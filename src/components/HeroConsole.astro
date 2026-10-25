@@ -1,0 +1,295 @@
+---
+// Live agent console for the hero: an orchestrator routes a real question to one of four
+// agents, a packet travels the graph, and the trace log types out what happened.
+import { PILLARS } from '../consts';
+import { url } from '../lib';
+
+const agents = [
+  { x: 76, label: 'agents' },
+  { x: 208, label: 'strategy' },
+  { x: 352, label: 'business' },
+  { x: 484, label: 'leadership' },
+];
+
+const runs = [
+  {
+    task: 'why does our checkout agent loop?',
+    lines: [
+      ['orchestrator', 'plan → route to agents'],
+      ['agents', 'tool_call traces.search(status="timeout")'],
+      ['agents', 'no step budget · retries every 429'],
+      ['evals', 'regression suite passing'],
+      ['ship', 'max_steps=8 · backoff on 429'],
+    ],
+  },
+  {
+    task: 'should we build or buy support AI?',
+    lines: [
+      ['orchestrator', 'plan → route to strategy'],
+      ['strategy', 'tool_call cost.model(volume, team)'],
+      ['strategy', 'sets us apart: low · urgency: high'],
+      ['evals', 'vendor tested on our own tickets'],
+      ['ship', 'buy now · own the evals and the data'],
+    ],
+  },
+  {
+    task: 'can AI cut invoice processing time?',
+    lines: [
+      ['orchestrator', 'plan → route to business'],
+      ['business', 'tool_call process.map("invoices")'],
+      ['business', '5 hand-offs → AI draft + 1 human check'],
+      ['evals', 'accuracy measured against last quarter'],
+      ['ship', '2-week pilot · track cycle time'],
+    ],
+  },
+  {
+    task: 'how do juniors grow when AI writes code?',
+    lines: [
+      ['orchestrator', 'plan → route to leadership'],
+      ['leadership', 'tool_call reviews.sample(team)'],
+      ['leadership', 'reviews check syntax, not judgment'],
+      ['evals', 'pair juniors on design, not just PRs'],
+      ['ship', 'review checklist: ask why, not what'],
+    ],
+  },
+];
+const links = PILLARS.map((p) => ({ href: url(`/tags/${p.tag}`), title: p.title }));
+---
+<div class="console panel navy" data-runs={JSON.stringify(runs)} data-links={JSON.stringify(links)}>
+  <div class="console-bar">
+    <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="mono bar-title">agent-console</span>
+    <span class="mono live"><span class="pulse" aria-hidden="true"></span>live</span>
+  </div>
+
+  <svg class="diagram graph" viewBox="0 0 560 250" role="img" aria-label="An orchestrator routes a question to one of four agents, which use tools and report back">
+    <g class="edges">
+      {agents.map((a, i) => <path class="ln-teal faint edge" data-edge={i} d={`M280 64 L${a.x} 136`} />)}
+      {agents.map((a, i) => <path class="ln dash faint tool-edge" data-tool-edge={i} d={`M${a.x} 176 L${a.x} 206`} />)}
+    </g>
+    <g class="node-g" data-node="orch">
+      <rect class="node-gold" x="186" y="16" width="188" height="48" rx="10" />
+      <text class="t-lg t-gold" x="280" y="46" text-anchor="middle">orchestrator</text>
+    </g>
+    {agents.map((a, i) => (
+      <g class="node-g" data-node={i}>
+        <rect class="node-teal" x={a.x - 56} y="136" width="112" height="40" rx="9" />
+        <text class="t" x={a.x} y="161" text-anchor="middle">{a.label}</text>
+      </g>
+    ))}
+    <g class="node-g" data-node="tools">
+      <rect class="ln dash faint" x="20" y="206" width="520" height="36" rx="8" />
+      <text class="t-sm" x="280" y="229" text-anchor="middle">tools · memory · evals · traces</text>
+    </g>
+    <circle class="packet" r="5" cx="280" cy="40" />
+    <g class="check" opacity="0">
+      <circle cx="388" cy="22" r="10" class="fill-gold" />
+      <path d="M383 22 l3.5 3.5 l6 -7" stroke="#0F2A44" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+  </svg>
+
+  <div class="trace" aria-live="polite">
+    <p class="mono prompt"><span class="caret-label">›</span> <span class="task"></span><span class="cursor" aria-hidden="true"></span></p>
+    <ol class="mono log"></ol>
+  </div>
+
+  <div class="runs" role="tablist" aria-label="Pick a question to run">
+    {agents.map((a, i) => (
+      <button class="run mono" type="button" role="tab" data-run={i} aria-selected={i === 0 ? 'true' : 'false'}>run: {a.label}</button>
+    ))}
+  </div>
+</div>
+
+<script>
+  type Run = { task: string; lines: [string, string][] };
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  document.querySelectorAll<HTMLElement>('.console').forEach((root) => {
+    const runs: Run[] = JSON.parse(root.dataset.runs ?? '[]');
+    const links: { href: string; title: string }[] = JSON.parse(root.dataset.links ?? '[]');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const packet = root.querySelector<SVGCircleElement>('.packet')!;
+    const check = root.querySelector<SVGGElement>('.check')!;
+    const taskEl = root.querySelector<HTMLElement>('.task')!;
+    const log = root.querySelector<HTMLOListElement>('.log')!;
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('.run')];
+    const xs = [76, 208, 352, 484];
+    let token = 0;
+
+    const node = (k: string | number) => root.querySelector(`[data-node="${k}"]`);
+    const edge = (i: number) => root.querySelector(`[data-edge="${i}"]`);
+    const toolEdge = (i: number) => root.querySelector(`[data-tool-edge="${i}"]`);
+    const clearActive = () => root.querySelectorAll('.active').forEach((el) => el.classList.remove('active'));
+
+    function move(from: [number, number], to: [number, number], ms: number, my: number) {
+      return new Promise<void>((resolve) => {
+        const start = performance.now();
+        const step = (now: number) => {
+          if (my !== token) return resolve();
+          const t = Math.min(1, (now - start) / ms);
+          const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          packet.setAttribute('cx', String(from[0] + (to[0] - from[0]) * e));
+          packet.setAttribute('cy', String(from[1] + (to[1] - from[1]) * e));
+          t < 1 ? requestAnimationFrame(step) : resolve();
+        };
+        requestAnimationFrame(step);
+      });
+    }
+
+    async function type(el: HTMLElement, text: string, my: number, speed = 14) {
+      el.textContent = '';
+      for (const ch of text) {
+        if (my !== token) return;
+        el.textContent += ch;
+        await sleep(speed);
+      }
+    }
+
+    function addLine(who: string, what: string) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="who"></span><span class="what"></span>`;
+      li.querySelector('.who')!.textContent = who;
+      if (who === 'ship') li.classList.add('ship');
+      log.appendChild(li);
+      return li.querySelector<HTMLElement>('.what')!;
+    }
+
+    function finish(i: number) {
+      const li = document.createElement('li');
+      li.className = 'readmore';
+      li.innerHTML = `<a></a>`;
+      const a = li.querySelector('a')!;
+      a.href = links[i].href;
+      a.textContent = `read: ${links[i].title} →`;
+      log.appendChild(li);
+    }
+
+    function select(i: number) {
+      buttons.forEach((b, j) => b.setAttribute('aria-selected', String(i === j)));
+    }
+
+    function renderStatic(i: number) {
+      const run = runs[i];
+      clearActive();
+      select(i);
+      taskEl.textContent = run.task;
+      log.innerHTML = '';
+      run.lines.forEach(([who, what]) => (addLine(who, what).textContent = what));
+      finish(i);
+      [node('orch'), node(i), edge(i), toolEdge(i)].forEach((el) => el?.classList.add('active'));
+      packet.style.opacity = '0';
+      check.setAttribute('opacity', '1');
+    }
+
+    async function play(i: number, auto: boolean) {
+      const my = ++token;
+      const run = runs[i];
+      const x = xs[i];
+      select(i);
+      clearActive();
+      log.innerHTML = '';
+      check.setAttribute('opacity', '0');
+      packet.style.opacity = '1';
+      packet.setAttribute('cx', '280');
+      packet.setAttribute('cy', '40');
+
+      await type(taskEl, run.task, my, 22);
+      if (my !== token) return;
+      node('orch')?.classList.add('active');
+      await type(addLine(...run.lines[0]), run.lines[0][1], my);
+      edge(i)?.classList.add('active');
+      await move([280, 64], [x, 136], 650, my);
+      node(i)?.classList.add('active');
+      await type(addLine(...run.lines[1]), run.lines[1][1], my);
+      toolEdge(i)?.classList.add('active');
+      await move([x, 176], [x, 214], 380, my);
+      node('tools')?.classList.add('active');
+      await sleep(250);
+      await move([x, 214], [x, 176], 380, my);
+      await type(addLine(...run.lines[2]), run.lines[2][1], my);
+      await move([x, 136], [280, 64], 650, my);
+      if (my !== token) return;
+      await type(addLine(...run.lines[3]), run.lines[3][1], my);
+      check.setAttribute('opacity', '1');
+      packet.style.opacity = '0';
+      await type(addLine(...run.lines[4]), run.lines[4][1], my);
+      if (my !== token) return;
+      finish(i);
+      await sleep(auto ? 4200 : 9000);
+      if (my === token) play((i + 1) % runs.length, true);
+    }
+
+    buttons.forEach((b, i) => b.addEventListener('click', () => (reduced ? renderStatic(i) : play(i, false))));
+
+    if (reduced) {
+      renderStatic(0);
+      return;
+    }
+    // Start when the console scrolls into view, pause when it leaves.
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) play(0, true);
+      else token++;
+    });
+    io.observe(root);
+  });
+</script>
+
+<style>
+  .console.panel { display: block; place-items: initial; padding: 0; border-radius: 16px; box-shadow: 0 30px 60px -30px rgb(15 42 68 / 0.55); color: #f6f6f6; }
+  .console-bar { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 1rem; border-bottom: 1px solid rgb(95 179 179 / 0.22); }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; background: rgb(246 246 246 / 0.18); }
+  .dots i:first-child { background: var(--gold); }
+  .bar-title { color: var(--slate); }
+  .live { margin-left: auto; display: inline-flex; align-items: center; gap: 0.45rem; color: var(--teal); }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgb(95 179 179 / 0.6); } 100% { box-shadow: 0 0 0 9px rgb(95 179 179 / 0); } }
+
+  .graph { padding: 1.1rem 1.2rem 0.2rem; }
+  .graph :global(.edge), .graph :global(.tool-edge) { transition: stroke 0.3s, stroke-opacity 0.3s; }
+  .graph :global(.edge.active), .graph :global(.tool-edge.active) {
+    stroke: var(--gold);
+    stroke-opacity: 1;
+    stroke-width: 1.8;
+    stroke-dasharray: 5 5;
+    animation: flow 0.6s linear infinite;
+  }
+  @keyframes flow { to { stroke-dashoffset: -10; } }
+  .graph :global(.node-g rect) { transition: stroke 0.3s, fill 0.3s; }
+  .graph :global(.node-g.active rect) { stroke: var(--gold); stroke-opacity: 1; fill: #143453; }
+  .graph :global(.node-g.active .t) { fill: var(--gold); }
+  .packet { fill: var(--gold); filter: drop-shadow(0 0 6px rgb(225 176 59 / 0.9)); transition: opacity 0.3s; }
+  .check { transition: opacity 0.3s; }
+
+  .trace { padding: 0.4rem 1.3rem 0.6rem; min-height: 12.2rem; font-size: 0.86rem; }
+  .prompt { margin: 0 0 0.55rem; color: #f6f6f6; font-size: 0.95rem; }
+  .caret-label { color: var(--gold); }
+  .cursor { display: inline-block; width: 0.55em; height: 1.05em; margin-left: 2px; background: var(--teal); vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.28rem; }
+  .log :global(li) { display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.6rem; color: #d6dde4; font-size: 0.8rem; line-height: 1.45; }
+  .log :global(.who) { color: var(--teal); }
+  .log :global(.ship .who), .log :global(.ship .what) { color: var(--gold); }
+  .log :global(.readmore) { display: block; margin-top: 0.35rem; }
+  .log :global(.readmore a) { color: #f6f6f6; }
+  .log :global(.readmore a:hover) { color: var(--gold); }
+
+  .runs { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.8rem 1rem 1rem; border-top: 1px solid rgb(95 179 179 / 0.22); }
+  .run {
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid rgb(95 179 179 / 0.35);
+    background: transparent;
+    color: var(--slate);
+    cursor: pointer;
+    font-size: 0.78rem;
+  }
+  .run:hover { color: #f6f6f6; border-color: var(--teal); }
+  .run[aria-selected='true'] { background: var(--gold); border-color: var(--gold); color: var(--navy-deep); }
+  @media (prefers-color-scheme: dark) { .console.panel { border: 1px solid rgb(95 179 179 / 0.3); } }
+  @media (max-width: 520px) {
+    .log :global(li) { grid-template-columns: 1fr; gap: 0; }
+    .trace { min-height: 15rem; }
+  }
+</style>

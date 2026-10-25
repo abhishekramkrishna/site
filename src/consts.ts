@@ -7,6 +7,8 @@ export const SITE = {
     'Engineering leader at Whatfix in Bangalore, writing about building AI agents that ship, AI strategy for leaders, and where AI pays off in a business.',
   role: 'Engineering Leader @ Whatfix',
   location: 'Bangalore, India',
+  // Shown in the header status pill. Change it whenever your focus changes.
+  now: 'writing about agents in production',
   // X handle without the @. Leave empty until you have it.
   xHandle: '',
   links: {

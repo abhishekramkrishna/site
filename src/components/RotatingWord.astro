@@ -1,0 +1,38 @@
+---
+// Types and deletes a list of words in place. Shows the first word only when motion is reduced.
+interface Props { words: string[] }
+const { words } = Astro.props;
+---
+<span class="rotator" data-words={JSON.stringify(words)}><span class="word">{words[0]}</span><span class="caret" aria-hidden="true"></span></span>
+
+<script>
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  document.querySelectorAll<HTMLElement>('.rotator').forEach(async (el) => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const words: string[] = JSON.parse(el.dataset.words ?? '[]');
+    const out = el.querySelector<HTMLElement>('.word')!;
+    let i = 0;
+    for (;;) {
+      await sleep(2600);
+      for (let n = out.textContent!.length; n >= 0; n--) {
+        out.textContent = words[i].slice(0, n);
+        await sleep(45);
+      }
+      i = (i + 1) % words.length;
+      for (let n = 1; n <= words[i].length; n++) {
+        out.textContent = words[i].slice(0, n);
+        await sleep(85);
+      }
+    }
+  });
+</script>
+
+<style>
+  .rotator { color: var(--navy); white-space: nowrap; position: relative; }
+  .word {
+    background: linear-gradient(transparent 62%, rgb(225 176 59 / 0.55) 62%, rgb(225 176 59 / 0.55) 92%, transparent 92%);
+  }
+  .caret { display: inline-block; width: 3px; height: 0.82em; margin-left: 3px; background: var(--gold); vertical-align: baseline; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-color-scheme: dark) { .rotator { color: #f6f6f6; } }
+</style>

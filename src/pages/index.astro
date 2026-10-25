@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
-import Orchestrator from '../components/diagrams/Orchestrator.astro';
+import HeroConsole from '../components/HeroConsole.astro';
+import RotatingWord from '../components/RotatingWord.astro';
 import Pipeline from '../components/diagrams/Pipeline.astro';
 import TagDiagram from '../components/diagrams/TagDiagram.astro';
 import PostGrid from '../components/PostGrid.astro';
@@ -11,22 +12,25 @@ const posts = (await getPosts()).slice(0, 3);
 const tones = ['', 'navy', 'teal', 'gold'];
 ---
 <Base>
-  <section class="wrap hero">
-    <h1 class="statement wide">
-      <strong>Abhishek Ramkrishna builds AI agents that ship.</strong> He leads engineering at Whatfix and writes about
-      taking AI from prompts to production, for engineering leaders, junior engineers and founders.
-    </h1>
-    <div class="hero-actions">
-      <a class="btn dark" href={url('/blog')}>Read the writing →</a>
-      <a class="btn" href={SITE.links.linkedin}>Follow on LinkedIn</a>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="kicker mono"><span class="kicker-dot" aria-hidden="true"></span>{SITE.role} · {SITE.location}</p>
+        <h1 class="statement hero-title">
+          <strong>From prompts</strong> to production <RotatingWord words={['agents.', 'evals.', 'teams.', 'results.']} />
+        </h1>
+        <p class="lede">
+          I'm Abhishek Ramkrishna. I lead engineering at Whatfix and write about how AI actually gets built, shipped and run
+          in real businesses, for engineering leaders, junior engineers and founders.
+        </p>
+        <div class="hero-actions">
+          <a class="btn dark" href={url('/blog')}>Read the writing →</a>
+          <a class="btn" href={SITE.links.linkedin}>Follow on LinkedIn</a>
+        </div>
+        <p class="hint mono">↳ pick a question in the console to watch an agent work it</p>
+      </div>
+      <HeroConsole />
     </div>
-  </section>
-
-  <section class="wrap">
-    <figure class="panel navy hero-panel">
-      <div class="hero-diagram"><Orchestrator /></div>
-      <figcaption class="mono">fig. 1 · how I think about multi-agent systems: one orchestrator, specialist agents, shared tools, and a loop that checks the work</figcaption>
-    </figure>
   </section>
 
   <section class="wrap block">
@@ -93,11 +97,35 @@ const tones = ['', 'navy', 'teal', 'gold'];
 </Base>
 
 <style>
-  .hero { padding-top: 4.5rem; padding-bottom: 2.8rem; }
-  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2.2rem; }
-  .hero-panel { margin: 0; padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem) 1.5rem; }
-  .hero-diagram { width: min(100%, 720px); }
-  .hero-panel figcaption { color: var(--slate); margin-top: 1.4rem; text-align: center; max-width: 60ch; }
+  .hero {
+    position: relative;
+    isolation: isolate;
+    margin-top: -72px;
+    padding-top: 72px;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(circle, rgb(15 42 68 / 0.14) 1px, transparent 1.2px);
+    background-size: 22px 22px;
+    -webkit-mask-image: linear-gradient(#000 70%, transparent);
+    mask-image: linear-gradient(#000 70%, transparent);
+  }
+  .hero-grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; padding-top: 4.5rem; padding-bottom: 5rem; }
+  .kicker { display: inline-flex; align-items: center; gap: 0.55rem; color: var(--ink-soft); padding: 0.35rem 0.8rem; border: 1px solid var(--rule); border-radius: 999px; background: var(--bg); margin: 0 0 1.6rem; }
+  .kicker-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+  .hero-title { font-size: clamp(2.5rem, 5.2vw, 4.4rem); line-height: 1.04; max-width: none; }
+  .lede { font-size: 1.18rem; color: var(--ink-soft); max-width: 34rem; margin: 1.6rem 0 0; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; }
+  .hint { color: var(--muted); margin: 1.6rem 0 0; }
+  @media (prefers-color-scheme: dark) {
+    .hero::before { background-image: radial-gradient(circle, rgb(95 179 179 / 0.16) 1px, transparent 1.2px); }
+  }
+  @media (max-width: 980px) {
+    .hero-grid { grid-template-columns: 1fr; padding-top: 3rem; }
+  }
   .block { padding-top: 6rem; }
   .pillars { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; }
   .pillar { display: grid; gap: 0.9rem; color: var(--ink); text-decoration: none; }

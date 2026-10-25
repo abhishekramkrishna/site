@@ -39,6 +39,7 @@ const path = Astro.url.pathname;
           <Logo />
           <span class="wordmark">{SITE.name}</span>
         </a>
+        <p class="now mono" title="What I'm focused on right now"><span class="now-dot" aria-hidden="true"></span>now: {SITE.now}</p>
         <nav aria-label="Main">
           {nav.map((item) => (
             <a class="pill" href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>
@@ -46,6 +47,13 @@ const path = Astro.url.pathname;
         </nav>
       </div>
     </header>
+
+    <script>
+      const header = document.querySelector('.site-header');
+      const onScroll = () => header?.classList.toggle('scrolled', scrollY > 8);
+      addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    </script>
 
     <main id="main">
       <slot />
@@ -85,12 +93,17 @@ const path = Astro.url.pathname;
 <style>
   .skip { position: absolute; left: -999px; top: 8px; background: var(--gold); color: var(--navy-deep); padding: 0.5rem 0.8rem; border-radius: 6px; z-index: 10; }
   .skip:focus { left: 8px; }
-  .site-header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); }
+  .site-header { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid transparent; transition: background 0.2s, border-color 0.2s; }
+  .site-header.scrolled { background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom-color: var(--rule); }
+  .now { display: inline-flex; align-items: center; gap: 0.5rem; margin: 0 auto 0 1.4rem; color: var(--muted); font-size: 0.78rem; }
+  .now-dot { width: 7px; height: 7px; border-radius: 50%; background: #3fa66b; box-shadow: 0 0 0 0 rgb(63 166 107 / 0.6); animation: now-pulse 2s ease-out infinite; }
+  @keyframes now-pulse { 100% { box-shadow: 0 0 0 8px rgb(63 166 107 / 0); } }
+  @media (max-width: 900px) { .now { display: none; } }
   .bar { display: flex; align-items: center; justify-content: space-between; height: 72px; gap: 1rem; }
   .brand { display: flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; }
   .wordmark { font-family: var(--font-serif); font-size: 1.22rem; font-weight: 560; letter-spacing: -0.02em; white-space: nowrap; }
   nav { display: flex; gap: 0.45rem; }
-  main { min-height: 70vh; }
+  main { min-height: 70vh; position: relative; }
 
   .site-footer { margin-top: 7rem; background: var(--navy); color: #f6f6f6; --bg: var(--navy); }
   .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2.5rem; padding-top: 4rem; padding-bottom: 3rem; }
