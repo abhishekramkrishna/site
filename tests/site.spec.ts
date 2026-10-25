@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -73,4 +73,21 @@ test('unknown routes return the 404 page', async ({ page }) => {
   const res = await page.goto('/this-page-does-not-exist');
   expect(res?.status()).toBe(404);
   await expect(page.locator('h1')).toContainText('404');
+});
+
+test('post images and demo video load', async ({ page, request }) => {
+  await page.goto('/blog/agents-that-answer-with-screens', { waitUntil: 'networkidle' });
+  const imgs = page.locator('article img, .prose img, main img');
+  expect(await imgs.count()).toBeGreaterThanOrEqual(3);
+  for (const img of await imgs.all()) {
+    await img.scrollIntoViewIfNeeded();
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+  }
+  const video = page.locator('main video');
+  await expect(video).toHaveCount(1);
+  for (const attr of ['src', 'poster']) {
+    const url = await video.getAttribute(attr);
+    expect(url, `video ${attr}`).toBeTruthy();
+    expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
+  }
 });

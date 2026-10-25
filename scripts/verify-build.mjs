@@ -71,7 +71,7 @@ for (const f of html) {
 }
 
 // 4. Internal links and assets resolve
-const refRe = /(?:href|src)="([^"#?]+)[^"]*"/g;
+const refRe = /(?:href|src|poster)="([^"#?]+)[^"]*"/g;
 for (const f of html) {
   const s = readFileSync(f, 'utf8');
   for (const [, ref] of s.matchAll(refRe)) {
