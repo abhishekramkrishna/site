@@ -1,22 +1,11 @@
 ---
-// Personal mark: ARK. A clean A and R, then a K whose arms branch from one gold node,
-// the way an orchestrator routes work to agents.
+// Personal mark: ARK with a gold smile that runs from the A to the K
+// and ends in an agent node. Letters are outlined paths (Inter Black).
 interface Props { size?: number }
 const { size = 32 } = Astro.props;
 ---
-<svg width={size * 1.4} height={size} viewBox="0 0 56 40" aria-hidden="true" class="logo-mark">
-  <g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3 35 L11 5 L19 35" />
-    <path d="M6.5 25 H15.5" />
-    <path d="M24 35 V5 H30 A6.5 6.5 0 0 1 30 18 H24" />
-    <path d="M28.5 18 L35 35" />
-    <path d="M41 5 V35" />
-  </g>
-  <g fill="none" stroke="#5FB3B3" stroke-width="2.6" stroke-linecap="round">
-    <path d="M41 20 L52 6" />
-    <path d="M41 20 L52 34" />
-  </g>
-  <circle cx="52" cy="6" r="3" fill="var(--bg)" stroke="#5FB3B3" stroke-width="2.4" />
-  <circle cx="52" cy="34" r="3" fill="var(--bg)" stroke="#5FB3B3" stroke-width="2.4" />
-  <circle cx="41" cy="20" r="4.6" fill="#E1B03B" />
+<svg width={size * 64 / 44} height={size} viewBox="0 0 64 44" aria-hidden="true" class="logo-mark">
+  <path d="M0.84 31.0 7.91 9.17H16.00L23.34 31.0H16.63L14.09 22.53Q13.27 19.77 12.56 16.81Q11.84 13.84 11.19 10.91H12.54Q11.93 13.84 11.30 16.81Q10.67 19.77 9.87 22.53L7.46 31.0ZM6.08 26.81V22.38H18.09V26.81Z M23.92 31.0V9.17H33.32Q35.75 9.17 37.58 10.06Q39.40 10.94 40.42 12.60Q41.44 14.27 41.44 16.58Q41.44 18.92 40.40 20.54Q39.36 22.15 37.48 22.97Q35.61 23.79 33.12 23.79H27.49V19.19H31.91Q32.97 19.19 33.72 18.92Q34.46 18.66 34.86 18.09Q35.25 17.52 35.25 16.58Q35.25 15.64 34.86 15.06Q34.46 14.47 33.72 14.19Q32.97 13.91 31.91 13.91H29.83V31.0ZM35.72 31.0 30.39 20.98H36.69L42.17 31.0Z M46.95 27.17V22.16Q47.55 20.79 48.12 19.68Q48.70 18.57 49.46 17.43Q50.23 16.29 51.39 14.78L55.73 9.17H62.74L53.62 20.40L53.06 20.17ZM42.46 31.0V9.17H48.37V13.86L48.26 20.14L48.37 23.03V31.0ZM56.18 31.0 50.92 22.22 54.67 17.88 63.15 31.0Z" fill="currentColor" />
+  <path d="M7 34.5 Q 30 44.5 52.5 35.5" fill="none" stroke="#E1B03B" stroke-width="3.4" stroke-linecap="round" />
+  <circle cx="55" cy="34.3" r="3.6" fill="var(--bg)" stroke="#E1B03B" stroke-width="2.6" />
 </svg>

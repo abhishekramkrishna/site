@@ -36,7 +36,7 @@ const path = Astro.url.pathname;
     <header class="site-header">
       <div class="wrap bar">
         <a class="brand" href={url('/')} aria-label={`${SITE.name}, home`}>
-          <Logo />
+          <Logo size={38} />
           <span class="wordmark">{SITE.name}</span>
         </a>
         <p class="now mono" title="What I'm focused on right now"><span class="now-dot" aria-hidden="true"></span>now: {SITE.now}</p>
@@ -72,7 +72,7 @@ const path = Astro.url.pathname;
     <footer class="site-footer">
       <div class="wrap foot">
         <div class="foot-brand">
-          <Logo size={36} />
+          <Logo size={44} />
           <p class="statement foot-line"><strong>From prompts</strong> to production agents.</p>
         </div>
         <div class="foot-cols">
@@ -110,7 +110,7 @@ const path = Astro.url.pathname;
   @keyframes now-pulse { 100% { box-shadow: 0 0 0 8px rgb(63 166 107 / 0); } }
   @media (max-width: 900px) { .now { display: none; } }
   .bar { display: flex; align-items: center; justify-content: space-between; height: 72px; gap: 1rem; }
-  .brand { display: flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; }
+  .brand { display: flex; align-items: center; gap: 0.75rem; color: var(--ink); text-decoration: none; }
   .wordmark { font-family: var(--font-serif); font-size: 1.22rem; font-weight: 560; letter-spacing: -0.02em; white-space: nowrap; }
   nav { display: flex; gap: 0.45rem; }
   .pill.icon { padding: 0.38rem 0.6rem; }
