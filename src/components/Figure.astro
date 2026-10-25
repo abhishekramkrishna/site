@@ -1,10 +1,11 @@
 ---
 // Wrap a diagram in a panel inside a post: <Figure caption="..." tone="navy"><AgentLoop /></Figure>
-interface Props { caption?: string; tone?: '' | 'navy' | 'teal' | 'gold' }
-const { caption, tone = '' } = Astro.props;
+// `wide` gives data figures (charts, stat tiles) more room than line diagrams.
+interface Props { caption?: string; tone?: '' | 'navy' | 'teal' | 'gold'; wide?: boolean }
+const { caption, tone = '', wide = false } = Astro.props;
 ---
 <figure class="post-figure">
-  <div class:list={['panel', tone]}><div class="art"><slot /></div></div>
+  <div class:list={['panel', tone]}><div class:list={['art', { wide }]}><slot /></div></div>
   {caption && <figcaption>{caption}</figcaption>}
 </figure>
 
@@ -12,4 +13,17 @@ const { caption, tone = '' } = Astro.props;
   .post-figure { margin: 2.4em 0; }
   .panel { padding: 6% 5%; }
   .art { width: min(100%, 520px); }
+  .art.wide { width: 100%; }
 </style>
+
+<script>
+  // Data figures animate once when scrolled into view. Without JS, or with reduced
+  // motion, they show their final state (see the .dfig rules in global.css).
+  const figs = document.querySelectorAll<HTMLElement>('.dfig');
+  if (figs.length && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
+    }, { threshold: 0.35 });
+    figs.forEach((f) => { f.classList.add('motion'); io.observe(f); });
+  }
+</script>

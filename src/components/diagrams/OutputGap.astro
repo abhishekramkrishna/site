@@ -1,0 +1,32 @@
+---
+// After AI agents: code output rose, resolved issues did not (Chen & Stratton, Harvard, 2026).
+const max = 36;
+const rows: [string, number][] = [
+  ['Lines of code', 30],
+  ['Pull requests', 23],
+  ['Commits', 20],
+];
+---
+<div class="dfig gap" role="img" aria-label="After firms adopted AI coding agents, lines of code rose 30%, pull requests 23% and commits 20%. Issues resolved showed no statistically significant change; the study rules out a gain above 12%.">
+  <p class="df-title">Code output rose. Delivered work didn't measurably move.</p>
+  {rows.map(([label, v], i) => (
+    <div class="row">
+      <div class="lab"><span>{label}</span><span class="df-num">+{v}%</span></div>
+      <div class="df-track"><div class="df-bar" style={`width:${(v / max) * 100}%;--i:${i}`}></div></div>
+    </div>
+  ))}
+  <div class="row out">
+    <div class="lab"><span>Issues resolved</span><span class="df-num muted-num">no clear gain</span></div>
+    <div class="df-track"><div class="df-bar range" style={`width:${(12 / max) * 100}%;--i:3`}></div></div>
+    <p class="df-note df-fade">Not statistically significant. The confidence interval rules out a gain above 12%.</p>
+  </div>
+  <p class="df-note">Change after adopting AI coding agents. 718 firms on Jellyfish, January 2021 to March 2026.</p>
+</div>
+
+<style>
+  .row { margin-bottom: 0.95rem; }
+  .lab { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.92rem; font-weight: 550; margin-bottom: 0.35rem; }
+  .muted-num { color: var(--df-hi); }
+  .range { background: repeating-linear-gradient(135deg, transparent 0 6px, rgb(225 176 59 / 0.28) 6px 12px); border: 1.5px dashed var(--df-hi); }
+  .out .df-note { margin-top: 0.4rem; }
+</style>

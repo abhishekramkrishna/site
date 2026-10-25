@@ -1,0 +1,37 @@
+---
+// Output metrics inflate with AI agents; outcome metrics are worth trusting.
+const flattering = ['Pull requests opened', 'Lines of code', 'Commits', 'PR cycle time'];
+const honest: [string, string][] = [
+  ['Issues resolved per engineer', 'Did not inflate with agents'],
+  ['Review wait time by lane', 'Shows whether the lanes work'],
+  ['PRs sent back for changes', 'Rework the agent created'],
+  ['Change failure rate', 'What reached customers broken'],
+];
+---
+<div class="dfig score" role="img" aria-label="Metrics that inflate with AI: pull requests opened, lines of code, commits, PR cycle time. Metrics worth trusting: issues resolved per engineer, review wait time by lane, PRs sent back for changes, change failure rate.">
+  <p class="df-title">Measure what the business actually gets.</p>
+  <div class="cols">
+    <div class="col">
+      <p class="h">Inflates with AI</p>
+      <ul>{flattering.map((m, i) => <li><span class="strike">{m}<i class="df-bar" style={`--i:${i}`}></i></span></li>)}</ul>
+    </div>
+    <div class="col good">
+      <p class="h">Worth trusting</p>
+      <ul>{honest.map(([m, why]) => <li><strong>{m}</strong><span class="why">{why}</span></li>)}</ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.9rem; }
+  .col { border: 1px solid var(--df-rule); border-radius: 10px; padding: 0.9rem 1rem; }
+  .col.good { border-color: var(--df-hi); }
+  .h { font: 500 0.72rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--df-muted); margin: 0 0 0.5rem; }
+  .good .h { color: var(--df-hi); }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { padding: 0.5rem 0; border-top: 1px solid var(--df-rule); font-size: 0.92rem; line-height: 1.3; }
+  .strike { position: relative; color: var(--df-muted); }
+  .strike .df-bar { top: 50%; bottom: auto; height: 1.5px; width: 100%; border-radius: 0; background: var(--df-muted); }
+  strong { color: var(--df-ink); font-weight: 600; }
+  .why { display: block; font: 400 0.74rem var(--font-mono); color: var(--df-accent); margin-top: 0.15rem; }
+</style>

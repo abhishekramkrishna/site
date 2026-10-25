@@ -1,0 +1,120 @@
+---
+title: "More code, not more software: review is the new bottleneck"
+description: AI agents are raising code output across engineering teams. Delivered work is rising far less. The constraint has moved to code review, and engineering leaders need to redesign it.
+pubDate: 2026-10-26
+updatedDate: 2026-10-26
+tags: [agents, leadership]
+draft: false
+---
+
+import Figure from '../../components/Figure.astro';
+import OutputGap from '../../components/diagrams/OutputGap.astro';
+import ReviewSlowdown from '../../components/diagrams/ReviewSlowdown.astro';
+import CfoView from '../../components/diagrams/CfoView.astro';
+import Scoreboard from '../../components/diagrams/Scoreboard.astro';
+import ReviewLanes from '../../components/diagrams/ReviewLanes.astro';
+
+Most engineering organisations that have adopted AI coding agents can show a chart that goes up and to the right. Pull requests, commits, lines of code. The harder question, and the one boards and CFOs are starting to ask, is whether the business is getting more software out of it.
+
+The best evidence so far says: much less than the output charts suggest.
+
+**The short version**
+
+- In a study of 718 companies, AI agents raised lines of code by about 30%, but resolved issues showed no statistically significant gain. Time to review a pull request rose 49%.
+- Review is now the constraint. Treating every change the same wastes reviewer attention on low-risk work and under-protects high-risk work.
+- Split review into three lanes by risk, require authors to explain agent-written code, and judge output by issues resolved rather than pull requests.
+
+## What the data shows
+
+Fiona Chen and James Stratton at Harvard analysed 718 companies on the Jellyfish engineering analytics platform, covering roughly 700,000 people and 300 million work events from January 2021 to March 2026. Their paper, *Artificial Intelligence in the Firm: Bottlenecks in Software Production*, was reported by InfoQ in October 2026. When teams adopted AI agents, lines of code rose about 30%, pull requests 23% and commits 20%. Resolved issues did not rise by a statistically significant amount. The confidence interval rules out any gain above 12%.
+
+<Figure caption="Agents widened the top of the pipeline. Resolved issues didn't follow. Source: Chen and Stratton, Harvard, 2026." tone="navy" wide>
+  <OutputGap />
+</Figure>
+
+The cost appeared downstream. Average time to review a pull request rose 49%, from about 7 days to 10.5. Comments per pull request rose 35%. The share of pull requests sent back for changes nearly doubled, from 13% to 25%, and 14% more engineers were pulled into review. Pull requests didn't get bigger, so this isn't just larger diffs. Each change took more work to approve.
+
+<Figure caption="Same study, same firms. Each pull request took more review effort after agents arrived." tone="navy" wide>
+  <ReviewSlowdown />
+</Figure>
+
+AI review tools haven't cleared the queue either. By March 2026 nearly 80% of the firms had tried them, but only about 23% of review comments were AI-generated, and the authors found the bottleneck persisted after adoption. In their words, when AI speeds up writing code, "complementary steps may serve as bottlenecks." Code review is the largest of those steps.
+
+It isn't one dataset. Faros AI's analysis of more than 10,000 developers in 2025 found the same shape: teams with high AI adoption merged 98% more pull requests, review time rose 91%, and there was no significant improvement at company level.
+
+## Why review breaks first
+
+Writing code was never the majority of an engineer's time. The same study estimates it at 30 to 40%. The rest is reading, deciding, reviewing, coordinating and fixing. Accelerate the writing and every other stage receives more input than it was designed for.
+
+Each change is also harder to check. CodeRabbit's analysis of 470 open-source pull requests found AI-generated ones carried about 1.7 times as many issues as human-written ones, including more logic and security problems. It's a vendor study and a small sample, but it matches what the Harvard data shows: more comments, more changes requested.
+
+Review also carries a less visible cost. AI has made producing a change cheap. It has not made understanding one cheap. Addy Osmani describes this as comprehension debt: the growing gap between how much code exists in a system and how much of it anyone actually understands. As he puts it, "A junior engineer can now generate code faster than a senior engineer can critically audit it."
+
+Andrej Karpathy made the same observation in October 2026, writing that "human review and comprehension are starting to fall behind."
+
+The predictable failure mode follows. Review queues grow, reviewers fall behind, and approvals become faster than reading. Gergely Orosz calls these zombie code reviews, and his line from his LDX3 New York keynote should concern every engineering leader: "If your team is still doing code reviews, you're probably not doing code reviews."
+
+## What finance leaders see
+
+CFOs approve the AI budget, and they are now being asked what it bought. In Avalara's survey of 1,505 CFOs and senior finance leaders in June 2026, 92% said they feel pressure to show AI investments are paying off, and half said their AI agents had produced only limited measurable ROI. Meanwhile Gartner found that 85% of functional leaders plan to increase AI spending in 2026.
+
+<Figure caption="The finance view of AI spend in 2026. Sources: Avalara via ESG Dive, July 2026; Gartner, September and May 2026." tone="navy" wide>
+  <CfoView />
+</Figure>
+
+Gartner's advice to CFOs is that "they must not mistake activity for impact." The organisations in its survey reporting positive returns on most AI initiatives were the ones that track ROI, manage AI as a portfolio and stop projects that underperform.
+
+That is the engineering problem in finance language. A pull request chart is activity. If agents raise output 30% and the review queue absorbs the gain, the business has paid for activity. The leaders who can show a CFO more resolved work per engineer, at the same or better quality, will keep their AI budgets.
+
+## Redesign review around risk
+
+Some companies are responding by removing review for non-critical code. Ramp, for example, has reportedly told engineers they can skip review on non-critical changes. I understand the impulse, but I don't think it's the right default. The better move is to stop treating every change the same way.
+
+I recommend three review lanes, assigned by risk rather than by size.
+
+<Figure caption="Three review lanes, assigned before review starts. Adapt the lane rules to your own systems." tone="navy" wide>
+  <ReviewLanes />
+</Figure>
+
+**Low risk.** Tests, internal tooling, copy changes, dependency updates that pass CI. An automated review pass plus one brief human check. The reviewer confirms the change does what the ticket asked. They are not expected to read every line.
+
+**Medium risk.** Most feature work. A full human review, with one condition: the author writes a short summary of what changed, why, and what they would examine as the reviewer. If an agent wrote the code, the author must be able to explain it without referring back to the agent's session. If they can't, the change isn't ready for review.
+
+**High risk.** Authentication, payments, data migrations, anything touching customer data, anything difficult to roll back. Two human reviewers, one of whom owns that part of the system. No agent-only approvals.
+
+The "explain it back" rule matters more than it looks. It slows teams down for a week or two. After that, engineers start directing agents more deliberately, because they know they will have to defend the result. That shift from passive delegation to active, question-driven use is exactly what Osmani argues protects skill and understanding.
+
+## Change what you measure
+
+Pull request count and cycle time are now flattering metrics. More pull requests can mean more delivered work, or simply more load on reviewers. I'd put these on any engineering dashboard instead:
+
+- **Issues resolved per engineer.** It was the one output measure in the Harvard data that didn't inflate with AI adoption, which is precisely why it's worth trusting.
+- **Review wait time by lane.** If low-risk changes wait as long as high-risk ones, the lanes aren't doing their job.
+- **Pull requests sent back for changes.** It shows the rework agents create before it reaches customers.
+- **Change failure rate.** It shows the rework that got past review.
+
+<Figure caption="Output metrics inflate with AI. Outcome metrics tell you whether the business got more software." tone="navy" wide>
+  <Scoreboard />
+</Figure>
+
+## Where to start
+
+Take last month's merged pull requests and plot time-to-approve against size. Large changes approved quickly are where zombie reviews hide. Then identify the single category of change your organisation is most concerned about getting wrong, and make that your first lane with stricter rules. There's no need to redesign the whole process at once.
+
+The open question I'm still weighing is how much human attention a low-risk, agent-written change really needs. If your organisation has moved a lane to fully automated review, I'd be interested to hear which signals you rely on to know it's safe.
+
+*Updated 26 October 2026: checked against the paper itself. Comments per pull request rose 35%, not 53% as first reported, and resolved issues showed no statistically significant gain rather than a 12% rise. Added data on review load, finance leaders' views and what to measure.*
+
+---
+
+**Sources**
+
+- [Chen and Stratton, *Artificial Intelligence in the Firm: Bottlenecks in Software Production*](https://fion.ac/jellyfish.pdf) (Harvard, August 2026), and [InfoQ's report on the study](https://www.infoq.com/news/2026/10/jellyfish-ai-productivity/) (October 2026)
+- [Faros AI: The AI Productivity Paradox Report](https://www.faros.ai/blog/ai-software-engineering) (July 2025)
+- [The Register on CodeRabbit's AI vs human code report](https://www.theregister.com/2025/12/17/ai_code_bugs/) (December 2025)
+- [ESG Dive on Avalara's survey of 1,505 finance leaders](https://www.esgdive.com/news/92-cfos-top-finance-staff-pressure-show-roi-ai-avalara/826030/) (July 2026)
+- [Gartner: only 22% of organisations have scaled AI across business units](https://www.gartner.com/en/newsroom/press-releases/gartner-survey-finds-only-22-percent-of-organizations-have-successfully-scaled-ai-across-multiple-business-units) (September 2026)
+- [Gartner: CFOs must stop mistaking finance AI deployment for value creation](https://www.gartner.com/en/newsroom/press-releases/2026-05-28-gartner-says-cfos-must-stop-mistaking-finance-ai-deployment-for-value-creation) (May 2026)
+- [Addy Osmani on comprehension debt, O'Reilly Radar](https://www.oreilly.com/radar/comprehension-debt-the-hidden-cost-of-ai-generated-code/) (April 2026)
+- [Business Today on Karpathy's post about review falling behind](https://www.businesstoday.in/technology/artificial-intelligence/story/only-5000-people-have-access-to-ai-agents-that-can-tackle-years-of-work-in-weeks-says-ai-researcher-andrej-karpathy-560943-2026-10-12) (October 2026)
+- [Summary of Gergely Orosz's LDX3 keynote](https://pjfp.com/gergely-orosz-state-of-tech-industry-2026-ldx3/) (October 2026)
