@@ -1,0 +1,36 @@
+---
+// Review load after AI agents (Chen & Stratton, Harvard, 2026). Bars show before and after on a shared scale per row.
+const rows: { label: string; before: number; after: number; fmt: (n: number) => string; change: string }[] = [
+  { label: 'Time to review a pull request', before: 7.03, after: 10.48, fmt: (n) => `${n.toFixed(1)} days`, change: '+49%' },
+  { label: 'Pull requests sent back for changes', before: 13, after: 25, fmt: (n) => `${n}%`, change: '~2×' },
+  { label: 'Comments per pull request', before: 1.66, after: 2.24, fmt: (n) => n.toFixed(1), change: '+35%' },
+];
+---
+<div class="dfig slow" role="img" aria-label="After AI agents: time to review a pull request rose from 7.0 to 10.5 days (+49%), the share of pull requests sent back for changes rose from 13% to 25%, and comments per pull request rose from 1.7 to 2.2 (+35%). The share of engineers doing review rose 14%, and pull requests did not get bigger.">
+  <p class="df-title">The extra code piled up in review.</p>
+  {rows.map((r, i) => (
+    <div class="row">
+      <div class="lab"><span>{r.label}</span><span class:list={['df-num', { hi: i === 0 }]}>{r.change}</span></div>
+      <div class="pair">
+        <span class="k">before</span>
+        <div class="df-track"><div class="df-bar before" style={`width:${(r.before / r.after) * 100}%;--i:${i}`}></div></div>
+        <span class="v">{r.fmt(r.before)}</span>
+        <span class="k">after</span>
+        <div class="df-track"><div class="df-bar" style={`width:100%;--i:${i + 0.5}`}></div></div>
+        <span class="v strong">{r.fmt(r.after)}</span>
+      </div>
+    </div>
+  ))}
+  <p class="df-note">Engineers doing code review also rose 14%. Pull requests did not get bigger, so each one took more work to approve.</p>
+</div>
+
+<style>
+  .row { margin-bottom: 1.15rem; }
+  .lab { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.92rem; font-weight: 550; margin-bottom: 0.45rem; }
+  .pair { display: grid; grid-template-columns: 3.6rem 1fr 4.8rem; align-items: center; gap: 0.35rem 0.6rem; }
+  .k { font: 400 0.72rem var(--font-mono); color: var(--df-muted); }
+  .v { font: 500 0.8rem var(--font-mono); color: var(--df-muted); text-align: right; }
+  .v.strong { color: var(--df-ink); }
+  .hi { color: var(--df-hi); }
+  .before { background: var(--df-muted); opacity: 0.55; }
+</style>

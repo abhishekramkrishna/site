@@ -1,0 +1,35 @@
+---
+// Three review lanes assigned by risk. Lane rules are a starting point to adapt.
+const lanes: { name: string; color: string; what: string; how: string; guard: string }[] = [
+  { name: 'Low', color: 'var(--df-accent)', what: 'Tests, internal tools, copy, CI-passing dependency bumps', how: 'Automated pass + one quick human check', guard: 'Reviewer confirms it does what the ticket asked' },
+  { name: 'Medium', color: 'var(--df-muted)', what: 'Most feature work', how: 'Author summary, then full human review', guard: 'Author explains agent code without its session' },
+  { name: 'High', color: 'var(--df-hi)', what: 'Auth, payments, data migrations, customer data, hard to roll back', how: 'Two reviewers, one owns the system', guard: 'No agent-only approvals' },
+];
+---
+<div class="dfig lanes" role="img" aria-label="Three review lanes by risk. Low: tests, internal tools, copy and CI-passing dependency bumps get an automated pass plus one quick human check. Medium: most feature work gets an author summary then full human review, and the author must explain agent code without its session. High: auth, payments, data migrations, customer data and anything hard to roll back get two reviewers, one of whom owns the system, and no agent-only approvals.">
+  <p class="df-title">Review effort follows risk, not volume.</p>
+  <div class="grid">
+    {lanes.map((l, i) => (
+      <div class="lane" style={`--c:${l.color}`}>
+        <p class="nm">{l.name}</p>
+        <p class="what">{l.what}</p>
+        <p class="how">{l.how}</p>
+        <p class="guard">{l.guard}</p>
+        <div class="df-track"><div class="df-bar" style={`width:${(i + 1) * 33.3}%;--i:${i}`}></div></div>
+      </div>
+    ))}
+  </div>
+  <p class="df-note">Bar length shows relative review effort.</p>
+</div>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; }
+  .lane { border: 1px solid var(--df-rule); border-top: 3px solid var(--c); border-radius: 10px; padding: 0.85rem 0.95rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  .lane p { margin: 0; line-height: 1.35; }
+  .nm { font: 500 0.75rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); }
+  .what { font-size: 0.82rem; color: var(--df-muted); }
+  .how { font-size: 0.95rem; font-weight: 600; }
+  .guard { font: 400 0.74rem var(--font-mono); color: var(--df-accent); flex: 1; }
+  .lane .df-track { height: 6px; margin-top: 0.3rem; }
+  .lane .df-bar { background: var(--c); }
+</style>
