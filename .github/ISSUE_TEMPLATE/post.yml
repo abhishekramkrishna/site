@@ -1,0 +1,19 @@
+name: Publish a post
+description: Track publishing one approved blog post.
+title: "[post] "
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Post title
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before publishing
+      options:
+        - label: The owner approved the final text
+        - label: Front matter complete (title, description, pubDate, tags) and draft set to false
+        - label: Diagrams and images have alt text or captions
+        - label: Link preview checked (title, description, image)

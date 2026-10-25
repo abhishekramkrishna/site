@@ -51,6 +51,11 @@ Every post ends with **LinkedIn**, **X** and **Copy link** buttons. Link preview
 
 Edit name, links and topics in `src/consts.ts`.
 
+## Contributing
+
+Every change starts with an issue and lands through a PR that passes CI. The full rules are in
+[CLAUDE.md](CLAUDE.md). Run `npm run validate` before opening a PR.
+
 ## Deploy
 
 1. **Settings → Pages → Source: GitHub Actions**.
