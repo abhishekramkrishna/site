@@ -3,7 +3,7 @@
 Personal site and blog for Abhishek Ramkrishna. Astro, static, hosted on GitHub Pages. **This repository is public.**
 
 These rules apply to every change, from a human, Claude or any other agent. They are not optional, and nobody may
-disable, skip or work around them: no direct pushes to `main`, no bypassing branch protection, no skipping or
+disable, skip or work around them: no direct pushes to `main`, no merging on red or pending checks, no skipping or
 weakening checks or tests to get a green build, no force-pushes to `main`.
 
 ## 1. Issue first
@@ -37,9 +37,12 @@ Rules for the rubric:
 - **Zero known vulnerabilities.** Do not merge with an open high or critical advisory; upgrade or replace the dependency.
 
 ## 4. Merge gate
-- `main` is protected: a PR is required, every CI job (Repo hygiene; Type check, build and verify; Vulnerability scan;
-  CodeQL; Browser regression tests) must pass, the branch must be up to date with `main`, and the rules apply to admins.
-- Merge only when every check is green on the PR's latest commit.
+- Every change reaches `main` through a PR. No direct pushes to `main`.
+- A PR is merged only when every CI job (Repo hygiene; Type check, build and verify; Vulnerability scan; CodeQL;
+  Browser regression tests) is green on its latest commit, the branch is up to date with `main`, and every review
+  conversation is resolved. Claude merges PRs on the owner's behalf only under these conditions; a red or pending
+  check means no merge, with no exceptions and no admin override.
+- Merges use squash or a merge commit that references the issue; history on `main` is never rewritten.
 - Publishing the live site (the **Deploy site** workflow) is a separate, manual step and happens only with the owner's go-ahead.
 
 ## 5. Privacy (public repo)
