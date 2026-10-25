@@ -84,7 +84,14 @@ for (const f of html) {
   }
 }
 
-// 5. RSS feed is well formed enough to parse
+// 5. Personal brand: the public site does not name an employer
+const forbiddenTerms = [/whatfix/i];
+for (const f of files.filter((f) => /\.(html|xml|txt|json)$/.test(f))) {
+  const s = readFileSync(f, 'utf8');
+  for (const re of forbiddenTerms) if (re.test(s)) fail(`${relative(DIST, f)}: contains forbidden term ${re}`);
+}
+
+// 6. RSS feed is well formed enough to parse
 const rss = existsSync(join(DIST, 'rss.xml')) ? readFileSync(join(DIST, 'rss.xml'), 'utf8') : '';
 if (rss && !/^<\?xml[\s\S]*<rss[\s\S]*<channel>[\s\S]*<\/channel>\s*<\/rss>\s*$/.test(rss)) fail('rss.xml is malformed');
 

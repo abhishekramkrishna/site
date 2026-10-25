@@ -4,8 +4,8 @@ export const SITE = {
   title: 'Abhishek Ramkrishna: AI agents, strategy and engineering leadership',
   tagline: 'From prompts to production agents.',
   description:
-    'Engineering leader at Whatfix in Bangalore, writing about building AI agents that ship, AI strategy for leaders, and where AI pays off in a business.',
-  role: 'Engineering Leader @ Whatfix',
+    'Abhishek Ramkrishna is an Engineering Leader writing about AI agents that ship, AI strategy for technology leaders, and how engineering organisations adopt AI.',
+  role: 'Engineering Leader',
   location: 'Bangalore, India',
   // Shown in the header status pill. Change it whenever your focus changes.
   now: 'writing about agents in production',
@@ -37,6 +37,6 @@ export const PILLARS = [
   {
     tag: 'leadership',
     title: 'Leading engineers in the AI era',
-    blurb: 'Code review, hiring and growing juniors when AI writes a lot of the code.',
+    blurb: 'Code review, hiring and team design when AI writes a lot of the code.',
   },
 ];
