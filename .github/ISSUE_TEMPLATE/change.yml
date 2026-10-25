@@ -1,0 +1,27 @@
+name: Change or feature
+description: Any change to the site. Every PR must close one of these.
+title: "[change] "
+body:
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The problem or goal.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What should change
+      description: What a visitor will see or be able to do.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: A checklist. The PR is done when every item is true.
+      value: |
+        - [ ] 
+    validations:
+      required: true

@@ -146,7 +146,7 @@ const links = PILLARS.map((p) => ({ href: url(`/tags/${p.tag}`), title: p.title 
       }
     }
 
-    function addLine(who: string, what: string) {
+    function addLine(who: string) {
       const li = document.createElement('li');
       li.innerHTML = `<span class="who"></span><span class="what"></span>`;
       li.querySelector('.who')!.textContent = who;
@@ -175,7 +175,7 @@ const links = PILLARS.map((p) => ({ href: url(`/tags/${p.tag}`), title: p.title 
       select(i);
       taskEl.textContent = run.task;
       log.innerHTML = '';
-      run.lines.forEach(([who, what]) => (addLine(who, what).textContent = what));
+      run.lines.forEach(([who, what]) => (addLine(who).textContent = what));
       finish(i);
       [node('orch'), node(i), edge(i), toolEdge(i)].forEach((el) => el?.classList.add('active'));
       packet.style.opacity = '0';
@@ -197,23 +197,23 @@ const links = PILLARS.map((p) => ({ href: url(`/tags/${p.tag}`), title: p.title 
       await type(taskEl, run.task, my, 22);
       if (my !== token) return;
       node('orch')?.classList.add('active');
-      await type(addLine(...run.lines[0]), run.lines[0][1], my);
+      await type(addLine(run.lines[0][0]), run.lines[0][1], my);
       edge(i)?.classList.add('active');
       await move([280, 64], [x, 136], 650, my);
       node(i)?.classList.add('active');
-      await type(addLine(...run.lines[1]), run.lines[1][1], my);
+      await type(addLine(run.lines[1][0]), run.lines[1][1], my);
       toolEdge(i)?.classList.add('active');
       await move([x, 176], [x, 214], 380, my);
       node('tools')?.classList.add('active');
       await sleep(250);
       await move([x, 214], [x, 176], 380, my);
-      await type(addLine(...run.lines[2]), run.lines[2][1], my);
+      await type(addLine(run.lines[2][0]), run.lines[2][1], my);
       await move([x, 136], [280, 64], 650, my);
       if (my !== token) return;
-      await type(addLine(...run.lines[3]), run.lines[3][1], my);
+      await type(addLine(run.lines[3][0]), run.lines[3][1], my);
       check.setAttribute('opacity', '1');
       packet.style.opacity = '0';
-      await type(addLine(...run.lines[4]), run.lines[4][1], my);
+      await type(addLine(run.lines[4][0]), run.lines[4][1], my);
       if (my !== token) return;
       finish(i);
       await sleep(auto ? 4200 : 9000);
