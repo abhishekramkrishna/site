@@ -14,7 +14,7 @@ export const SITE = {
   links: {
     linkedin: 'https://www.linkedin.com/in/abhishek-ramkrishna',
     x: 'https://x.com/abhi_ramkrishna',
-    github: 'https://github.com/abhishekramkrishna002',
+    github: 'https://github.com/abhishekramkrishna',
   },
 };
 
