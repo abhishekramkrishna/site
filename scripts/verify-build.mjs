@@ -84,8 +84,8 @@ for (const f of html) {
   }
 }
 
-// 5. Personal brand: the public site does not name an employer
-const forbiddenTerms = [/whatfix/i];
+// 5. Personal brand: the public site does not name an employer or the old GitHub username
+const forbiddenTerms = [/whatfix/i, /abhishekramkrishna002/i];
 for (const f of files.filter((f) => /\.(html|xml|txt|json)$/.test(f))) {
   const s = readFileSync(f, 'utf8');
   for (const re of forbiddenTerms) if (re.test(s)) fail(`${relative(DIST, f)}: contains forbidden term ${re}`);
