@@ -10,10 +10,10 @@ export const SITE = {
   // Shown in the header status pill. Change it whenever your focus changes.
   now: 'writing about agents in production',
   // X handle without the @. Leave empty until you have it.
-  xHandle: '',
+  xHandle: 'abhi_ramkrishna',
   links: {
     linkedin: 'https://www.linkedin.com/in/abhishek-ramkrishna',
-    x: '',
+    x: 'https://x.com/abhi_ramkrishna',
     github: 'https://github.com/abhishekramkrishna002',
   },
 };

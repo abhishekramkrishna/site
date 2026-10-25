@@ -44,6 +44,16 @@ const path = Astro.url.pathname;
           {nav.map((item) => (
             <a class="pill" href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>
           ))}
+          {SITE.links.x && (
+            <a class="pill icon" href={SITE.links.x} rel="me" aria-label={`@${SITE.xHandle} on X`} title={`@${SITE.xHandle} on X`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.2h1.7L7.4 4.73H5.58z"/></svg>
+            </a>
+          )}
+          {SITE.links.linkedin && (
+            <a class="pill icon" href={SITE.links.linkedin} rel="me" aria-label="LinkedIn" title="LinkedIn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C20.6 8.65 21 11.2 21 14.5V21h-4v-5.8c0-1.4-.03-3.2-1.95-3.2-1.95 0-2.25 1.52-2.25 3.1V21H9z"/></svg>
+            </a>
+          )}
         </nav>
       </div>
     </header>
@@ -76,7 +86,7 @@ const path = Astro.url.pathname;
           <div>
             <p class="foot-h">Connect</p>
             {SITE.links.linkedin && <a href={SITE.links.linkedin} rel="me">LinkedIn</a>}
-            {SITE.links.x && <a href={SITE.links.x} rel="me">X</a>}
+            {SITE.links.x && <a href={SITE.links.x} rel="me">X (@{SITE.xHandle})</a>}
             {SITE.links.github && <a href={SITE.links.github} rel="me">GitHub</a>}
             <a href={url('/about')}>About</a>
           </div>
@@ -103,6 +113,8 @@ const path = Astro.url.pathname;
   .brand { display: flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; }
   .wordmark { font-family: var(--font-serif); font-size: 1.22rem; font-weight: 560; letter-spacing: -0.02em; white-space: nowrap; }
   nav { display: flex; gap: 0.45rem; }
+  .pill.icon { padding: 0.38rem 0.6rem; }
+  @media (max-width: 420px) { .pill.icon:last-child { display: none; } }
   main { min-height: 70vh; position: relative; }
 
   .site-footer { margin-top: 7rem; background: var(--navy); color: #f6f6f6; --bg: var(--navy); }

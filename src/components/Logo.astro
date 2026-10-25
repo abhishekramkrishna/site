@@ -1,12 +1,17 @@
 ---
-// Personal mark: an "A" drawn as a small agent graph. Two worker nodes, one gold orchestrator node.
+// Personal mark: an A and R that share one stroke. The joints are agent nodes,
+// and the gold node at the apex is the orchestrator.
 interface Props { size?: number }
-const { size = 30 } = Astro.props;
+const { size = 32 } = Astro.props;
 ---
-<svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" class="logo-mark">
-  <path d="M16 6 L6.5 26 M16 6 L25.5 26" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-  <path d="M10.5 18 L21.5 18" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2.4" stroke-linecap="round" />
-  <circle cx="6.5" cy="26" r="3" fill="var(--bg)" stroke="currentColor" stroke-width="2" />
-  <circle cx="25.5" cy="26" r="3" fill="var(--bg)" stroke="currentColor" stroke-width="2" />
-  <circle cx="16" cy="6" r="3.6" fill="#E1B03B" />
+<svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" class="logo-mark">
+  <g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 34 L20 6 L20 34" />
+    <path d="M12.5 22 L20 22" />
+    <path d="M20 6 H27 A7 7 0 0 1 27 20 H20" />
+    <path d="M25 20 L34 34" />
+  </g>
+  <circle cx="6" cy="34" r="3.4" fill="var(--bg)" stroke="currentColor" stroke-width="2.6" />
+  <circle cx="34" cy="34" r="3.4" fill="var(--bg)" stroke="currentColor" stroke-width="2.6" />
+  <circle cx="20" cy="6" r="4.4" fill="#E1B03B" />
 </svg>

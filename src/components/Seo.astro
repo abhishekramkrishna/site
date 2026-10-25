@@ -56,5 +56,6 @@ const jsonLd = article
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={imageUrl} />
 {SITE.xHandle && <meta name="twitter:creator" content={`@${SITE.xHandle}`} />}
+{SITE.xHandle && <meta name="twitter:site" content={`@${SITE.xHandle}`} />}
 
 <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

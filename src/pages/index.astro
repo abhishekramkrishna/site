@@ -25,7 +25,11 @@ const tones = ['', 'navy', 'teal', 'gold'];
         </p>
         <div class="hero-actions">
           <a class="btn dark" href={url('/blog')}>Read the writing →</a>
-          <a class="btn" href={SITE.links.linkedin}>Follow on LinkedIn</a>
+          <a class="btn" href={SITE.links.linkedin}>LinkedIn</a>
+          <a class="btn" href={SITE.links.x}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.2h1.7L7.4 4.73H5.58z"/></svg>
+            @{SITE.xHandle}
+          </a>
         </div>
         <p class="hint mono">↳ pick a question in the console to watch an agent work it</p>
       </div>
@@ -78,7 +82,7 @@ const tones = ['', 'navy', 'teal', 'gold'];
     <ol class="numbered">
       <li>
         <span class="num mono">01</span>
-        <div><h3>Writing</h3><p class="muted">Long-form posts here first, then shared on <a href={SITE.links.linkedin}>LinkedIn</a> and X. Subscribe by <a href={url('/rss.xml')}>RSS</a>.</p></div>
+        <div><h3>Writing</h3><p class="muted">Long-form posts here first, then shared on <a href={SITE.links.linkedin}>LinkedIn</a> and <a href={SITE.links.x}>X</a>. Subscribe by <a href={url('/rss.xml')}>RSS</a>.</p></div>
       </li>
       <li>
         <span class="num mono">02</span>
