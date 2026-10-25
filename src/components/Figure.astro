@@ -1,0 +1,15 @@
+---
+// Wrap a diagram in a panel inside a post: <Figure caption="..." tone="navy"><AgentLoop /></Figure>
+interface Props { caption?: string; tone?: '' | 'navy' | 'teal' | 'gold' }
+const { caption, tone = '' } = Astro.props;
+---
+<figure class="post-figure">
+  <div class:list={['panel', tone]}><div class="art"><slot /></div></div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .post-figure { margin: 2.4em 0; }
+  .panel { padding: 6% 5%; }
+  .art { width: min(100%, 520px); }
+</style>

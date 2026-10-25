@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+
+# Private: unpublished drafts, plans and notes never go in this public repo.
+src/content/blog/drafts/
+drafts/
+private/
+notes/
+*.draft.md
+*.draft.mdx
+.env
+.env.*

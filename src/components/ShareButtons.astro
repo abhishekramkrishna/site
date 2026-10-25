@@ -1,0 +1,43 @@
+---
+import { SITE } from '../consts';
+
+interface Props { title: string; url: string }
+const { title, url } = Astro.props;
+const encoded = encodeURIComponent(url);
+const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`;
+const xText = encodeURIComponent(SITE.xHandle ? `${title} by @${SITE.xHandle}` : title);
+const x = `https://x.com/intent/post?text=${xText}&url=${encoded}`;
+---
+<div class="share" aria-label="Share this post">
+  <span class="mono muted">Share</span>
+  <a class="btn" href={linkedin} target="_blank" rel="noopener">
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C20.6 8.65 21 11.2 21 14.5V21h-4v-5.8c0-1.4-.03-3.2-1.95-3.2-1.95 0-2.25 1.52-2.25 3.1V21H9z"/></svg>
+    LinkedIn
+  </a>
+  <a class="btn" href={x} target="_blank" rel="noopener">
+    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.2h1.7L7.4 4.73H5.58z"/></svg>
+    X
+  </a>
+  <button class="btn copy" type="button" data-url={url}>Copy link</button>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.share .copy').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.url ?? location.href);
+        btn.textContent = 'Copied';
+      } catch {
+        btn.textContent = 'Copy failed';
+      }
+      setTimeout(() => (btn.textContent = 'Copy link'), 1800);
+    });
+  });
+</script>
+
+<style>
+  .share { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+  .share .btn { padding: 0.55rem 0.9rem; font-size: 0.88rem; }
+  .share .muted { color: var(--muted); }
+  .share > span { margin-right: 0.2rem; }
+</style>

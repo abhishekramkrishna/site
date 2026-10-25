@@ -1,0 +1,62 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
+import TagDiagram from '../../components/diagrams/TagDiagram.astro';
+import { SITE } from '../../consts';
+import { formatDate, getPosts, readingTime, url, type Post } from '../../lib';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: Post };
+const { Content } = await render(post);
+const { title, description, pubDate, updatedDate, tags, draft } = post.data;
+const permalink = new URL(url(`/blog/${post.id}`), Astro.site).href;
+const tone = ['', 'navy', 'teal', 'gold'][['agents', 'strategy', 'business', 'leadership'].indexOf(tags[0] ?? '') + 1] ?? '';
+---
+<Base title={title} description={description} article={{ published: pubDate, modified: updatedDate, tags }}>
+  <article>
+    <header class="wrap post-head">
+      <p class="chip">
+        <a href={url(`/tags/${tags[0] ?? ''}`)}>{tags[0] ?? 'Writing'}</a> · <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time> · {readingTime(post.body)}
+        {draft && <span class="draft-badge">draft, not published</span>}
+      </p>
+      <h1>{title}</h1>
+      <p class="dek serif">{description}</p>
+      <p class="byline muted">By {SITE.name}{updatedDate && <span> · updated {formatDate(updatedDate)}</span>}</p>
+    </header>
+
+    <div class="wrap">
+      <figure class:list={['panel', 'cover', tone]}><div class="cover-art"><TagDiagram tag={tags[0]} /></div></figure>
+    </div>
+
+    <div class="wrap body">
+      <div class="prose"><Content /></div>
+      <footer class="post-foot">
+        <ShareButtons title={title} url={permalink} />
+        <div class="tags">{tags.map((t) => <a class="pill" href={url(`/tags/${t}`)}>{t}</a>)}</div>
+        <p class="muted">
+          Written by {SITE.name}, {SITE.role}. If this was useful, <a href={SITE.links.linkedin}>follow me on LinkedIn</a> for more like it.
+        </p>
+      </footer>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .post-head { padding-top: 4rem; max-width: 980px; text-align: center; }
+  .post-head .chip { justify-content: center; flex-wrap: wrap; }
+  .chip a { color: var(--muted); }
+  .post-head h1 { margin: 1.2rem auto 1rem; max-width: 22ch; font-size: clamp(2.1rem, 5vw, 3.6rem); letter-spacing: -0.03em; }
+  .dek { font-size: clamp(1.2rem, 2.2vw, 1.5rem); color: var(--ink-soft); max-width: 40ch; margin: 0 auto 1rem; line-height: 1.4; }
+  .byline { font-size: 0.92rem; margin-bottom: 2.5rem; }
+  .cover { margin: 0 auto; max-width: 1100px; padding: clamp(1.2rem, 5vw, 4rem); }
+  .cover-art { width: min(100%, 560px); }
+  .body { display: grid; justify-items: center; padding-top: 3.5rem; }
+  .post-foot { width: 100%; max-width: var(--measure); margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid var(--rule); display: grid; gap: 1.4rem; }
+  .post-foot p { margin: 0; font-size: 0.95rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+</style>

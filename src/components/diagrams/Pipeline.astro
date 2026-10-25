@@ -1,0 +1,26 @@
+---
+// From prototype to production: the evals and observe steps are what make it real.
+---
+<svg class="diagram" viewBox="0 0 760 175" role="img" aria-label="From prototype to production: prototype, evals, guardrails, ship, observe, and loop back from observe to evals">
+  <defs>
+    <marker id="pl-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" class="fill-line" />
+    </marker>
+  </defs>
+  {[
+    ['prototype', 'works once', 'node'],
+    ['evals', 'works 95%+ of runs', 'node-gold'],
+    ['guardrails', 'hard limits', 'node'],
+    ['ship', 'behind a flag', 'node-teal'],
+    ['observe', 'traces · cost', 'node'],
+  ].map(([label, sub, cls], i) => (
+    <g>
+      <rect class={cls} x={20 + i * 148} y="70" width="124" height="56" rx="10" />
+      <text class={cls === 'node-gold' ? 't-lg t-gold' : 't-lg'} x={82 + i * 148} y="102" text-anchor="middle">{label}</text>
+      <text class="t-sm" x={82 + i * 148} y="150" text-anchor="middle">{sub}</text>
+      {i < 4 && <path class="ln" d={`M${144 + i * 148} 98 L${166 + i * 148} 98`} marker-end="url(#pl-arrow)" />}
+    </g>
+  ))}
+  <path class="ln dash" d="M674 70 C 674 30, 230 30, 230 66" marker-end="url(#pl-arrow)" />
+  <text class="t-sm" x="452" y="22" text-anchor="middle">every production failure becomes a new eval</text>
+</svg>

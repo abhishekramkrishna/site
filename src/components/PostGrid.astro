@@ -1,0 +1,40 @@
+---
+import TagDiagram from './diagrams/TagDiagram.astro';
+import { formatDate, url, type Post } from '../lib';
+
+interface Props { posts: Post[]; columns?: 2 | 3 }
+const { posts, columns = 3 } = Astro.props;
+const tones = ['', 'navy', 'teal', 'gold'];
+const toneFor = (tag?: string) => tones[['agents', 'strategy', 'business', 'leadership'].indexOf(tag ?? '') + 1] ?? '';
+---
+<ul class:list={['grid', `cols-${columns}`]}>
+  {posts.map((post) => (
+    <li>
+      <a class="card" href={url(`/blog/${post.id}`)}>
+        <span class="chip">
+          {post.data.tags[0] ?? 'Writing'} · <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+          {post.data.draft && <span class="draft-badge">draft</span>}
+        </span>
+        <span class:list={['panel', 'thumb', toneFor(post.data.tags[0])]}>
+          <TagDiagram tag={post.data.tags[0]} />
+        </span>
+        <span class="title">{post.data.title}</span>
+        <span class="desc muted">{post.data.description}</span>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 2.5rem 1.4rem; }
+  .cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .card { display: grid; gap: 0.9rem; text-decoration: none; color: var(--ink); }
+  .thumb { aspect-ratio: 4 / 3; padding: 8%; transition: transform 0.2s; }
+  .card:hover .thumb { transform: translateY(-3px); }
+  .card:hover .title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  .title { font-size: 1.35rem; font-weight: 650; letter-spacing: -0.02em; line-height: 1.2; }
+  .desc { font-size: 0.98rem; }
+  @media (max-width: 900px) { .cols-3 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .cols-3, .cols-2 { grid-template-columns: 1fr; } }
+</style>

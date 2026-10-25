@@ -1,0 +1,31 @@
+---
+// One business process, before and after AI: fewer hand-offs, one human check.
+---
+<svg class="diagram" viewBox="0 0 520 340" role="img" aria-label="A business process before AI has five manual steps; after AI it has an AI draft step and one human review">
+  <defs>
+    <marker id="ba-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" class="fill-line" />
+    </marker>
+  </defs>
+  <text class="t-sm" x="30" y="52">before</text>
+  {['intake', 'triage', 'research', 'draft', 'review'].map((label, i) => (
+    <g>
+      <rect class="node" x={30 + i * 96} y="66" width="80" height="40" rx="8" />
+      <text class="t-sm" x={70 + i * 96} y="90" text-anchor="middle">{label}</text>
+      {i < 4 && <path class="ln" d={`M${110 + i * 96} 86 L${124 + i * 96} 86`} marker-end="url(#ba-arrow)" />}
+    </g>
+  ))}
+  <text class="t-sm" x="30" y="134">5 hand-offs · days</text>
+  <path class="ln faint dash" d="M30 168 L490 168" />
+  <text class="t-sm" x="30" y="212">after</text>
+  <rect class="node" x="30" y="226" width="80" height="40" rx="8" />
+  <text class="t-sm" x="70" y="250" text-anchor="middle">intake</text>
+  <path class="ln" d="M110 246 L142 246" marker-end="url(#ba-arrow)" />
+  <rect class="node-teal" x="146" y="220" width="176" height="52" rx="10" />
+  <text class="t" x="234" y="243" text-anchor="middle">AI agent</text>
+  <text class="t-sm" x="234" y="261" text-anchor="middle">triage · research · draft</text>
+  <path class="ln" d="M322 246 L354 246" marker-end="url(#ba-arrow)" />
+  <rect class="node-gold" x="358" y="226" width="132" height="40" rx="8" />
+  <text class="t t-gold" x="424" y="250" text-anchor="middle">human check</text>
+  <text class="t-sm" x="30" y="300">1 hand-off · hours · a person owns the outcome</text>
+</svg>

@@ -1,0 +1,43 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostGrid from '../../components/PostGrid.astro';
+import TagDiagram from '../../components/diagrams/TagDiagram.astro';
+import { PILLARS } from '../../consts';
+import { getPosts, url, type Post } from '../../lib';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = new Set([...PILLARS.map((p) => p.tag), ...posts.flatMap((p) => p.data.tags)]);
+  return [...tags].map((tag) => ({
+    params: { tag },
+    props: { posts: posts.filter((p) => p.data.tags.includes(tag)) },
+  }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props as { posts: Post[] };
+const index = PILLARS.findIndex((p) => p.tag === tag);
+const pillar = PILLARS[index];
+const tone = ['', 'navy', 'teal', 'gold'][index] ?? '';
+---
+<Base title={pillar ? pillar.title : `#${tag}`} description={pillar?.blurb ?? `Posts tagged ${tag}.`}>
+  <section class="wrap hero">
+    <div>
+      <p class="chip"><a href={url('/blog')}>Writing</a></p>
+      <h1 class="statement"><strong>{pillar ? pillar.title : `#${tag}`}.</strong> {pillar?.blurb}</h1>
+    </div>
+    <figure class:list={['panel', 'art', tone]}><TagDiagram tag={tag} /></figure>
+  </section>
+  <section class="wrap">
+    <div class="section-head"><h2>Posts</h2><a href={url('/blog')}>All writing →</a></div>
+    {posts.length > 0 ? <PostGrid posts={posts} /> : <p class="muted">Nothing here yet. The first post on this is on its way.</p>}
+  </section>
+</Base>
+
+<style>
+  .hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 3rem; align-items: center; padding-top: 4rem; padding-bottom: 4rem; }
+  .chip a { color: var(--muted); text-decoration: none; }
+  .chip { margin: 0 0 1.2rem; }
+  .art { margin: 0; padding: 8%; aspect-ratio: 4 / 3; }
+  @media (max-width: 820px) { .hero { grid-template-columns: 1fr; } }
+</style>

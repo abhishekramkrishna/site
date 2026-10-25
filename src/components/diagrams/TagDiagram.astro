@@ -1,0 +1,11 @@
+---
+import Orchestrator from './Orchestrator.astro';
+import AgentLoop from './AgentLoop.astro';
+import BuildVsBuy from './BuildVsBuy.astro';
+import BeforeAfter from './BeforeAfter.astro';
+import TeamLoop from './TeamLoop.astro';
+
+interface Props { tag?: string }
+const { tag } = Astro.props;
+---
+{tag === 'agents' ? <AgentLoop /> : tag === 'strategy' ? <BuildVsBuy /> : tag === 'business' ? <BeforeAfter /> : tag === 'leadership' ? <TeamLoop /> : <Orchestrator />}

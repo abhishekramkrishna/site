@@ -1,0 +1,110 @@
+---
+import '../styles/global.css';
+import Seo from '../components/Seo.astro';
+import Logo from '../components/Logo.astro';
+import { SITE } from '../consts';
+import { url } from '../lib';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  article?: { published: Date; modified?: Date; tags: string[] };
+}
+
+const nav = [
+  { href: url('/blog'), label: 'Writing' },
+  { href: url('/tags/agents'), label: 'Agents' },
+  { href: url('/about'), label: 'About' },
+];
+const path = Astro.url.pathname;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A1F33" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name}: Writing`} href={url('/rss.xml')} />
+    <link rel="sitemap" href={url('/sitemap-index.xml')} />
+    <Seo {...Astro.props} />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a class="brand" href={url('/')} aria-label={`${SITE.name}, home`}>
+          <Logo />
+          <span class="wordmark">{SITE.name}</span>
+        </a>
+        <nav aria-label="Main">
+          {nav.map((item) => (
+            <a class="pill" href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap foot">
+        <div class="foot-brand">
+          <Logo size={36} />
+          <p class="statement foot-line"><strong>From prompts</strong> to production agents.</p>
+        </div>
+        <div class="foot-cols">
+          <div>
+            <p class="foot-h">Read</p>
+            <a href={url('/blog')}>Writing</a>
+            <a href={url('/tags/agents')}>Building AI agents</a>
+            <a href={url('/tags/strategy')}>AI strategy</a>
+            <a href={url('/rss.xml')}>RSS feed</a>
+          </div>
+          <div>
+            <p class="foot-h">Connect</p>
+            {SITE.links.linkedin && <a href={SITE.links.linkedin} rel="me">LinkedIn</a>}
+            {SITE.links.x && <a href={SITE.links.x} rel="me">X</a>}
+            {SITE.links.github && <a href={SITE.links.github} rel="me">GitHub</a>}
+            <a href={url('/about')}>About</a>
+          </div>
+        </div>
+      </div>
+      <div class="wrap legal">
+        <p>© {new Date().getFullYear()} {SITE.name} · {SITE.location}</p>
+        <p>Views are my own and not those of my employer.</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--gold); color: var(--navy-deep); padding: 0.5rem 0.8rem; border-radius: 6px; z-index: 10; }
+  .skip:focus { left: 8px; }
+  .site-header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 72px; gap: 1rem; }
+  .brand { display: flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; }
+  .wordmark { font-family: var(--font-serif); font-size: 1.22rem; font-weight: 560; letter-spacing: -0.02em; white-space: nowrap; }
+  nav { display: flex; gap: 0.45rem; }
+  main { min-height: 70vh; }
+
+  .site-footer { margin-top: 7rem; background: var(--navy); color: #f6f6f6; --bg: var(--navy); }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2.5rem; padding-top: 4rem; padding-bottom: 3rem; }
+  .foot-brand { display: grid; gap: 1.2rem; color: #f6f6f6; }
+  .foot-line { font-size: clamp(1.5rem, 3vw, 2.1rem); max-width: 16ch; color: #f6f6f6; }
+  .foot-cols { display: flex; gap: 4rem; }
+  .foot-cols div { display: grid; gap: 0.55rem; align-content: start; }
+  .foot-h { font-size: 0.85rem; color: var(--slate); margin: 0 0 0.3rem; }
+  .foot-cols a { color: #f6f6f6; text-decoration: none; font-size: 0.95rem; }
+  .foot-cols a:hover { color: var(--teal); }
+  .legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem; padding-top: 1.2rem; padding-bottom: 1.6rem; border-top: 1px solid rgb(95 179 179 / 0.25); font-size: 0.85rem; color: var(--slate); }
+  .legal p { margin: 0; }
+  @media (max-width: 640px) {
+    .wordmark { display: none; }
+    .foot-cols { gap: 2.5rem; }
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+// The core agent loop: think, act with a tool, observe, repeat; exit when done.
+---
+<svg class="diagram" viewBox="0 0 480 360" role="img" aria-label="The agent loop: goal, think, act with a tool, observe the result, repeat, and stop when the goal is met">
+  <defs>
+    <marker id="loop-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" class="fill-line" />
+    </marker>
+  </defs>
+  <circle class="ln faint dash" cx="240" cy="190" r="104" />
+  <path class="ln" d="M258 88 A104 104 0 0 1 340 160" marker-end="url(#loop-arrow)" />
+  <path class="ln" d="M338 226 A104 104 0 0 1 262 292" marker-end="url(#loop-arrow)" />
+  <path class="ln" d="M218 292 A104 104 0 0 1 142 226" marker-end="url(#loop-arrow)" />
+  <path class="ln" d="M140 160 A104 104 0 0 1 222 88" marker-end="url(#loop-arrow)" />
+  <rect class="node" x="190" y="64" width="100" height="40" rx="20" />
+  <text class="t" x="240" y="89" text-anchor="middle">think</text>
+  <rect class="node-teal" x="300" y="170" width="100" height="40" rx="20" />
+  <text class="t" x="350" y="195" text-anchor="middle">act</text>
+  <rect class="node" x="190" y="276" width="100" height="40" rx="20" />
+  <text class="t" x="240" y="301" text-anchor="middle">observe</text>
+  <rect class="node" x="80" y="170" width="100" height="40" rx="20" />
+  <text class="t" x="130" y="195" text-anchor="middle">update</text>
+  <!-- tool call -->
+  <path class="ln-teal dash" d="M400 190 L444 190" />
+  <rect class="node-teal" x="418" y="132" width="52" height="30" rx="6" />
+  <text class="t-sm" x="444" y="151" text-anchor="middle">tool</text>
+  <path class="ln-teal dash" d="M444 162 L444 190" />
+  <!-- goal and exit -->
+  <text class="t-sm" x="240" y="40" text-anchor="middle">goal</text>
+  <path class="ln" d="M240 46 L240 62" marker-end="url(#loop-arrow)" />
+  <circle class="fill-gold" cx="240" cy="190" r="7" />
+  <text class="t-sm" x="240" y="214" text-anchor="middle">done?</text>
+  <path class="ln-gold" d="M247 190 L290 190" />
+  <text class="t t-gold" x="240" y="350" text-anchor="middle">stop when the goal is met, or a step budget runs out</text>
+</svg>

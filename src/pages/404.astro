@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib';
+---
+<Base title="Not found">
+  <section class="wrap" style="padding-top:6rem">
+    <h1 class="statement"><strong>404.</strong> This page took a wrong tool call.</h1>
+    <p class="muted" style="margin-top:1.5rem">Try the <a href={url('/blog')}>writing</a> or go <a href={url('/')}>home</a>.</p>
+  </section>
+</Base>

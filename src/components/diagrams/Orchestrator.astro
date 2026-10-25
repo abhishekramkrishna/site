@@ -1,0 +1,28 @@
+---
+// An orchestrator routing work to four agents, which call shared tools and loop back.
+---
+<svg class="diagram" viewBox="0 0 560 400" role="img" aria-label="An orchestrator routes work to four agents, which call tools and loop back until the work is right">
+  <defs>
+    <marker id="orc-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L8 4 L0 8 z" class="fill-teal" />
+    </marker>
+  </defs>
+  <path class="ln-teal" d="M280 98 L92 182" marker-end="url(#orc-arrow)" />
+  <path class="ln-teal" d="M280 98 L214 182" marker-end="url(#orc-arrow)" />
+  <path class="ln-teal" d="M280 98 L346 182" marker-end="url(#orc-arrow)" />
+  <path class="ln-teal" d="M280 98 L468 182" marker-end="url(#orc-arrow)" />
+  {[92, 214, 346, 468].map((x) => <path class="ln dash" d={`M${x} 226 L${x} 290`} />)}
+  <path class="ln-teal faint" d="M524 312 C 560 220, 520 70, 372 66" marker-end="url(#orc-arrow)" />
+  <rect class="node-gold" x="180" y="44" width="200" height="54" rx="10" />
+  <text class="t-lg t-gold" x="280" y="68" text-anchor="middle">orchestrator</text>
+  <text class="t-sm" x="280" y="86" text-anchor="middle">plan · route · verify</text>
+  {[[92, 'agents'], [214, 'strategy'], [346, 'business'], [468, 'leadership']].map(([x, label]) => (
+    <g>
+      <rect class="node-teal" x={Number(x) - 54} y="182" width="108" height="44" rx="9" />
+      <text class="t" x={x} y="209" text-anchor="middle">{label}</text>
+    </g>
+  ))}
+  <rect class="ln dash faint" x="30" y="290" width="500" height="46" rx="9" />
+  <text class="t-sm" x="280" y="318" text-anchor="middle">tools · memory · evals · traces</text>
+  <text class="t-sm" x="280" y="378" text-anchor="middle">loop until the work is right, then ship</text>
+</svg>

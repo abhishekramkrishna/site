@@ -1,0 +1,20 @@
+---
+// The layers an AI feature needs. Most teams start at the model and stop too early.
+---
+<svg class="diagram" viewBox="0 0 520 380" role="img" aria-label="The AI adoption stack, from bottom to top: model, tools and data, evals and guardrails, product experience, and people and process at the top">
+  {[
+    ['people & process', 'who owns it, how work changes', 'node-gold'],
+    ['product experience', 'where the user meets it', 'node'],
+    ['evals & guardrails', 'how you know it works', 'node-teal'],
+    ['tools & data', 'what it can see and do', 'node'],
+    ['model', 'the part everyone talks about', 'node'],
+  ].map(([label, sub, cls], i) => (
+    <g>
+      <rect class={cls} x={60 + i * 18} y={30 + i * 66} width={400 - i * 36} height="54" rx="10" />
+      <text class={cls === 'node-gold' ? 't-lg t-gold' : 't-lg'} x="260" y={55 + i * 66} text-anchor="middle">{label}</text>
+      <text class="t-sm" x="260" y={73 + i * 66} text-anchor="middle">{sub}</text>
+    </g>
+  ))}
+  <path class="ln faint dash" d="M30 360 L30 40" />
+  <text class="t-sm" x="22" y="200" text-anchor="middle" transform="rotate(-90 22 200)">where the real work is ↑</text>
+</svg>

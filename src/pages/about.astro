@@ -1,0 +1,75 @@
+---
+import Base from '../layouts/Base.astro';
+import AdoptionStack from '../components/diagrams/AdoptionStack.astro';
+import AgentLoop from '../components/diagrams/AgentLoop.astro';
+import { SITE } from '../consts';
+---
+<Base title="About" description={`About ${SITE.name}: ${SITE.role}, writing about AI agents, AI strategy and engineering leadership.`}>
+  <section class="wrap hero">
+    <h1 class="statement wide">
+      <strong>I lead engineering at Whatfix.</strong> Most of my week goes into one question: how do we make AI actually work in
+      a real product, with a real team?
+    </h1>
+  </section>
+
+  <section class="wrap about-grid">
+    <div class="prose">
+      <p>
+        Here I share what I learn doing that. How to build AI agents that hold up in production. How leaders should plan,
+        staff and measure AI work. Where AI pays off in a business, and where it doesn't.
+      </p>
+      <p>
+        I write for three groups: engineering leaders bringing AI into their teams, junior engineers building their skills,
+        and founders deciding what to build. I write from the build side, so expect specifics: tools, costs, mistakes and
+        the calls I'd make again.
+      </p>
+      <p>Based in Bangalore. Happy to talk agents, AI strategy, or engineering leadership.</p>
+      <p>
+        <a class="btn dark" href={SITE.links.linkedin}>Message me on LinkedIn</a>
+      </p>
+    </div>
+    <figure class="panel gold side-fig">
+      <AgentLoop />
+    </figure>
+  </section>
+
+  <section class="wrap block">
+    <div class="section-head"><h2>How I think about AI in a company</h2></div>
+    <div class="stack-grid">
+      <figure class="panel navy stack-fig"><AdoptionStack /></figure>
+      <div>
+        <p class="statement small"><strong>The model is the bottom layer,</strong> not the whole stack.</p>
+        <p class="muted">
+          Teams often pick a model, ship a demo and stop. The layers above it decide whether anyone uses it: what data and
+          tools the AI can reach, how you know it works, where it shows up in the product, and who owns it. The top layer,
+          people and process, is where leaders earn their keep.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap block">
+    <div class="section-head"><h2>Who I write for</h2></div>
+    <ol class="audiences">
+      <li><span class="mono num">01</span><h3>Engineering leaders</h3><p class="muted">How to bring AI into teams, roadmaps and hiring without the hype.</p></li>
+      <li><span class="mono num">02</span><h3>Junior engineers</h3><p class="muted">Practical skills: building agents, which tools matter, how to grow a career with AI.</p></li>
+      <li><span class="mono num">03</span><h3>Founders</h3><p class="muted">Where AI actually pays off in a business, and what it costs to build.</p></li>
+    </ol>
+  </section>
+</Base>
+
+<style>
+  .hero { padding-top: 4.5rem; padding-bottom: 3rem; }
+  .about-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: start; }
+  .side-fig { margin: 0; padding: 8%; }
+  .block { padding-top: 6rem; }
+  .stack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+  .stack-fig { margin: 0; padding: 8%; }
+  .statement.small { font-size: clamp(1.5rem, 2.8vw, 2.2rem); margin-bottom: 1.2rem; }
+  .audiences { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+  .audiences .num { color: var(--gold); display: block; margin-bottom: 0.6rem; }
+  .audiences h3 { margin-bottom: 0.4rem; }
+  @media (max-width: 860px) {
+    .about-grid, .stack-grid, .audiences { grid-template-columns: 1fr; }
+  }
+</style>

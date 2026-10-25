@@ -1,0 +1,126 @@
+---
+import Base from '../layouts/Base.astro';
+import Orchestrator from '../components/diagrams/Orchestrator.astro';
+import Pipeline from '../components/diagrams/Pipeline.astro';
+import TagDiagram from '../components/diagrams/TagDiagram.astro';
+import PostGrid from '../components/PostGrid.astro';
+import { SITE, PILLARS } from '../consts';
+import { getPosts, url } from '../lib';
+
+const posts = (await getPosts()).slice(0, 3);
+const tones = ['', 'navy', 'teal', 'gold'];
+---
+<Base>
+  <section class="wrap hero">
+    <h1 class="statement wide">
+      <strong>Abhishek Ramkrishna builds AI agents that ship.</strong> He leads engineering at Whatfix and writes about
+      taking AI from prompts to production, for engineering leaders, junior engineers and founders.
+    </h1>
+    <div class="hero-actions">
+      <a class="btn dark" href={url('/blog')}>Read the writing →</a>
+      <a class="btn" href={SITE.links.linkedin}>Follow on LinkedIn</a>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <figure class="panel navy hero-panel">
+      <div class="hero-diagram"><Orchestrator /></div>
+      <figcaption class="mono">fig. 1 · how I think about multi-agent systems: one orchestrator, specialist agents, shared tools, and a loop that checks the work</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap block">
+    <div class="section-head"><h2>What I write about</h2><a href={url('/blog')}>All writing →</a></div>
+    <ul class="pillars">
+      {PILLARS.map((p, i) => (
+        <li>
+          <a class="pillar" href={url(`/tags/${p.tag}`)}>
+            <span class="chip">{p.tag}</span>
+            <span class:list={['panel', 'pillar-art', tones[i]]}><TagDiagram tag={p.tag} /></span>
+            <h3>{p.title}</h3>
+            <p class="muted">{p.blurb}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="wrap block">
+    <div class="section-head"><h2>How I take AI to production</h2></div>
+    <div class="split">
+      <p class="statement">
+        <strong>A demo is one good run.</strong> Production is the same result every day, at a cost you can explain, with
+        someone who owns it when it breaks.
+      </p>
+      <p class="muted split-copy">
+        Most AI projects stall between the prototype and the launch. The gap is rarely the model. It's evals, guardrails and
+        observability, and a team that knows what "good" looks like. That's the part I write about most.
+      </p>
+    </div>
+    <figure class="panel pipeline-panel">
+      <div class="pipeline"><Pipeline /></div>
+    </figure>
+  </section>
+
+  {posts.length > 0 && (
+    <section class="wrap block">
+      <div class="section-head"><h2>Latest writing</h2><a href={url('/blog')}>All posts →</a></div>
+      <PostGrid posts={posts} />
+    </section>
+  )}
+
+  <section class="wrap block">
+    <div class="section-head"><h2>Elsewhere</h2></div>
+    <ol class="numbered">
+      <li>
+        <span class="num mono">01</span>
+        <div><h3>Writing</h3><p class="muted">Long-form posts here first, then shared on <a href={SITE.links.linkedin}>LinkedIn</a> and X. Subscribe by <a href={url('/rss.xml')}>RSS</a>.</p></div>
+      </li>
+      <li>
+        <span class="num mono">02</span>
+        <div><h3>Speaking</h3><p class="muted">Happy to talk about AI agents in production, AI strategy for engineering orgs, and growing engineers in the AI era. Reach out on LinkedIn.</p></div>
+      </li>
+      <li>
+        <span class="num mono">03</span>
+        <div><h3>Building</h3><p class="muted">Code and experiments on <a href={SITE.links.github}>GitHub</a>.</p></div>
+      </li>
+      <li>
+        <span class="num mono">04</span>
+        <div><h3>Bangalore</h3><p class="muted">Always up for coffee with builders and founders in the city working on AI products.</p></div>
+      </li>
+    </ol>
+  </section>
+</Base>
+
+<style>
+  .hero { padding-top: 4.5rem; padding-bottom: 2.8rem; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2.2rem; }
+  .hero-panel { margin: 0; padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem) 1.5rem; }
+  .hero-diagram { width: min(100%, 720px); }
+  .hero-panel figcaption { color: var(--slate); margin-top: 1.4rem; text-align: center; max-width: 60ch; }
+  .block { padding-top: 6rem; }
+  .pillars { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; }
+  .pillar { display: grid; gap: 0.9rem; color: var(--ink); text-decoration: none; }
+  .pillar-art { aspect-ratio: 1 / 1; padding: 10%; transition: transform 0.2s; }
+  .pillar:hover .pillar-art { transform: translateY(-3px); }
+  .pillar h3 { margin: 0.2rem 0 0; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .pillar:hover h3 { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  .pillar p { margin: 0; font-size: 0.97rem; }
+  .split { display: grid; grid-template-columns: 1.3fr 1fr; gap: 3rem; align-items: end; margin-bottom: 2.4rem; }
+  .split .statement { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+  .split-copy { font-size: 1.08rem; margin: 0; }
+  .pipeline-panel { margin: 0; padding: clamp(1rem, 4vw, 3rem); }
+  .pipeline { width: 100%; max-width: 980px; }
+  @media (max-width: 640px) { .pipeline-panel { display: block; overflow-x: auto; } .pipeline { min-width: 620px; } }
+  .numbered { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem 3rem; }
+  .numbered li { display: grid; grid-template-columns: 3rem 1fr; gap: 0.5rem; }
+  .num { color: var(--gold); font-size: 1rem; padding-top: 0.15rem; }
+  .numbered h3 { margin-bottom: 0.35rem; }
+  .numbered p { margin: 0; }
+  @media (max-width: 1000px) { .pillars { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 760px) {
+    .split, .numbered { grid-template-columns: 1fr; }
+    .block { padding-top: 4.5rem; }
+  }
+  @media (max-width: 520px) { .pillars { grid-template-columns: 1fr; } }
+</style>
