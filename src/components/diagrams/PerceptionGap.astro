@@ -1,0 +1,44 @@
+---
+// Felt vs measured speed with AI tools (METR RCT, Jul 2025), and how leaders measure (LeadDev AI Impact Report 2026).
+const scale = 25; // percent at the end of each half
+---
+<div class="dfig gapf" role="img" aria-label="In METR's randomised trial, 16 experienced open-source developers believed AI tools made them 20% faster, but tasks took 19% longer with AI. In LeadDev's survey of 600 engineering leaders, 58% say token usage metrics are ineffective, and only 31% measure AI productivity gains.">
+  <p class="df-title">How fast it feels is not how fast it is.</p>
+  <div class="axis"><span>slower</span><span>faster</span></div>
+  <div class="dv">
+    <span class="k">Felt</span>
+    <div class="half l"></div>
+    <div class="half r"><div class="df-bar" style={`width:${(20 / scale) * 100}%;--i:0`}></div></div>
+    <span class="df-num">20% faster</span>
+  </div>
+  <div class="dv">
+    <span class="k">Measured</span>
+    <div class="half l"><div class="df-bar neg" style={`width:${(19 / scale) * 100}%;--i:1`}></div></div>
+    <div class="half r"></div>
+    <span class="df-num hi">19% slower</span>
+  </div>
+  <p class="df-note">METR randomised trial, 16 experienced developers, 246 real tasks, early-2025 tools. A small study, but the gap between feeling and measurement is the point.</p>
+  <div class="pair df-fade">
+    <div><span class="big">58%</span><p>of engineering leaders say token usage metrics are ineffective</p></div>
+    <div><span class="big hi">31%</span><p>measure AI productivity gains at all</p></div>
+  </div>
+  <p class="df-note">LeadDev, The AI Impact Report 2026, 600 engineering leaders.</p>
+</div>
+
+<style>
+  .axis { display: grid; grid-template-columns: 5rem 1fr 1fr 6rem; font: 400 0.7rem var(--font-mono); color: var(--df-muted); margin-bottom: 0.3rem; }
+  .axis span:first-child { grid-column: 2; }
+  .axis span:last-child { grid-column: 3; text-align: right; }
+  .dv { display: grid; grid-template-columns: 5rem 1fr 1fr 6rem; align-items: center; gap: 0; margin-bottom: 0.55rem; font-size: 0.9rem; font-weight: 550; }
+  .dv .df-num { text-align: right; font-size: 0.85rem; }
+  .half { height: 14px; background: var(--df-track); position: relative; overflow: hidden; }
+  .half.l { border-radius: 7px 0 0 7px; border-right: 2px solid var(--df-ink); }
+  .half.r { border-radius: 0 7px 7px 0; }
+  .half.l .df-bar { inset: 0 0 0 auto; transform-origin: right center; border-radius: 7px 0 0 7px; }
+  .half.r .df-bar { border-radius: 0 7px 7px 0; }
+  .neg { background: var(--df-hi); }
+  .hi { color: var(--df-hi); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.1rem; padding-top: 0.9rem; border-top: 1px solid var(--df-rule); }
+  .pair p { margin: 0.3rem 0 0; font-size: 0.86rem; line-height: 1.35; }
+  .big { font-size: 2rem; font-weight: 720; letter-spacing: -0.04em; line-height: 1; color: var(--df-accent); }
+</style>
