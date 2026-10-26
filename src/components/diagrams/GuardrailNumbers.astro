@@ -1,0 +1,36 @@
+---
+// Attack success on AI agents: guardrails cut it, adaptive attackers push it back up.
+// Sources: LlamaFirewall (arXiv 2505.03574), Anthropic (Nov 2025), NIST CAISI (2025).
+const groups: { title: string; rows: [string, string, string][] }[] = [
+  { title: 'Defence added: Meta LlamaFirewall on AgentDojo', rows: [['No defence', '17.6', 'base'], ['PromptGuard 2 + AlignmentCheck', '1.75', 'good']] },
+  { title: 'Defence added: Anthropic browser agent, Claude Opus 4.5', rows: [['Model alone', '8.0', 'base'], ['Improved safeguards', '1.4', 'good']] },
+  { title: 'Attacker adapts: NIST CAISI on AgentDojo', rows: [['Strongest baseline attack', '11', 'base'], ['New red-team attack', '81', 'bad']] },
+];
+let i = 0;
+---
+<div class="dfig ggn" role="img" aria-label="Attack success rates on AI agents. Meta LlamaFirewall on AgentDojo: 17.6% with no defence, 1.75% with PromptGuard 2 and AlignmentCheck. Anthropic browser agent on Claude Opus 4.5: 8.0% for the model alone, 1.4% with improved safeguards. NIST CAISI on AgentDojo: 11% for the strongest baseline attack, 81% for a new red-team attack.">
+  <p class="df-title">Guardrails help. Adaptive attackers still get through.</p>
+  {groups.map((g) => (
+    <div class="grp">
+      <p class="gt">{g.title}</p>
+      {g.rows.map(([label, v, kind]) => (
+        <div class:list={['row', kind]}>
+          <div class="lab"><span>{label}</span><span class="df-num">{v}%</span></div>
+          <div class="df-track"><div class="df-bar" style={`width:${Math.max(parseFloat(v), 1)}%;--i:${i++}`}></div></div>
+        </div>
+      ))}
+    </div>
+  ))}
+  <p class="df-note">Attack success rate, percent of attempts, on a 0 to 100% scale. Different models, tasks and attackers, so compare within a group, not across groups.</p>
+</div>
+
+<style>
+  .grp { margin-bottom: 1.1rem; }
+  .gt { font-size: 0.82rem; color: var(--df-muted); margin: 0 0 0.45rem; }
+  .row { margin-bottom: 0.5rem; }
+  .lab { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9rem; font-weight: 550; margin-bottom: 0.3rem; }
+  .base .df-bar { background: var(--df-muted); }
+  .base .df-num { color: var(--df-muted); }
+  .bad .df-bar { background: var(--df-hi); }
+  .bad .df-num { color: var(--df-hi); }
+</style>

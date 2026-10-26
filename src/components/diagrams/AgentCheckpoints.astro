@@ -1,0 +1,47 @@
+---
+// Five checkpoints for moderating an AI agent. Every control sits outside the model.
+const steps: { n: string; name: string; q: string; how: string; gate?: boolean }[] = [
+  { n: '0', name: 'Scope', q: 'What can it possibly touch?', how: 'Own identity, short-lived scoped tokens, tool allowlist, sandbox' },
+  { n: '1', name: 'Screen', q: 'Should it trust what it read?', how: 'Web, email, tickets and tool output are untrusted; screen for injection' },
+  { n: '2', name: 'Gate', q: 'Should this action happen?', how: 'Approval by risk tier, enforced by the tool; fail closed', gate: true },
+  { n: '3', name: 'Check', q: 'May it say this?', how: 'Harm, personal data, secrets, grounding, business rules' },
+  { n: '4', name: 'Watch', q: 'What did it do, and can we stop it?', how: 'Trace every step, monitor against the goal, kill switch, undo' },
+];
+---
+<div class="dfig cps" role="img" aria-label="Five checkpoints for moderating an AI agent, all enforced outside the model. 0 Scope: own identity, short-lived scoped tokens, a tool allowlist and a sandbox. 1 Screen: treat web pages, email, tickets and tool output as untrusted and screen them for injection. 2 Gate: approval by risk tier, enforced by the tool, failing closed. 3 Check: screen outputs for harm, personal data, secrets, grounding and business rules. 4 Watch: trace every step, monitor actions against the goal, keep a kill switch and undo. Across all five, red-team with adaptive attacks.">
+  <p class="df-title">Moderate the action, not just the words.</p>
+  <ol>
+    {steps.map((s, i) => (
+      <li class:list={['cp', { gate: s.gate }]} style={`--i:${i}`}>
+        <span class="nm">{s.n} {s.name}</span>
+        <span class="q">{s.q}</span>
+        <span class="how">{s.how}</span>
+        {s.gate && <span class="pill">approved</span>}
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">Across all five: red-team with adaptive, multi-attempt attacks before every release.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0 0 0 1.1rem; display: grid; gap: 0.6rem; position: relative; }
+  ol::before { content: ''; position: absolute; left: 0.3rem; top: 0.6rem; bottom: 0.6rem; border-left: 1.5px dashed var(--df-rule); }
+  .cp { position: relative; border: 1px solid var(--df-rule); border-left: 3px solid var(--df-accent); border-radius: 10px; padding: 0.7rem 0.95rem; display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.15rem 1rem; align-items: baseline; }
+  .cp::before { content: ''; position: absolute; left: -1.08rem; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: var(--df-accent); }
+  .cp.gate { border-color: var(--df-hi); border-left-color: var(--df-hi); }
+  .cp.gate::before { background: var(--df-hi); }
+  .nm { font: 500 0.78rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--df-accent); grid-row: span 2; }
+  .gate .nm { color: var(--df-hi); }
+  .q { font-size: 0.95rem; font-weight: 600; line-height: 1.3; }
+  .how { font-size: 0.8rem; color: var(--df-muted); line-height: 1.35; }
+  .pill { position: absolute; right: 0.7rem; top: -0.6rem; font: 500 0.66rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; background: var(--df-hi); color: #0a1f33; padding: 0.12rem 0.5rem; border-radius: 999px; }
+  @media (max-width: 520px) {
+    .cp { grid-template-columns: 1fr; }
+    .nm { grid-row: auto; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .dfig.motion .cp { opacity: 0; transform: translateY(8px); transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); transition-delay: calc(var(--i) * 160ms); }
+    .dfig.motion .pill { opacity: 0; transform: scale(0.85); transition: opacity 0.35s ease 1.3s, transform 0.35s ease 1.3s; }
+    .dfig.motion.in-view .cp, .dfig.motion.in-view .pill { opacity: 1; transform: none; }
+  }
+</style>
