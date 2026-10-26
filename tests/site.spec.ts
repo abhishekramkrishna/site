@@ -69,6 +69,40 @@ test('feeds and crawler files are served', async ({ request }) => {
   expect(rss).toContain('<rss');
 });
 
+test('every post has its own banner, listing thumbnail and link preview', async ({ page, request }) => {
+  const loaded = (el: HTMLImageElement) => el.complete && el.naturalWidth > 0;
+  await page.goto('/blog');
+  const posts: string[] = [];
+  const thumbs = new Set<string>();
+  for (const card of await page.locator('main .card').all()) {
+    const img = card.locator('.thumb img');
+    await img.scrollIntoViewIfNeeded();
+    await expect.poll(() => img.evaluate(loaded)).toBe(true);
+    thumbs.add(await img.evaluate((el: HTMLImageElement) => el.currentSrc));
+    posts.push((await card.getAttribute('href'))!);
+  }
+  expect(posts.length, 'posts listed').toBeGreaterThan(1);
+  expect(thumbs.size, 'each post has its own thumbnail').toBe(posts.length);
+
+  const previews = new Set<string>();
+  for (const path of posts) {
+    await page.goto(path);
+    const banner = page.locator('main figure.cover img');
+    await expect(banner).toHaveCount(1);
+    await expect.poll(() => banner.evaluate(loaded), `${path} banner loads`).toBe(true);
+    expect((await banner.getAttribute('alt'))?.length ?? 0, `${path} banner alt text`).toBeGreaterThanOrEqual(20);
+    const og = await page.locator('meta[property="og:image"]').getAttribute('content');
+    expect(og, `${path} og:image`).toMatch(/^https?:\/\/.+\.png$/);
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', og!);
+    const res = await request.get(new URL(og!).pathname);
+    expect(res.status(), `${path} og:image ${og}`).toBe(200);
+    const png = await res.body();
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)], `${path} og:image size`).toEqual([1200, 630]);
+    previews.add(og!);
+  }
+  expect(previews.size, 'each post has its own link preview').toBe(posts.length);
+});
+
 test('unknown routes return the 404 page', async ({ page }) => {
   const res = await page.goto('/this-page-does-not-exist');
   expect(res?.status()).toBe(404);
@@ -182,7 +216,8 @@ test('share clicks, video plays and read-through send analytics events', async (
 
 test('agent eval post shows its diagrams and screenshots and loads its video', async ({ page, request }) => {
   await page.goto('/blog/what-a-good-agent-eval-looks-like', { waitUntil: 'networkidle' });
-  const imgs = page.locator('main img');
+  // The post's own five figures; its cover is checked by the cover test below
+  const imgs = page.locator('.prose img');
   await expect(imgs).toHaveCount(5);
   for (const img of await imgs.all()) {
     await img.scrollIntoViewIfNeeded();

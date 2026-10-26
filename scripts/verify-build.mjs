@@ -1,7 +1,7 @@
 // Checks the production build in dist/ for regressions. Exits non-zero on any failure.
 // Run after `npm run build`.
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { basename, join, relative } from 'node:path';
 
 const DIST = 'dist';
 const errors = [];
@@ -72,11 +72,14 @@ for (const f of html) {
   if (h1 !== 1) fail(`${rel}: expected exactly one <h1>, found ${h1}`);
 }
 
-// 4. Internal links and assets resolve
+// 4. Internal links and assets resolve, including every candidate in a responsive image's srcset
 const refRe = /(?:href|src|poster)="([^"#?]+)[^"]*"/g;
+const srcsetRe = /srcset="([^"]+)"/g;
 for (const f of html) {
   const s = readFileSync(f, 'utf8');
-  for (const [, ref] of s.matchAll(refRe)) {
+  const refs = [...s.matchAll(refRe)].map((m) => m[1]);
+  for (const [, set] of s.matchAll(srcsetRe)) refs.push(...set.split(',').map((c) => c.trim().split(/\s+/)[0]));
+  for (const ref of refs) {
     if (/^(https?:|mailto:|data:|\/\/)/.test(ref)) continue;
     if (!ref.startsWith('/')) continue;
     let p = ref;
@@ -114,6 +117,45 @@ for (const f of html) {
   if (umamiId && m?.[1] !== umamiId) fail(`${rel}: missing the Umami analytics script`);
   if (!umamiId && umamiScript.test(s)) fail(`${rel}: Umami script present without PUBLIC_UMAMI_WEBSITE_ID`);
   if (otherTrackers.test(s)) fail(`${rel}: contains a third-party tracker other than Umami`);
+}
+
+// 8. Every post has its own cover (made with `npm run covers`, named after the post): the banner on the post,
+// its thumbnail in the blog listing, and its 1200x630 PNG link preview (og:image, twitter:image).
+// The shared og-default.png or another post's image is a failure.
+const named = (src, name) => basename(new URL(src, 'https://x').pathname).startsWith(`${name}.`);
+const posts = html.map((f) => relative(DIST, f)).filter((rel) => /^blog\/[^/]+\/index\.html$/.test(rel));
+for (const rel of posts) {
+  const slug = rel.split('/')[1];
+  const s = readFileSync(join(DIST, rel), 'utf8');
+  const og = s.match(/<meta property="og:image" content="(https?:\/\/[^"]+)"/)?.[1];
+  if (!og) continue; // reported by check 3
+  if (s.match(/<meta name="twitter:image" content="([^"]+)"/)?.[1] !== og) fail(`${rel}: twitter:image differs from og:image`);
+  if (!/<meta property="og:image:alt" content="[^"]{20,}"/.test(s)) fail(`${rel}: missing og:image:alt`);
+  if (!named(og, slug)) fail(`${rel}: og:image ${og} is not this post's own cover`);
+  const path = new URL(og).pathname;
+  if (base && !path.startsWith(base + '/')) fail(`${rel}: og:image ${og} is missing the base path ${base}`);
+  const file = join(DIST, base ? path.slice(base.length) : path);
+  if (!existsSync(file)) fail(`${rel}: og:image ${og} is not in the build`);
+  else {
+    const png = readFileSync(file);
+    const size = png.toString('latin1', 1, 4) === 'PNG' ? `${png.readUInt32BE(16)}x${png.readUInt32BE(20)}` : 'not a PNG';
+    if (size !== '1200x630') fail(`${rel}: og:image should be a 1200x630 PNG, got ${size}`);
+  }
+  const banner = s.match(/<figure class="cover"[^>]*><img src="([^"]+)"[^>]*alt="([^"]*)"/);
+  if (!banner) fail(`${rel}: no cover image at the top of the post`);
+  else {
+    if (!named(banner[1], slug)) fail(`${rel}: the banner ${banner[1]} is not this post's own cover`);
+    if (banner[2].length < 20) fail(`${rel}: the banner has no useful alt text`);
+  }
+}
+const listing = existsSync(join(DIST, 'blog/index.html')) ? readFileSync(join(DIST, 'blog/index.html'), 'utf8') : '';
+const cards = listing.split('<a class="card"').slice(1);
+if (cards.length !== posts.length) fail(`blog/index.html: lists ${cards.length} posts, the build has ${posts.length}`);
+for (const card of cards) {
+  const slug = card.match(/^[^>]*href="[^"]*\/blog\/([^"/]+)\/?"/)?.[1];
+  const thumb = card.match(/<span class="thumb"[^>]*><img src="([^"]+)"/)?.[1];
+  if (!thumb) fail(`blog/index.html: the card for ${slug} has no thumbnail image`);
+  else if (!named(thumb, `${slug}-thumb`)) fail(`blog/index.html: the card for ${slug} shows ${thumb}, not its own thumbnail`);
 }
 
 if (errors.length) {

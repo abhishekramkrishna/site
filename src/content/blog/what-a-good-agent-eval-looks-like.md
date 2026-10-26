@@ -4,6 +4,10 @@ description: I built a small eval agent that grades a support agent across tasks
 pubDate: 2026-10-27
 tags: [agents, strategy]
 draft: false
+cover:
+  image: ../../assets/covers/what-a-good-agent-eval-looks-like.png
+  thumb: ../../assets/covers/what-a-good-agent-eval-looks-like-thumb.png
+  alt: "v2 scored better and broke rules v1 kept: capability tasks up from 30% to 80%, regression tasks down from 100% to 77%, trials with a critical failure up from 0 to 4. Decision: hold."
 ---
 
 In [Passing evals is not permission to ship](/blog/passing-evals-is-not-permission-to-ship/), I argued that testing an agent and approving what it ships are two different decisions. Automate the first as far as you can. Decide the second by risk.

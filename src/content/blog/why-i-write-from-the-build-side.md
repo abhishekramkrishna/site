@@ -4,6 +4,10 @@ description: Most AI commentary comes from researchers or marketers. This blog i
 pubDate: 2026-10-26
 tags: [leadership, agents]
 draft: false
+cover:
+  image: ../../assets/covers/why-i-write-from-the-build-side.png
+  thumb: ../../assets/covers/why-i-write-from-the-build-side-thumb.png
+  alt: "Writing about AI from the build side: researchers explain what models can do, marketers what they will do, and the build side asks whether it will hold up in production, what it will cost to run and who owns it when it breaks."
 ---
 
 Most of what I read about AI comes from two places. Researchers explain what models can do. Marketers explain what they will do. Far less comes from the people in between, the ones accountable for making it work with a real team, a real budget and a real deadline.
