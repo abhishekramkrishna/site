@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import TagDiagram from './diagrams/TagDiagram.astro';
 import { formatDate, url, type Post } from '../lib';
 
@@ -15,9 +16,15 @@ const toneFor = (tag?: string) => tones[['agents', 'strategy', 'business', 'lead
           {post.data.tags[0] ?? 'Writing'} · <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
           {post.data.draft && <span class="draft-badge">draft</span>}
         </span>
-        <span class:list={['panel', 'thumb', toneFor(post.data.tags[0])]}>
-          <TagDiagram tag={post.data.tags[0]} />
-        </span>
+        {post.data.cover ? (
+          <span class="thumb">
+            <Image src={post.data.cover.thumb} alt="" widths={[400, 800, 1200]} sizes="(max-width: 600px) calc(100vw - 40px), (max-width: 900px) 45vw, 370px" />
+          </span>
+        ) : (
+          <span class:list={['panel', 'thumb', 'thumb-draft', toneFor(post.data.tags[0])]}>
+            <TagDiagram tag={post.data.tags[0]} />
+          </span>
+        )}
         <span class="title">{post.data.title}</span>
         <span class="desc muted">{post.data.description}</span>
       </a>
@@ -30,7 +37,9 @@ const toneFor = (tag?: string) => tones[['agents', 'strategy', 'business', 'lead
   .cols-3 { grid-template-columns: repeat(3, 1fr); }
   .cols-2 { grid-template-columns: repeat(2, 1fr); }
   .card { display: grid; gap: 0.9rem; text-decoration: none; color: var(--ink); }
-  .thumb { aspect-ratio: 4 / 3; padding: 8%; transition: transform 0.2s; }
+  .thumb { display: block; aspect-ratio: 4 / 3; transition: transform 0.2s; }
+  .thumb :global(img) { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 14px; box-shadow: 0 0 0 1px var(--rule); }
+  .thumb-draft { display: grid; padding: 8%; }
   .card:hover .thumb { transform: translateY(-3px); }
   .card:hover .title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
   .title { font-size: 1.35rem; font-weight: 650; letter-spacing: -0.02em; line-height: 1.2; }
