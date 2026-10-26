@@ -4,6 +4,10 @@ description: Employees report large productivity gains from AI, yet most organis
 pubDate: 2026-10-26
 tags: [leadership, strategy]
 draft: false
+cover:
+  image: ../../assets/covers/your-teams-use-more-ai-than-they-admit.png
+  thumb: ../../assets/covers/your-teams-use-more-ai-than-they-admit-thumb.png
+  alt: "The gains exist, they are stuck with individuals: people hide AI use because of old policies, pride and fear of job cuts. Leaders close the gap by using AI visibly, updating the policy, rewarding sharing and saying where saved time will go."
 ---
 
 Here's a puzzle many technology executives will recognise. Many employees say AI saves them real time on the tasks they use it for. Yet when leaders look for those gains in delivery, cost or output, they're hard to find.

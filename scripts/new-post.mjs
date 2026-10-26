@@ -1,6 +1,7 @@
 // Usage: npm run new "My post title"
 // Creates the post in src/content/blog/drafts/, which git ignores, so it stays private.
-// When it's ready, set draft: false and move it to src/content/blog/ to publish.
+// When it's ready, give it a cover (add it to scripts/covers/covers.html, then `npm run covers <slug>`),
+// set draft: false and move it to src/content/blog/ to publish.
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 const title = process.argv.slice(2).join(' ').trim();

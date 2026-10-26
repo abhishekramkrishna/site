@@ -4,6 +4,10 @@ description: The median company spends about $137 a year per employee on AI. The
 pubDate: 2026-10-26
 tags: [strategy, leadership]
 draft: false
+cover:
+  image: ../../assets/covers/what-to-spend-on-ai-per-engineer.png
+  thumb: ../../assets/covers/what-to-spend-on-ai-per-engineer-thumb.png
+  alt: "AI spend per employee ranges from $137 a year at the median company to $89,000 at the top 1% of software companies, a gap of about 650 times. Defend it with cost per resolved issue, paired with a quality measure."
 ---
 
 Every engineering leader will soon be asked a version of the same question by finance: what are we getting for what we spend on AI? Most of us are still setting that budget by instinct.

@@ -4,6 +4,10 @@ description: Fewer enterprises now let AI agents deploy changes on automated eva
 pubDate: 2026-10-26
 tags: [agents, strategy]
 draft: false
+cover:
+  image: ../../assets/covers/passing-evals-is-not-permission-to-ship.png
+  thumb: ../../assets/covers/passing-evals-is-not-permission-to-ship-thumb.png
+  alt: "Passing evals is not permission to ship: enterprises letting agents ship on automated evals alone fell from 75% to 56%, 61% had a customer-facing failure after tests passed, and those expecting to keep human review rose from 20% to 42%."
 ---
 
 A few months ago, the direction of travel looked settled. Build good evaluations, and once an agent passes them, let it ship. Human approval was a temporary crutch.

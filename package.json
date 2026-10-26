@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "new": "node scripts/new-post.mjs",
+    "covers": "node scripts/render-covers.mjs",
     "check": "astro check",
     "verify": "node scripts/verify-build.mjs",
     "check:repo": "node scripts/check-repo.mjs",

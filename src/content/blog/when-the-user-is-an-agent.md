@@ -4,6 +4,10 @@ description: AI agents are becoming the heaviest users of enterprise software. M
 pubDate: 2026-10-26
 tags: [business, agents]
 draft: false
+cover:
+  image: ../../assets/covers/when-the-user-is-an-agent.png
+  thumb: ../../assets/covers/when-the-user-is-an-agent-thumb.png
+  alt: "Your fastest-growing users may not have eyes: a person finds the right screen, an agent needs the right action, rules written where it acts, its own identity, scopes and rate limits, and a designed human sign-off."
 ---
 
 For decades, "the user" in enterprise software meant a person: someone at a screen, often distracted, trying to finish one task before the next meeting. We designed for that person with navigation, tooltips, guided onboarding, helpful empty states and confirmation dialogs in front of anything risky.
