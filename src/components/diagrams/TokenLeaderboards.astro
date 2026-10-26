@@ -1,0 +1,34 @@
+---
+// What happened when token use became the target (Fortune, Apr 2026; FT via The Decoder, May 2026; Fortune, May 2026).
+const cases: { co: string; what: string; stat: string; statLabel: string; end: string }[] = [
+  { co: 'Meta', what: 'An employee-built leaderboard ranked the top 250 of 85,000+ staff by tokens used.', stat: '281B', statLabel: 'tokens for the top user in 30 days, over $1.4M at list price', end: 'Taken down about two days after it was reported.' },
+  { co: 'Amazon', what: 'An internal ranking scored engineers by activity on its Kiro coding tool.', stat: '“Don’t use AI just for the sake of using AI.”', statLabel: 'Dave Treadwell, SVP, after staff pointed agents at pointless tasks', end: 'Retired. Amazon reportedly now tracks normalized deployments.' },
+  { co: 'Uber', what: 'A leaderboard reportedly ranked teams by total AI tool usage.', stat: '4 months', statLabel: 'to use the full 2026 AI coding tools budget, per reports Uber did not confirm', end: '“That link is not there yet,” said COO Andrew Macdonald.' },
+];
+---
+<div class="dfig tlb" role="img" aria-label="Three companies that ranked people by AI usage. Meta: an employee-built leaderboard ranked the top 250 of more than 85,000 staff by tokens; the top user used 281 billion tokens in 30 days, over 1.4 million dollars at list price, and the board came down about two days after it was reported. Amazon: an internal ranking of Kiro activity was retired after staff pointed agents at pointless tasks; Dave Treadwell said don't use AI just for the sake of using AI. Uber: a leaderboard reportedly ranked teams by usage and the 2026 AI coding budget was reportedly used up in four months; COO Andrew Macdonald said that link is not there yet.">
+  <p class="df-title">When token use became the target, it stopped measuring anything.</p>
+  <div class="cards">
+    {cases.map((c, i) => (
+      <div class="card df-fade" style={`transition-delay:${0.2 + i * 0.25}s`}>
+        <p class="co">{c.co}</p>
+        <p class="what">{c.what}</p>
+        <p class:list={['stat', { q: c.stat.startsWith('“') }]}>{c.stat}</p>
+        <p class="sl">{c.statLabel}</p>
+        <p class="end">{c.end}</p>
+      </div>
+    ))}
+  </div>
+  <p class="df-note">Sources: Fortune, 9 Apr 2026 (Meta). Financial Times via The Decoder, 29 May 2026 (Amazon). Fortune, 26 May 2026 (Uber). Cost uses $5 per million tokens.</p>
+</div>
+
+<style>
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.8rem; }
+  .card { border: 1px solid var(--df-rule); border-radius: 10px; padding: 0.9rem 1rem; display: flex; flex-direction: column; }
+  .co { font: 500 0.74rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--df-hi); margin: 0 0 0.4rem; }
+  .what { font-size: 0.86rem; line-height: 1.35; margin: 0 0 0.7rem; }
+  .stat { font-family: var(--font-sans); font-size: 1.7rem; font-weight: 720; letter-spacing: -0.03em; line-height: 1.05; color: var(--df-accent); margin: 0; }
+  .stat.q { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 500; letter-spacing: 0; line-height: 1.25; color: var(--df-ink); }
+  .sl { font: 400 0.72rem var(--font-mono); color: var(--df-muted); line-height: 1.4; margin: 0.35rem 0 0.7rem; }
+  .end { margin: auto 0 0; padding-top: 0.6rem; border-top: 1px solid var(--df-rule); font-size: 0.82rem; line-height: 1.35; color: var(--df-muted); }
+</style>

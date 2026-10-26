@@ -1,0 +1,115 @@
+---
+title: "Stop counting tokens: what to measure when the board asks about AI return"
+description: Token leaderboards at Meta, Amazon and Uber showed what happens when AI usage becomes the target. Boards now want to know what the spend bought. Four numbers engineering leaders can put in front of them instead.
+pubDate: 2026-10-28
+tags: [strategy, leadership]
+draft: false
+---
+
+import Figure from '../../components/Figure.astro';
+import TokenLeaderboards from '../../components/diagrams/TokenLeaderboards.astro';
+import ShippingLadder from '../../components/diagrams/ShippingLadder.astro';
+import PerceptionGap from '../../components/diagrams/PerceptionGap.astro';
+import AiReturnScorecard from '../../components/diagrams/AiReturnScorecard.astro';
+
+For a few months in 2026, one of the most talked-about AI metrics in big tech was a leaderboard of tokens. Who used the most, which team burned through the most, who had earned the badge. Most of those leaderboards have since been switched off, and the question in board meetings has changed. Boards no longer ask whether engineers are using AI. They ask what the money bought.
+
+Token counts can't answer that. They tell you what you spent, not what you got.
+
+**The short version**
+
+- When Meta, Amazon and Uber ranked people or teams by AI usage, usage went up and the link to results got weaker. Amazon's own message to staff was "don't use AI just for the sake of using AI."
+- The research shows why. In a study of more than 500,000 developers, autonomous coding agents raised commits by 240% but releases by only 30%, and total usage of the software didn't rise.
+- Give the board four numbers instead: cost per resolved issue, lead time to production, change failure rate, and the business outcome each AI bet was funded to move. Keep tokens and seats on the team dashboard as diagnostics.
+
+## What happened when tokens became the target
+
+In April, The Information reported on "Claudeonomics", a leaderboard a Meta employee had built that ranked the top 250 of more than 85,000 staff by tokens used. Over 30 days, employees on it used more than 60 trillion tokens. The top user averaged 281 billion, which at $5 per million tokens is more than $1.4 million for one person. It came down about two days after the story broke. According to Fortune, Meta's CTO Andrew Bosworth has said his best engineer spends the equivalent of their salary on tokens and is "5x to 10x more productive", adding: "Keep doing it. No limit."
+
+At Amazon, an internal ranking of activity on its Kiro coding tool went the same way. According to the Financial Times, some engineers pointed agents at pointless tasks to climb it, and the extra usage raised cloud costs. Senior Vice President Dave Treadwell told staff: "Please don't use AI just for the sake of using AI." Amazon has reportedly moved to tracking what it calls normalized deployments instead.
+
+Uber reportedly used its entire 2026 budget for AI coding tools in four months, after a leaderboard ranked teams by total usage. Uber hasn't confirmed those reports. Its president and COO, Andrew Macdonald, was candid about the return, though. On whether heavy use of coding agents had turned into more features for customers, he said: "That link is not there yet," and that "that trade becomes harder to justify."
+
+<Figure caption="Three companies, one pattern: rank people by usage and you get more usage. Sources: Fortune; Financial Times via The Decoder." tone="navy" wide>
+  <TokenLeaderboards />
+</Figure>
+
+None of this is surprising. It's Goodhart's law: when a measure becomes a target, it stops being a good measure. What's new is the price. A gamed velocity chart used to cost nothing. A gamed token chart is billed by the million.
+
+## Why usage tells you so little
+
+The best evidence now available says the gain from AI shrinks at every step between the keyboard and the customer.
+
+Mert Demirer, Leon Musolff and Liyuan Yang studied more than 500,000 GitHub developers with AI usage telemetry for an NBER working paper published in May and revised in September 2026. Autocomplete raised commits by about 30%, interactive coding agents by 180% and autonomous agents by 240%. For autonomous agents, the effect fell to 80% for projects and 30% for releases. Across four software marketplaces, new apps rose sharply, but total usage did not rise at all. In the authors' words, "Large task-level AI productivity gains have therefore translated only partially into shipped and used software thus far."
+
+<Figure caption="Each step closer to the customer keeps less of the gain. Source: Demirer, Musolff and Yang, NBER Working Paper 35275, 2026." tone="navy" wide>
+  <ShippingLadder />
+</Figure>
+
+It matches the Harvard study of 718 companies I wrote about in [More code, not more software](/blog/more-code-not-more-software/), where code output rose 20 to 30% and resolved issues showed no statistically significant gain. Two different datasets, two different methods, the same shape. Tokens measure the top of that ladder. Boards are paying for the bottom.
+
+There is also a gap between how AI feels and what it does. In METR's randomised trial, 16 experienced open-source developers expected AI tools to make them 24% faster. Afterwards they believed they had been 20% faster. Measured on 246 real tasks, they were 19% slower. It's a small study with early-2025 tools, and newer agents may well change the result. But it shows that asking engineers how much faster they are is not measurement.
+
+Engineering leaders already know this. In LeadDev's AI Impact Report 2026, a survey of 600 engineering leaders, 58% said token usage metrics are ineffective. Only 31% measure AI productivity gains at all.
+
+<Figure caption="Self-reported speed and token counts both overstate the gain. Sources: METR, July 2025; LeadDev, 2026." tone="navy" wide>
+  <PerceptionGap />
+</Figure>
+
+## What the board is really asking
+
+When a board asks about AI return, it is asking three things. Is this paying for itself? Is it making us faster at what customers pay for, without breaking things? And is anyone accountable if it isn't?
+
+Visibility and ownership turn out to matter more than the size of the spend. In KPMG's Global AI Pulse for Q2 2026, companies with full visibility into what their AI systems cost to run were five times more likely to report proven ROI. Companies with clearly defined responsibility for AI outcomes were three times more likely. Seven percent had already postponed AI roll-outs because running costs exceeded the expected benefit.
+
+So the answer to "what did the AI spend buy?" can't be a usage chart. It has to be a short set of outcome numbers with names next to them.
+
+## Four numbers for the board
+
+This is the scorecard I'd bring. Each line answers one of the board's questions, and none of them goes up just because people use more AI.
+
+<Figure caption="Four lines answer the board's questions. Usage metrics stay on the team dashboard, where they help find waste." tone="navy" wide>
+  <AiReturnScorecard />
+</Figure>
+
+**1. Cost per resolved issue.** Total AI spend for a team (seats, API usage, agent compute) divided by the work items it closed and shipped in the same period. Tokens belong here, as a cost input, not as a result. I made the case for this metric in [What should you spend on AI per engineer?](/blog/what-to-spend-on-ai-per-engineer/). Its weakness is that work items vary in size, so watch the trend for each team rather than comparing teams with each other.
+
+**2. Lead time from accepted to in production.** How long it takes a piece of work, once a team commits to it, to reach customers. This is where the NBER paper says the gain leaks away, so this is where to look for it. If commits double and lead time doesn't move, the bottleneck is somewhere else, often review, testing or release.
+
+**3. Change failure rate and rework.** The share of changes that cause a failure in production, plus the pull requests sent back for changes before they merge. DORA's 2025 research found AI adoption now goes with higher throughput but also with rising delivery instability. Speed that ships failures is not a return. It's a cost that arrives later.
+
+**4. The outcome each AI bet was funded to change.** This is the one most teams skip. Every significant AI investment should name, before the money is spent, the business number it is meant to move: support backlog, time to onboard a customer, a migration finished a quarter earlier, a team that absorbed growth without hiring. Give it an owner and a stop rule. If it hasn't moved by the agreed date, the spend goes somewhere else.
+
+Tokens, active seats, suggestion acceptance and the share of code written by agents still matter. They are diagnostics. They tell you which teams are stuck, which agents are looping and where licences are idle. Keep them on the engineering dashboard and use them to find waste. Don't put them on the board slide, and don't rank people by them.
+
+## How to show it was the AI
+
+A board will rightly ask whether the improvement came from AI or from something else. Three habits make the answer credible.
+
+**Take a baseline first.** Pull the four numbers for the two quarters before a team's roll-out. Without a before, there is no after.
+
+**Compare teams that started at different times.** Both the NBER and Harvard studies get their estimates by comparing groups that adopted AI at different points. You can do a simpler version of the same thing. Roll out in waves, and compare the teams that have the tools with the ones still waiting.
+
+**Report ranges and misses.** A board trusts "lead time fell between 10 and 20%, and one team got slower" more than a single round number. Name the bets you stopped. Stopping one shows the stop rules are real.
+
+## Where to start
+
+This month, pick one team. Pull its last two quarters of resolved issues, lead time, change failure rate and AI spend, and write down the one business outcome its AI tools are supposed to help with. That is your baseline and your first board slide.
+
+If you have a token leaderboard, move it to the cost dashboard and take the names off it.
+
+I'd like to hear from leaders who have already taken AI numbers to a board. Which metric did the board actually trust, and which ones did they wave away?
+
+---
+
+**Sources**
+
+- [Fortune: Meta's employee AI token dashboard](https://fortune.com/2026/04/09/meta-killed-employee-ai-token-dashboard/) (April 2026)
+- [The Decoder on Amazon retiring its internal AI leaderboard](https://the-decoder.com/amazon-kills-internal-ai-leaderboard-after-employees-gamed-it-with-pointless-tasks/), reporting the Financial Times (May 2026)
+- [Fortune: Uber COO on AI spending, tokens and Claude Code](https://fortune.com/2026/05/26/uber-coo-ai-spending-tokens-claude-code/) (May 2026)
+- [Demirer, Musolff and Yang, *Writing Code vs. Shipping Code: Productivity Effects Across Generations of AI Coding Tools*](https://www.nber.org/papers/w35275), NBER Working Paper 35275 (May 2026, revised September 2026)
+- [InfoQ: Harvard and Jellyfish study on AI coding productivity](https://www.infoq.com/news/2026/10/jellyfish-ai-productivity/) (October 2026)
+- [The Register on METR's randomised trial of AI coding tools](https://www.theregister.com/2025/07/11/ai_code_tools_slow_down/) (July 2025)
+- [LeadDev: The AI Impact Report 2026](https://leaddev.com/the-ai-impact-report-2026) (August 2026)
+- [KPMG: Global AI Pulse, Q2 2026](https://kpmg.com/de/en/insights/digital-transformation/artificial-intelligence/global-ai-pulse-q2-2026.html) (2026)
+- [InfoQ on DORA's 2025 State of AI-assisted Software Development report](https://www.infoq.com/news/2025/09/dora-state-of-ai-in-dev-2025) (September 2025)
