@@ -28,6 +28,11 @@ import { SITE } from '../consts';
         <a class="btn dark" href={SITE.links.linkedin}>Message me on LinkedIn</a>
         <a class="btn" href={SITE.links.x}>Follow @{SITE.xHandle} on X</a>
       </p>
+      <p class="muted privacy">
+        <strong>Privacy:</strong> this site counts visits with Umami, a cookieless analytics tool. It records which pages are read, where
+        visitors came from, and clicks on share buttons and videos. It sets no cookies, stores nothing personal and
+        respects Do Not Track.
+      </p>
     </div>
     <figure class="panel gold side-fig">
       <AgentLoop />
@@ -62,6 +67,7 @@ import { SITE } from '../consts';
 <style>
   .hero { padding-top: 4.5rem; padding-bottom: 3rem; }
   .about-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: start; }
+  .privacy { margin-top: 2rem; font-size: 0.9rem; }
   .side-fig { margin: 0; padding: 8%; }
   .block { padding-top: 6rem; }
   .stack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
