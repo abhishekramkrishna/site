@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/model-retirement-is-the-new-dependency-upgrade'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -111,6 +111,90 @@ test('reduced motion shows the review figures finished without animating', async
   await expect(fig).not.toHaveClass(/motion/);
   const transform = await fig.locator('.df-bar').first().evaluate((el) => getComputedStyle(el).transform);
   expect(transform).toBe('none');
+  await ctx.close();
+});
+
+test('agent moderation post shows its figures, animates them and loads its video', async ({ page, request }) => {
+  await page.goto('/blog/moderating-ai-agents', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  const last = figs.last();
+  await expect(last).toHaveClass(/motion/);
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+  const video = page.locator('main video');
+  await expect(video).toHaveCount(1);
+  for (const attr of ['src', 'poster']) {
+    const url = await video.getAttribute(attr);
+    expect(url, `video ${attr}`).toBeTruthy();
+    expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
+  }
+});
+
+test('reduced motion shows the agent moderation figures finished without animating', async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.goto('/blog/moderating-ai-agents');
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
+  await ctx.close();
+});
+
+test('agent eval post shows its diagrams and screenshots and loads its video', async ({ page, request }) => {
+  await page.goto('/blog/what-a-good-agent-eval-looks-like', { waitUntil: 'networkidle' });
+  const imgs = page.locator('main img');
+  await expect(imgs).toHaveCount(5);
+  for (const img of await imgs.all()) {
+    await img.scrollIntoViewIfNeeded();
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+  }
+  const video = page.locator('main video');
+  await expect(video).toHaveCount(1);
+  for (const attr of ['src', 'poster']) {
+    const url = await video.getAttribute(attr);
+    expect(url, `video ${attr}`).toBeTruthy();
+    expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
+  }
+});
+
+test('skills post shows its figures and animates them on scroll', async ({ page }) => {
+  await page.goto('/blog/skills-are-the-new-team-wiki', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  const last = figs.last();
+  await expect(last).toHaveClass(/motion/);
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});
+
+test('reduced motion shows the skills figures finished without animating', async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.goto('/blog/skills-are-the-new-team-wiki');
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
+  await ctx.close();
+});
+
+test('tokens post shows its figures and animates them on scroll', async ({ page }) => {
+  await page.goto('/blog/stop-counting-tokens', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  const last = figs.last();
+  await expect(last).toHaveClass(/motion/);
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});
+
+test('reduced motion shows the tokens figures finished without animating', async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.goto('/blog/stop-counting-tokens');
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
   await ctx.close();
 });
 

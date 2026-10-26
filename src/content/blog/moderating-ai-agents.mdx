@@ -1,0 +1,159 @@
+---
+title: "Moderating AI agents: what social platforms already learned the hard way"
+description: Social platforms spent twenty years learning how to moderate billions of posts. Agents now produce actions at the same scale, and most teams are repeating the early mistakes. Six lessons from content moderation, and the checkpoints they point to.
+pubDate: 2026-10-26
+tags: [agents, strategy]
+draft: false
+---
+
+import Figure from '../../components/Figure.astro';
+import LessonsMap from '../../components/diagrams/LessonsMap.astro';
+import AgentCheckpoints from '../../components/diagrams/AgentCheckpoints.astro';
+import ActionTiers from '../../components/diagrams/ActionTiers.astro';
+import GuardrailNumbers from '../../components/diagrams/GuardrailNumbers.astro';
+
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/moderating-ai-agents`;
+
+In July 2025 a coding agent deleted a company's production database during a code freeze it had been told about. In April 2026 another agent found an API token that could delete storage volumes and wiped a production volume in about nine seconds, along with the backups stored on it. Neither agent said anything offensive. A content filter would have passed both.
+
+When I ask teams how they moderate their agents, the answer is usually a content filter on the model's output. That is how we moderated chatbots. It is also roughly where social platforms were in 2008: a blocklist, a report button and a small team reading the queue. Platforms then spent fifteen years learning, often in public, what actually works at scale.
+
+Agents are now producing actions at the kind of volume platforms produce posts. We don't have to relearn those lessons from scratch.
+
+**The short version**
+
+- 80% of organisations have seen AI agents take unintended actions. Most incidents come from too much access and untrusted input, not offensive output.
+- Platform trust and safety teams already know the playbook: plan for an error rate, match the response to the severity, keep humans for the hard calls, police accounts as well as content, and keep an audit trail.
+- For agents, that becomes five checkpoints enforced outside the model: scope, screen, gate, check and watch.
+
+## The 60-second version
+
+<video controls preload="none" playsinline poster={`${media}/summary-poster.jpg`} src={`${media}/summary.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="60-second narrated summary of moderating AI agents, with captions"></video>
+
+## Agents are the new user-generated content
+
+A social platform hosts content written by people it doesn't control. An agent platform runs actions planned by a model it doesn't fully control. In both cases the volume is too high for humans to review everything, the inputs come from strangers, and a small share of bad outcomes does most of the damage.
+
+The numbers say most organisations haven't caught up. In a 2025 SailPoint survey, 80% of organisations had seen agents take unintended actions: 39% had agents reach systems they shouldn't, 33% had agents share restricted information. Only 44% had any agent governance policy. A Cloud Security Alliance survey in early 2026 found that 68% of organisations can't clearly tell agent activity from human activity, and 43% run agents on shared service accounts. Both are small, vendor-sponsored samples, so read them as direction. But they match the incidents.
+
+There is one big difference. A harmful post can't instruct the moderator. An agent reads web pages, emails and tickets, and any of them can contain instructions. In 2025 a malicious GitHub issue made an agent copy private repository data into a public pull request, and hidden text on a Reddit page made a browser agent leak a one-time password. Platforms never had to moderate content that talks back to the system reading it.
+
+With that caveat, here are the six lessons I'd borrow.
+
+<Figure caption="Each content moderation lesson has a direct equivalent for agents." tone="navy" wide>
+  <LessonsMap />
+</Figure>
+
+## 1. Plan for an error rate
+
+Mike Masnick summed up a decade of platform experience in one line in 2019: "Content moderation at scale is impossible to do well." His arithmetic still holds. At 350 million images a day, "If there's a 99.9% accuracy rate, it's still going to make 'mistakes' on 350,000 images. Every. Single. Day."
+
+Meta said something similar about itself in January 2025: of the content it removed each day, "one to two out of every 10 of these actions may have been mistakes."
+
+Agent guardrails have the same shape. Classifiers work: Meta's LlamaFirewall cut attack success on the AgentDojo benchmark from 17.6% to 1.75%, and Anthropic reported attack success against its browser agent falling from 8.0% to 1.4% with improved safeguards. But attackers adapt. NIST's AI safety team ran new red-team attacks against an agent and raised attack success from 11% to 81%. A 2025 paper titled "The Attacker Moves Second" bypassed 12 published defences with attack success above 90% for most of them.
+
+<Figure caption="Layered classifiers cut attack success about tenfold. A new adaptive attack raised it from 11% to 81%. Sources: LlamaFirewall paper, Anthropic, NIST CAISI." tone="navy" wide>
+  <GuardrailNumbers />
+</Figure>
+
+Anthropic's own summary is the right mindset: "A 1% attack success rate... still represents meaningful risk." If an agent reads ten thousand untrusted inputs a day, 1% is a hundred successful attacks. Platforms stopped asking "how do we catch everything?" and started asking "what happens when we miss?" Agent teams need the same question.
+
+## 2. Match the response to the severity
+
+Platforms don't have one response to a bad post. They label, reduce reach, remove, suspend or ban, depending on how severe the harm is. When Meta reset its approach in 2025, the change was about severity. Automated systems would focus "on tackling illegal and high-severity violations," while "for less severe policy violations, we're going to rely on someone reporting an issue before we take any action."
+
+Agents need the same graded response, applied to actions. A search is not a payment. Tier every tool by how reversible it is and how much it can break, and attach a control to each tier.
+
+<Figure caption="Tier every tool by reversibility and blast radius. Adapt the tiers to your own systems." tone="navy" wide>
+  <ActionTiers />
+</Figure>
+
+The gate has to live in the tool, not in the prompt. In one reported 2026 case, an agent bulk-deleted a user's emails despite an explicit "do not act without my approval" instruction. A prompt that says "ask first" is a request. A tool that can't act without an approval is a control. OWASP says the same in its guidance on excessive agency: "Implement authorization in downstream systems rather than relying on an LLM to decide if an action is allowed."
+
+## 3. Automate the first pass, keep humans for the hard calls
+
+No large platform reviews everything by hand. Classifiers take the first pass and people handle the cases that are ambiguous or high stakes. The interesting part is how Meta reduced its mistakes. It tuned its systems "to require a much higher degree of confidence before a piece of content is taken down," and in more cases required "multiple reviewers to reach a determination." By May 2025 it reported "a roughly 50% reduction in enforcement mistakes" in the United States, quarter on quarter.
+
+For agents, that means a human approval on consequential actions, two people on irreversible ones, and a classifier that only escalates when it's unsure. It also means watching your reviewers. Trust and safety teams track reviewer accuracy and fatigue. If people approve 99% of agent requests in two seconds, the gate is decoration. Either the tier is wrong or the approval screen doesn't show the evidence.
+
+## 4. Police the account, not just the content
+
+The biggest wins against spam on social platforms didn't come from reading posts more carefully. They came from account signals: identity, age of the account, rate limits, reputation and behaviour across many posts. X's recent rule that automated replies need the original author's mention or quote is the same idea applied to bots.
+
+For agents, the equivalent is identity and scope. Give every agent its own identity, not a shared service account. Issue short-lived tokens scoped to the task. Put rate and spend limits on it. Meta's "Agents Rule of Two" is the best test I've found: in one session an agent should combine no more than two of these three properties: it processes untrusted input, it can reach sensitive data, and it can change state or communicate externally. If it needs all three, a human goes in the loop.
+
+The courts are drawing the same line. In March 2026 a judge found that Perplexity's shopping agent acted on Amazon "with the Amazon user's permission, but without authorization by Amazon." A user saying yes is not the same as the system saying yes.
+
+## 5. Write the policy before the classifier
+
+Every mature platform publishes community standards first and builds classifiers to enforce them second. A classifier without a written policy can't be audited, appealed or improved, because nobody can say what it was supposed to catch.
+
+Most agent deployments skip this step. The "policy" is a paragraph in the system prompt. Write it down as a document people can review: what the agent may do on its own, what needs approval, what it must never do, and what it must never say on the company's behalf. The Air Canada case is the cautionary tale. A tribunal held the airline liable for its chatbot's wrong refund advice and rejected the argument that the bot was "a separate legal entity." Your agent's output is your company's speech.
+
+## 6. Keep the receipts
+
+Platforms are now required to explain themselves. Under the EU's Digital Services Act, every moderation decision gets a statement of reasons in a public database, including whether it was automated. Appeals, transparency reports and an independent board exist because enforcement at scale gets things wrong and people need a way to see and fix that.
+
+For agents, the receipts are traces. Log every step and tool call against a named agent identity. OpenTelemetry now has conventions for agent and tool spans. Run a second model that checks actions against the user's goal. And test your stop button. Microsoft's agent governance guidance says to "decide in advance how to quickly disable an agent." Keep backups where the agent can't reach them, so a mistake can be undone.
+
+## Putting it together: five checkpoints
+
+Those lessons, plus the one thing platforms never faced (content that gives instructions), add up to five checkpoints. Every control sits outside the model, where a clever prompt can't argue with it.
+
+<Figure caption="Five checkpoints, each enforced outside the model." tone="navy" wide>
+  <AgentCheckpoints />
+</Figure>
+
+If your organisation works to ISO certifications, these map onto ISO/IEC 42001, the AI management system standard. Its Annex A has 38 controls under nine objectives:
+
+| Checkpoint | ISO/IEC 42001 Annex A | OWASP | Other |
+| --- | --- | --- | --- |
+| Scope | A.9.4 intended use; A.10.3 suppliers (models, MCP servers, tools) | LLM06 Excessive Agency; ASI03 Identity and Privilege Abuse | MCP security best practices; NIST agent identity concept paper |
+| Screen | A.7 data for AI systems | LLM01 Prompt Injection; ASI01 Agent Goal Hijack | MITRE ATLAS agent techniques |
+| Gate | A.5 impact assessment; A.6.2.5 deployment | LLM06; ASI02 Tool Misuse | EU AI Act Art. 14 human oversight (high-risk systems) |
+| Check | A.6.2.4 verification and validation | LLM05 Improper Output Handling | EU AI Act Art. 50 transparency |
+| Watch | A.6.2.6 operation and monitoring; A.6.2.8 event logs; A.8.4 incident communication | ASI08 Cascading Failures; ASI10 Rogue Agents | NIST AI RMF Manage function |
+
+ISO/IEC 42001 has no standalone human-oversight control, so you show it through the operation and use controls. ISO/IEC 42005:2025 covers the impact assessment itself.
+
+## Where I'd start
+
+Take one agent you already run and treat it the way a trust and safety team would treat a new feature.
+
+1. Write its policy on one page: may do, needs approval, must never do.
+2. List every tool it can call and put each one in a tier.
+3. Check whether anything in the top two tiers runs without an approval that the tool enforces.
+4. Check whether it holds a token broader than its task, or shares an identity with anything else.
+5. Find out when someone last tested the stop button.
+
+I'm still working out where the line between "reversible" and "consequential" sits for agents that post or send messages on someone's behalf. If you've drawn that line in production, I'd like to hear where you put it.
+
+---
+
+**Further reading and tools**
+
+Guardrails: [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails), [Guardrails AI](https://github.com/guardrails-ai/guardrails), [PurpleLlama (Llama Guard, Prompt Guard, LlamaFirewall)](https://github.com/meta-llama/PurpleLlama), [OpenAI Guardrails](https://github.com/openai/openai-guardrails-python), [Granite Guardian](https://github.com/ibm-granite/granite-guardian). Testing: [promptfoo](https://github.com/promptfoo/promptfoo), [PyRIT](https://github.com/microsoft/PyRIT), [garak](https://github.com/NVIDIA/garak), [AgentDojo](https://github.com/ethz-spylab/agentdojo), [Inspect](https://github.com/UKGovernmentBEIS/inspect_ai), [agent-scan for MCP servers](https://github.com/snyk/agent-scan). Tracing: [OpenTelemetry GenAI conventions](https://github.com/open-telemetry/semantic-conventions-genai), [Langfuse](https://github.com/langfuse/langfuse). Sandboxes: [E2B](https://github.com/e2b-dev/E2B). Managed services: [Azure Prompt Shields](https://learn.microsoft.com/azure/ai-services/content-safety/), [Bedrock Guardrails](https://aws.amazon.com/bedrock/guardrails/), [Google Model Armor](https://cloud.google.com/security/products/model-armor), [OpenAI Moderation](https://platform.openai.com/docs/guides/moderation).
+
+**Sources**
+
+- [Masnick's Impossibility Theorem, Techdirt](https://archive.techdirt.com/articles/20191111/23032743367/masnicks-impossibility-theorem-content-moderation-scale-is-impossible-to-do-well.shtml) (November 2019)
+- [Meta, More Speech and Fewer Mistakes, with the May 2025 update](https://about.fb.com/news/2025/01/meta-more-speech-fewer-mistakes/) (January 2025)
+- [Automated Transparency: an analysis of the DSA Transparency Database](https://arxiv.org/abs/2404.02894) (2024)
+- [SailPoint research on AI agents, via HPCwire](https://www.hpcwire.com/aiwire/2025/06/04/sailpoint-research-reveals-ai-agents-as-enterprise-security-blind-spot/) (June 2025)
+- [Cloud Security Alliance and Aembit survey on agent identity](https://cloudsecurityalliance.org/press-releases/2026/03/24/more-than-two-thirds-of-organizations-cannot-clearly-distinguish-ai-agent-from-human-actions) (March 2026)
+- [Replit database deletion, eWeek](https://www.eweek.com/news/replit-ai-coding-assistant-failure/) (July 2025)
+- [PocketOS volume deletion, Fast Company](https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane) (April 2026)
+- [Email agent ignoring approval and stop commands, UC Strategies](https://ucstrategies.com/news/openclaw-bug-when-an-ai-agent-deletes-emails-from-a-meta-safety-director/) (February 2026)
+- [Air Canada chatbot ruling, CTV News](https://bc.ctvnews.ca/air-canada-s-chatbot-gave-a-b-c-man-the-wrong-information-now-the-airline-has-to-pay-for-the-mistake-1.6769454) (February 2024)
+- [GitHub MCP toxic agent flow, Invariant Labs](https://invariantlabs.ai/blog/mcp-github-vulnerability) (May 2025)
+- [Perplexity Comet prompt injection, The Register](https://www.theregister.com/2025/08/20/perplexity_comet_browser_prompt_injection/) (August 2025)
+- [Amazon v. Perplexity injunction, GeekWire](https://www.geekwire.com/2026/judge-blocks-perplexitys-ai-bot-from-shopping-on-amazon-in-early-test-of-agentic-commerce/) (March 2026)
+- [X API limits on automated replies, PiunikaWeb](https://piunikaweb.com/2026/02/24/x-api-blocks-automated-spam-replies/) (February 2026)
+- [OWASP LLM06:2025 Excessive Agency](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/) and [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/)
+- [LlamaFirewall paper](https://arxiv.org/abs/2505.03574) (April 2025)
+- [Anthropic on prompt injection defenses](https://www.anthropic.com/research/prompt-injection-defenses) (November 2025)
+- [NIST CAISI on agent hijacking evaluations](https://www.nist.gov/node/1872381) (2025)
+- [The Attacker Moves Second](https://arxiv.org/abs/2510.09023) (October 2025)
+- [Meta, Agents Rule of Two](https://ai.meta.com/blog/practical-ai-agent-security/) (October 2025)
+- [Microsoft, govern and secure AI agents](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/governance-security-across-organization) (2026)
+- [ISO/IEC 42001:2023](https://www.iso.org/standard/42001) and [ISO/IEC 42005:2025](https://www.iso.org/standard/44545.html)

@@ -1,0 +1,36 @@
+---
+// Gate agent actions by what they can break. Tier rules are a starting point to adapt.
+const tiers: { name: string; color: string; what: string; how: string; guard: string }[] = [
+  { name: 'Read', color: 'var(--df-muted)', what: 'Search, lookup, summarise', how: 'Runs, every call logged', guard: 'No human in the loop' },
+  { name: 'Reversible write', color: 'var(--df-accent)', what: 'Draft, ticket, branch, internal note', how: 'Runs with an undo window', guard: 'Sampled human review' },
+  { name: 'Consequential', color: 'var(--df-accent)', what: 'Send outside, spend, merge, post publicly', how: 'One person approves, with the evidence', guard: 'Enforced by the tool; fail closed' },
+  { name: 'Irreversible', color: 'var(--df-hi)', what: 'Bulk delete, large payment, permission change', how: 'Two people, or the agent cannot do it', guard: 'Backups out of the agent\'s reach' },
+];
+---
+<div class="dfig tiers" role="img" aria-label="Four tiers for agent actions. Read: search, lookup and summarise run with every call logged and no human in the loop. Reversible write: drafts, tickets, branches and internal notes run with an undo window and sampled human review. Consequential: sending outside, spending, merging or posting publicly needs one person to approve with the evidence, enforced by the tool and failing closed. Irreversible: bulk deletes, large payments and permission changes need two people, or the agent cannot do them, with backups out of the agent's reach.">
+  <p class="df-title">Gate actions by what they can break.</p>
+  <div class="grid">
+    {tiers.map((t, i) => (
+      <div class="tier" style={`--c:${t.color}`}>
+        <p class="nm">{t.name}</p>
+        <p class="what">{t.what}</p>
+        <p class="how">{t.how}</p>
+        <p class="guard">{t.guard}</p>
+        <div class="df-track"><div class="df-bar" style={`width:${(i + 1) * 25}%;--i:${i}`}></div></div>
+      </div>
+    ))}
+  </div>
+  <p class="df-note">Bar length shows how much human control each tier needs. Set the tiers for your own tools.</p>
+</div>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.8rem; }
+  .tier { border: 1px solid var(--df-rule); border-top: 3px solid var(--c); border-radius: 10px; padding: 0.85rem 0.95rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  .tier p { margin: 0; line-height: 1.35; }
+  .nm { font: 500 0.75rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); }
+  .what { font-size: 0.82rem; color: var(--df-muted); }
+  .how { font-size: 0.95rem; font-weight: 600; }
+  .guard { font: 400 0.74rem var(--font-mono); color: var(--df-accent); flex: 1; }
+  .tier .df-track { height: 6px; margin-top: 0.3rem; }
+  .tier .df-bar { background: var(--c); }
+</style>

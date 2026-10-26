@@ -1,0 +1,45 @@
+---
+// What content moderation on social platforms teaches agent moderation.
+const lessons: [string, string, string][] = [
+  ['Plan for an error rate', 'Even 99.9% accuracy means thousands of mistakes a day', 'Assume some attacks land; limit what one miss can do'],
+  ['Match response to severity', 'Label, reduce reach, remove, ban', 'Tier tools: run, undo window, approve, two people'],
+  ['Humans for the hard calls', 'Higher confidence bar, multiple reviewers', 'Approval with evidence; watch for rubber-stamping'],
+  ['Police the account', 'Identity, rate limits, reputation', 'Own identity, scoped tokens, spend limits'],
+  ['Policy before classifier', 'Published community standards', 'A written agent policy, enforced in the tools'],
+  ['Keep the receipts', 'Statements of reasons, appeals, reports', 'Traces, a stop button, undo'],
+];
+---
+<div class="dfig lm" role="img" aria-label="Six lessons from social media content moderation and their agent equivalents. Plan for an error rate: even 99.9% accuracy means thousands of mistakes a day, so assume some attacks land and limit what one miss can do. Match the response to severity: platforms label, reduce reach, remove or ban; agents tier tools from run, to undo window, to approval, to two people. Humans for the hard calls: platforms raised confidence thresholds and used multiple reviewers; agents need approval with evidence and a watch for rubber-stamping. Police the account: identity, rate limits and reputation become agent identity, scoped tokens and spend limits. Policy before classifier: published community standards become a written agent policy enforced in the tools. Keep the receipts: statements of reasons, appeals and reports become traces, a stop button and undo.">
+  <p class="df-title">Platforms already learned this. Agents need the same playbook.</p>
+  <div class="head"><span></span><span>On social platforms</span><span>For AI agents</span></div>
+  {lessons.map(([lesson, platform, agent], i) => (
+    <div class="ln" style={`--i:${i}`}>
+      <p class="nm"><span class="no">{i + 1}</span>{lesson}</p>
+      <p class="pf">{platform}</p>
+      <p class="ag">{agent}</p>
+    </div>
+  ))}
+  <p class="df-note">New for agents: content can carry instructions, so everything an agent reads is untrusted.</p>
+</div>
+
+<style>
+  .head, .ln { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 0.9rem; align-items: baseline; }
+  .head { font: 500 0.7rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--df-muted); padding: 0 0 0.5rem; border-bottom: 1px solid var(--df-rule); }
+  .head span:last-child { color: var(--df-accent); }
+  .ln { padding: 0.65rem 0; border-bottom: 1px solid var(--df-rule); }
+  .ln p { margin: 0; line-height: 1.35; }
+  .nm { font-size: 0.92rem; font-weight: 600; }
+  .no { font: 500 0.75rem var(--font-mono); color: var(--df-hi); margin-right: 0.5rem; }
+  .pf { font-size: 0.82rem; color: var(--df-muted); }
+  .ag { font-size: 0.85rem; color: var(--df-ink); border-left: 2px solid var(--df-accent); padding-left: 0.6rem; }
+  @media (max-width: 560px) {
+    .head { display: none; }
+    .ln { grid-template-columns: 1fr; gap: 0.3rem; }
+    .pf::before { content: 'Platforms: '; font-family: var(--font-mono); font-size: 0.7rem; }
+    .ag::before { content: 'Agents: '; font-family: var(--font-mono); font-size: 0.7rem; color: var(--df-accent); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .dfig.motion .ln { opacity: 0; transform: translateX(-6px); transition: opacity 0.45s ease, transform 0.45s ease; transition-delay: calc(var(--i) * 120ms); }
+    .dfig.motion.in-view .ln { opacity: 1; transform: none; }
+  }
+</style>
