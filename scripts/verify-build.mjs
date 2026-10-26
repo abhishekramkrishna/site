@@ -78,7 +78,11 @@ for (const f of html) {
     if (/^(https?:|mailto:|data:|\/\/)/.test(ref)) continue;
     if (!ref.startsWith('/')) continue;
     let p = ref;
-    if (base && p.startsWith(base)) p = p.slice(base.length) || '/';
+    if (base && !(p === base || p.startsWith(base + '/'))) {
+      fail(`${relative(DIST, f)}: ${ref} is missing the base path ${base}`);
+      continue;
+    }
+    if (base) p = p.slice(base.length) || '/';
     const candidates = [join(DIST, p), join(DIST, p, 'index.html'), join(DIST, `${p}.html`)];
     if (!candidates.some((c) => existsSync(c) && statSync(c).isFile())) fail(`${relative(DIST, f)}: broken link ${ref}`);
   }
