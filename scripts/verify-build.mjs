@@ -35,6 +35,8 @@ const required = [
   'favicon.svg',
   'og-default.png',
   ...['agents', 'strategy', 'business', 'leadership'].map((t) => `tags/${t}/index.html`),
+  // Posts that scheduled social posts link to: a missing one means a live 404
+  ...['what-a-good-agent-eval-looks-like'].map((s) => `blog/${s}/index.html`),
 ];
 for (const r of required) if (!existsSync(join(DIST, r))) fail(`missing required file: ${r}`);
 

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -139,4 +139,21 @@ test('reduced motion shows the agent moderation figures finished without animati
   await expect(figs).toHaveCount(4);
   for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
   await ctx.close();
+});
+
+test('agent eval post shows its diagrams and screenshots and loads its video', async ({ page, request }) => {
+  await page.goto('/blog/what-a-good-agent-eval-looks-like', { waitUntil: 'networkidle' });
+  const imgs = page.locator('main img');
+  await expect(imgs).toHaveCount(5);
+  for (const img of await imgs.all()) {
+    await img.scrollIntoViewIfNeeded();
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+  }
+  const video = page.locator('main video');
+  await expect(video).toHaveCount(1);
+  for (const attr of ['src', 'poster']) {
+    const url = await video.getAttribute(attr);
+    expect(url, `video ${attr}`).toBeTruthy();
+    expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
+  }
 });
