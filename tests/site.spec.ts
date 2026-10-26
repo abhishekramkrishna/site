@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/model-retirement-is-the-new-dependency-upgrade'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -112,4 +112,17 @@ test('reduced motion shows the review figures finished without animating', async
   const transform = await fig.locator('.df-bar').first().evaluate((el) => getComputedStyle(el).transform);
   expect(transform).toBe('none');
   await ctx.close();
+});
+
+test('model retirement post shows its labelled figures and a readable comparison table', async ({ page }) => {
+  await page.goto('/blog/model-retirement-is-the-new-dependency-upgrade', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(3);
+  for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  await expect(page.locator('main table th').first()).toContainText('Framework upgrade');
+  const table = page.locator('main table');
+  expect(await table.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  const last = figs.last();
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
 });
