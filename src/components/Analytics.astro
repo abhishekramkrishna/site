@@ -1,0 +1,54 @@
+---
+// Cookieless page views and events through Umami Cloud.
+// The tracker loads only when PUBLIC_UMAMI_WEBSITE_ID is set (the deploy workflow passes the
+// UMAMI_WEBSITE_ID repository variable), so dev, CI and test builds make no third-party requests.
+// The event helper below always ships and does nothing until window.umami exists.
+const websiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
+const domain = Astro.site ? new URL(Astro.site).hostname : undefined;
+---
+{websiteId && (
+  <script
+    is:inline
+    defer
+    src="https://cloud.umami.is/script.js"
+    data-website-id={websiteId}
+    data-domains={domain}
+    data-do-not-track="true"
+  ></script>
+)}
+
+<script>
+  type Umami = { track: (name: string, data?: Record<string, string | number>) => void };
+  const track = (name: string, data: Record<string, string | number> = {}) =>
+    (window as Window & { umami?: Umami }).umami?.track(name, { path: location.pathname, ...data });
+
+  // Clicks on anything marked data-event="name", e.g. the share buttons.
+  document.addEventListener('click', (e) => {
+    const el = (e.target as Element | null)?.closest<HTMLElement>('[data-event]');
+    if (el?.dataset.event) track(el.dataset.event);
+  });
+
+  // Post videos: media events do not bubble, so listen in the capture phase.
+  const videoName = (e: Event) => (e.target as HTMLVideoElement).currentSrc.split('/').pop() ?? '';
+  const started = new WeakSet<EventTarget>();
+  document.addEventListener('play', (e) => {
+    if (!(e.target instanceof HTMLVideoElement) || started.has(e.target)) return;
+    started.add(e.target);
+    track('video-play', { video: videoName(e) });
+  }, true);
+  document.addEventListener('ended', (e) => {
+    if (e.target instanceof HTMLVideoElement) track('video-complete', { video: videoName(e) });
+  }, true);
+
+  // Read-through: the reader's viewport bottom has passed 75% of the post body.
+  const prose = document.querySelector<HTMLElement>('article .prose');
+  if (prose) {
+    const onScroll = () => {
+      const rect = prose.getBoundingClientRect();
+      if (innerHeight - rect.top < rect.height * 0.75) return;
+      removeEventListener('scroll', onScroll);
+      track('read-75');
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+  }
+</script>

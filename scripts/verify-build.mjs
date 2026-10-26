@@ -101,6 +101,21 @@ for (const f of files.filter((f) => /\.(html|xml|txt|json)$/.test(f))) {
 const rss = existsSync(join(DIST, 'rss.xml')) ? readFileSync(join(DIST, 'rss.xml'), 'utf8') : '';
 if (rss && !/^<\?xml[\s\S]*<rss[\s\S]*<channel>[\s\S]*<\/channel>\s*<\/rss>\s*$/.test(rss)) fail('rss.xml is malformed');
 
+// 7. Analytics: the cookieless Umami tracker is on every page when configured, and nowhere otherwise.
+// No other tracker is allowed.
+const umamiId = process.env.PUBLIC_UMAMI_WEBSITE_ID;
+const umamiTag = /<script[^>]+src="https:\/\/cloud\.umami\.is\/script\.js"[^>]*data-website-id="([^"]+)"[^>]*data-do-not-track="true"/;
+const umamiScript = /<script[^>]+src="https:\/\/cloud\.umami\.is\//;
+const otherTrackers = /<script[^>]+src="https:\/\/(?:www\.)?(?:googletagmanager\.com|google-analytics\.com|connect\.facebook\.net|static\.hotjar\.com|snap\.licdn\.com)\//;
+for (const f of html) {
+  const rel = relative(DIST, f);
+  const s = readFileSync(f, 'utf8');
+  const m = s.match(umamiTag);
+  if (umamiId && m?.[1] !== umamiId) fail(`${rel}: missing the Umami analytics script`);
+  if (!umamiId && umamiScript.test(s)) fail(`${rel}: Umami script present without PUBLIC_UMAMI_WEBSITE_ID`);
+  if (otherTrackers.test(s)) fail(`${rel}: contains a third-party tracker other than Umami`);
+}
+
 if (errors.length) {
   console.error(`verify-build: ${errors.length} problem(s)\n` + errors.map((e) => `  ✗ ${e}`).join('\n'));
   process.exit(1);

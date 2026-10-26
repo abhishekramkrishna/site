@@ -50,6 +50,20 @@ Rules for the rubric:
 - No strategy notes, plans, watchlists, personal contact details or secrets in this repo, its issues or its PRs.
 - Commits use the GitHub no-reply email.
 
+## Analytics (Umami Cloud)
+- Cookieless, no consent banner. Website ID `764008c3-72fc-4e4b-8b51-41f15ac01487` (public: it ships in page source).
+  Dashboard: https://cloud.umami.is.
+- Loaded by `src/components/Analytics.astro` only when `PUBLIC_UMAMI_WEBSITE_ID` is set. Only `deploy.yml` sets it
+  (repository variable `UMAMI_WEBSITE_ID`, falling back to the ID above), so dev, CI and test builds load no tracker.
+  `scripts/verify-build.mjs` check 7 and the analytics tests in `tests/site.spec.ts` enforce this.
+- Custom events, each with the page `path`: `share-linkedin`, `share-x`, `share-copy-link` (any element with
+  `data-event="name"`), `video-play`, `video-complete`, `read-75`. Page views, referrers and UTM campaigns are built in.
+- **Every new post, and every time a post is promoted**, give the owner tracked links for LinkedIn and X:
+  `<post URL>?utm_source=linkedin|x&utm_medium=social&utm_campaign=<post-slug>`. Use these in social drafts instead
+  of the bare URL. Plain UTM links need nothing created in Umami; they show up under the campaign report. If the owner
+  wants a short link, remind them to create it in Umami under **Links** with the same UTM values.
+  Add the post's slug to the weekly traffic report.
+
 ## Project map
 - `src/consts.ts`: name, role, links, topics, the header "now" line
 - `src/pages/`: routes (home, about, blog, tags, RSS, robots, 404)
