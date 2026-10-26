@@ -10,15 +10,15 @@ const x = `https://x.com/intent/post?text=${xText}&url=${encoded}`;
 ---
 <div class="share" aria-label="Share this post">
   <span class="mono muted">Share</span>
-  <a class="btn" href={linkedin} target="_blank" rel="noopener">
+  <a class="btn" href={linkedin} target="_blank" rel="noopener" data-event="share-linkedin">
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C20.6 8.65 21 11.2 21 14.5V21h-4v-5.8c0-1.4-.03-3.2-1.95-3.2-1.95 0-2.25 1.52-2.25 3.1V21H9z"/></svg>
     LinkedIn
   </a>
-  <a class="btn" href={x} target="_blank" rel="noopener">
+  <a class="btn" href={x} target="_blank" rel="noopener" data-event="share-x">
     <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.2h1.7L7.4 4.73H5.58z"/></svg>
     X
   </a>
-  <button class="btn copy" type="button" data-url={url}>Copy link</button>
+  <button class="btn copy" type="button" data-url={url} data-event="share-copy-link">Copy link</button>
 </div>
 
 <script>

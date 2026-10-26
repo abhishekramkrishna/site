@@ -140,3 +140,42 @@ test('reduced motion shows the agent moderation figures finished without animati
   for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
   await ctx.close();
 });
+
+test('test builds load no analytics tracker or third-party requests', async ({ page }) => {
+  const hosts = new Set<string>();
+  page.on('request', (r) => hosts.add(new URL(r.url()).host));
+  for (const path of ['/', '/blog/moderating-ai-agents']) {
+    await page.goto(path, { waitUntil: 'networkidle' });
+    await expect(page.locator('script[src*="umami"]')).toHaveCount(0);
+  }
+  const origin = new URL(page.url()).host;
+  expect([...hosts].filter((h) => h !== origin)).toEqual([]);
+});
+
+test('share clicks, video plays and read-through send analytics events', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { events: [string, Record<string, unknown>][]; umami: unknown };
+    w.events = [];
+    w.umami = { track: (name: string, data: Record<string, unknown>) => w.events.push([name, data]) };
+  });
+  await page.goto('/blog/moderating-ai-agents', { waitUntil: 'networkidle' });
+  const events = () => page.evaluate(() => (window as unknown as { events: [string, Record<string, unknown>][] }).events);
+  const names = async () => (await events()).map(([n]) => n);
+
+  expect(await names()).not.toContain('read-75');
+  await page.locator('.post-foot').scrollIntoViewIfNeeded();
+  await expect.poll(names).toContain('read-75');
+  expect((await events())[0][1]).toMatchObject({ path: '/blog/moderating-ai-agents' });
+
+  await page.locator('.share [data-event="share-linkedin"]').evaluate((a) => a.addEventListener('click', (e) => e.preventDefault()));
+  await page.locator('.share [data-event="share-linkedin"]').click();
+  await expect.poll(names).toContain('share-linkedin');
+
+  await page.locator('main video').evaluate((v) => {
+    v.dispatchEvent(new Event('play'));
+    v.dispatchEvent(new Event('play'));
+    v.dispatchEvent(new Event('ended'));
+  });
+  await expect.poll(names).toContain('video-complete');
+  expect((await names()).filter((n) => n === 'video-play')).toHaveLength(1);
+});
