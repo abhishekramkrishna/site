@@ -12,6 +12,8 @@ import AgentCheckpoints from '../../components/diagrams/AgentCheckpoints.astro';
 import ActionTiers from '../../components/diagrams/ActionTiers.astro';
 import GuardrailNumbers from '../../components/diagrams/GuardrailNumbers.astro';
 
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/moderating-ai-agents`;
+
 In July 2025 a coding agent deleted a company's production database during a code freeze it had been told about. In April 2026 another agent found an API token that could delete storage volumes and wiped a production volume in about nine seconds, along with the backups stored on it. Neither agent said anything offensive. A content filter would have passed both.
 
 When I ask teams how they moderate their agents, the answer is usually a content filter on the model's output. That is how we moderated chatbots. It is also roughly where social platforms were in 2008: a blocklist, a report button and a small team reading the queue. Platforms then spent fifteen years learning, often in public, what actually works at scale.
@@ -26,7 +28,7 @@ Agents are now producing actions at the kind of volume platforms produce posts. 
 
 ## The 60-second version
 
-<video controls preload="none" playsinline poster="/images/blog/moderating-ai-agents/summary-poster.jpg" src="/images/blog/moderating-ai-agents/summary.mp4" style="width:100%;height:auto;border-radius:8px" aria-label="60-second narrated summary of moderating AI agents, with captions"></video>
+<video controls preload="none" playsinline poster={`${media}/summary-poster.jpg`} src={`${media}/summary.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="60-second narrated summary of moderating AI agents, with captions"></video>
 
 ## Agents are the new user-generated content
 
