@@ -1,0 +1,39 @@
+---
+// Four numbers for the board, plus the usage numbers that stay on the team dashboard.
+const lines: { n: string; q: string; metric: string; why: string }[] = [
+  { n: '1', q: 'What did it cost?', metric: 'Cost per resolved issue', why: 'All AI spend for a team, divided by work items closed and shipped' },
+  { n: '2', q: 'Did more reach customers?', metric: 'Lead time from accepted to in production', why: 'Releases and resolved work, not commits or pull requests' },
+  { n: '3', q: 'Did quality hold?', metric: 'Change failure rate and rework', why: 'Failed changes, escaped defects, PRs sent back for changes' },
+  { n: '4', q: 'Did the business move?', metric: 'The outcome each AI bet was funded to change', why: 'Named before the money is spent, with an owner and a stop rule' },
+];
+const diag = ['Tokens', 'Seats active', 'Acceptance rate', 'Agent-authored share'];
+---
+<div class="dfig card4" role="img" aria-label="An AI return scorecard with four lines for the board. 1, what did it cost: cost per resolved issue. 2, did more reach customers: lead time from accepted to in production. 3, did quality hold: change failure rate and rework. 4, did the business move: the outcome each AI bet was funded to change, named in advance with an owner and a stop rule. Tokens, active seats, acceptance rate and agent-authored share stay on the team dashboard as diagnostics.">
+  <p class="df-title">Four lines for the board. Usage stays on the team dashboard.</p>
+  <ol>
+    {lines.map((l, i) => (
+      <li class="df-fade" style={`transition-delay:${0.15 + i * 0.18}s`}>
+        <span class="n">{l.n}</span>
+        <div><p class="q">{l.q}</p><p class="m">{l.metric}</p><p class="w">{l.why}</p></div>
+      </li>
+    ))}
+  </ol>
+  <div class="diag">
+    <p class="h">Diagnostics, not results</p>
+    <ul>{diag.map((d) => <li>{d}</li>)}</ul>
+    <p class="w">Use them to find waste and stuck teams. Never rank people by them.</p>
+  </div>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; }
+  ol li { display: grid; grid-template-columns: 2rem 1fr; gap: 0.7rem; padding: 0.7rem 0; border-top: 1px solid var(--df-rule); }
+  .n { font: 500 1.1rem var(--font-mono); color: var(--df-hi); }
+  .q { margin: 0; font: 400 0.74rem var(--font-mono); color: var(--df-muted); letter-spacing: 0.02em; }
+  .m { margin: 0.15rem 0 0; font-size: 1rem; font-weight: 640; line-height: 1.3; }
+  .w { margin: 0.2rem 0 0; font-size: 0.82rem; line-height: 1.35; color: var(--df-muted); }
+  .diag { margin-top: 0.9rem; border: 1px dashed var(--df-rule); border-radius: 10px; padding: 0.8rem 1rem; }
+  .h { font: 500 0.72rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--df-accent); margin: 0 0 0.5rem; }
+  .diag ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .diag li { font: 400 0.78rem var(--font-mono); color: var(--df-muted); border: 1px solid var(--df-rule); border-radius: 999px; padding: 0.15rem 0.6rem; }
+</style>

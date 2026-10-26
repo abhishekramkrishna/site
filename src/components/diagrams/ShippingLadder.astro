@@ -1,0 +1,31 @@
+---
+// Autonomous coding agents: the gain shrinks at each step from commit to used software (Demirer, Musolff & Yang, NBER w35275, 2026).
+const max = 260;
+const rows: [string, number, string][] = [
+  ['Commits', 240, 'What the agent produces'],
+  ['Projects', 80, 'Work that adds up to something'],
+  ['Releases', 30, 'What actually ships'],
+];
+---
+<div class="dfig ladder" role="img" aria-label="Effect of autonomous coding agents on developers' output, from a study of more than 500,000 GitHub developers. Commits rose 240%, projects 80% and releases 30%. Across four software marketplaces, new apps rose sharply but total usage did not increase.">
+  <p class="df-title">The further from the keyboard, the smaller the gain.</p>
+  {rows.map(([label, v, sub], i) => (
+    <div class="row">
+      <div class="lab"><span>{label} <small>{sub}</small></span><span class="df-num">+{v}%</span></div>
+      <div class="df-track"><div class="df-bar" style={`width:${(v / max) * 100}%;--i:${i}`}></div></div>
+    </div>
+  ))}
+  <div class="row out">
+    <div class="lab"><span>Software people use <small>Usage across four app marketplaces</small></span><span class="df-num hi">no increase</span></div>
+    <div class="df-track"><div class="df-bar zero" style="--i:3"></div></div>
+  </div>
+  <p class="df-note">Cumulative effect of autonomous coding agents. More than 500,000 GitHub developers with AI usage telemetry. Demirer, Musolff and Yang, NBER Working Paper 35275, May 2026, revised September 2026.</p>
+</div>
+
+<style>
+  .row { margin-bottom: 0.95rem; }
+  .lab { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; font-size: 0.92rem; font-weight: 550; margin-bottom: 0.35rem; }
+  .lab small { display: block; font: 400 0.72rem var(--font-mono); color: var(--df-muted); margin-top: 0.1rem; }
+  .hi { color: var(--df-hi); }
+  .zero { width: 3px; background: var(--df-hi); }
+</style>
