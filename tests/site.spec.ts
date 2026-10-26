@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -156,4 +156,24 @@ test('agent eval post shows its diagrams and screenshots and loads its video', a
     expect(url, `video ${attr}`).toBeTruthy();
     expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
   }
+});
+
+test('skills post shows its figures and animates them on scroll', async ({ page }) => {
+  await page.goto('/blog/skills-are-the-new-team-wiki', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  const last = figs.last();
+  await expect(last).toHaveClass(/motion/);
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});
+
+test('reduced motion shows the skills figures finished without animating', async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.goto('/blog/skills-are-the-new-team-wiki');
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
+  await ctx.close();
 });

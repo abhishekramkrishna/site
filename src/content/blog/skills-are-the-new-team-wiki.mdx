@@ -1,0 +1,168 @@
+---
+title: "Skills are the new team wiki"
+description: Most team documentation is written once and rarely read. Agent skills turn the same knowledge into instructions an agent reads every time the task comes up. What skills are, what the evidence says, an example, and how to manage them like code.
+pubDate: 2026-10-28
+tags: [agents, leadership]
+draft: false
+---
+
+import Figure from '../../components/Figure.astro';
+import WikiVsSkill from '../../components/diagrams/WikiVsSkill.astro';
+import SkillLoading from '../../components/diagrams/SkillLoading.astro';
+import SkillsBenchGains from '../../components/diagrams/SkillsBenchGains.astro';
+import SkillLifecycle from '../../components/diagrams/SkillLifecycle.astro';
+
+Every engineering team has a page called something like "How we do releases". It was accurate the week someone wrote it. Since then the process has changed twice, the page hasn't, and new joiners learn the real process by asking in chat.
+
+That isn't a writing problem. Teams write plenty. It's a reading problem. In Stack Overflow's 2024 survey of professional developers, about six in ten said they spend more than 30 minutes a day searching for answers or solutions. Much of what they're looking for is already written down somewhere.
+
+Agents change who reads the documentation. When the way your team works is written as an agent skill, the reader is an agent that loads it every time the task comes up, follows it, and shows you in a pull request when it's out of date.
+
+**The short version**
+
+- A skill is a folder with a `SKILL.md` file: a name, a one-line description of when to use it, and instructions. Agents load the full instructions only when a task matches.
+- The format is now an open standard used by Claude, GitHub Copilot, OpenAI Codex and others. Google is converting Gemini's Gems into skills from 17 November.
+- In the largest benchmark so far, skills written by people raised agent pass rates by 16 points on average. Skills the model wrote for itself didn't help. The value is in what only your team knows.
+- Treat skills like code: small, reviewed, owned, tested, and retired when the model no longer needs them.
+
+## Documentation nobody reads
+
+The traditional team wiki fails in predictable ways. It's written for a reader who may never arrive. Nobody can tell whether it works, because nobody checks what happens after someone reads it. And it goes stale silently, because the only signal is a confused new hire, who usually asks a colleague instead of fixing the page.
+
+Write the same knowledge as a skill and each of those changes.
+
+<Figure caption="The same team knowledge written for two different readers." tone="navy" wide>
+  <WikiVsSkill />
+</Figure>
+
+Anthropic, which created the format, describes writing a skill as being like writing "an onboarding guide for a new hire". That is exactly what a good team wiki was meant to be. The difference is that this new hire reads the guide every single time, and does what it says.
+
+## What a skill actually is
+
+A skill is a folder. Inside is a file called `SKILL.md` with two required fields at the top, `name` and `description`, followed by plain instructions. The folder can also hold scripts, templates and reference files.
+
+What makes skills practical is how agents load them, which the specification calls progressive disclosure. At startup the agent reads only each skill's name and description. When a task matches a description, it reads the full instructions. It opens bundled files only if the instructions call for them.
+
+<Figure caption="Progressive disclosure, as described in the Agent Skills specification and Anthropic's engineering guide." tone="navy" wide>
+  <SkillLoading />
+</Figure>
+
+Two things follow for anyone writing one. First, the description is the most important line. It decides whether the skill is ever used, so it should say when to use the skill, not just what it is. Second, because the rest only loads on demand, a team can keep many small skills on hand without the cost of loading all of them into every task.
+
+## Why this is happening now
+
+Skills went from one vendor's feature to a cross-industry format in about a year.
+
+- **October 2025.** Anthropic introduced Agent Skills for Claude.
+- **December 2025.** Anthropic published the format as an open standard at agentskills.io. The same day, GitHub announced Copilot support, picking up skills already in a repository's `.claude/skills` folder. VentureBeat reported that Cursor, Goose, Amp and OpenCode had adopted it, with partner skills from companies including Atlassian, Figma, Notion, Stripe and Zapier.
+- **2026.** OpenAI's Codex documentation now says its skills "build on the open agent skills standard", loading them from `.agents/skills` folders in a repository.
+- **17 November 2026.** Google begins converting Gemini's Gems into skills for personal accounts, with Workspace business and enterprise accounts scheduled for March 2027. Gemini's consumer skills share the name and the idea, reusable instructions invoked when relevant, but Google hasn't said they use the same file format.
+
+For a team, the practical consequence is portability. A skill written today for one agent is likely to work in the next one you adopt. That is a better bet than a wiki page or a vendor-specific prompt library.
+
+## What the evidence says
+
+The most useful evidence is SkillsBench, a benchmark published in February 2026 by Xiangyi Li and colleagues. They ran 84 tasks across 11 domains, with seven agent and model setups, each with and without skills, over 7,308 runs.
+
+<Figure caption="Source: Li et al., SkillsBench, February 2026. Percentage-point change in pass rate when skills were added." tone="navy" wide>
+  <SkillsBenchGains />
+</Figure>
+
+Four findings matter for teams.
+
+**Skills written by people help.** Curated skills raised the average pass rate by 16.2 percentage points.
+
+**Skills the model wrote for itself didn't.** When models were asked to write their own skills first, the average change was −1.3 points. The useful part of a skill is the knowledge the model doesn't already have. A model can't write down what it doesn't know.
+
+**Gains are largest where knowledge is specialised.** Software engineering tasks gained only 4.5 points, probably because models already know a lot of general coding practice. Healthcare tasks gained 51.9. Your team's conventions, systems and exceptions are your specialised domain. Skills that restate generic best practice add little.
+
+**Short beats comprehensive.** Focused skills with two or three parts did better than comprehensive documentation. With skills, Claude Haiku 4.5 scored 27.7%, ahead of Claude Opus 4.5 without them at 22.0%.
+
+Read it with the usual caution. It is a benchmark, not a study of teams at work, and skills made results worse on 16 of the 84 tasks. That last point is worth keeping. A wrong or outdated skill does more damage than no skill, because the agent follows it confidently.
+
+## An example: turning a review policy into a skill
+
+In an earlier post on [review as the new bottleneck](/blog/more-code-not-more-software/), I suggested sorting pull requests into three review lanes by risk. As a wiki page, that policy depends on every author remembering it. As a skill, the agent that drafts the pull request applies it every time.
+
+```markdown
+---
+name: review-lane
+description: Use when opening or updating a pull request. Assigns the
+  review lane (low, medium or high risk) and writes the author summary
+  reviewers need.
+---
+
+# Review lane
+
+## Pick the lane from what the change touches
+- **High**: authentication, payments, data migrations, customer data,
+  anything hard to roll back. Request two reviewers, one from CODEOWNERS
+  for that path.
+- **Low**: tests only, internal tools, copy, dependency bumps that pass CI.
+- **Medium**: everything else.
+- If the change spans lanes, use the highest one.
+
+## Write the PR description
+1. Add the label `lane:low`, `lane:medium` or `lane:high`.
+2. Summarise what changed and why in three sentences or fewer.
+3. List what you would check first as the reviewer.
+4. For medium and high, explain any non-obvious code in plain words.
+   If you cannot, say so instead of guessing.
+
+## Exceptions
+- Feature flags default to off. A change that turns one on is high.
+- `migrations/` is always high, even for one line.
+```
+
+It's short on purpose. The description tells the agent when to load it. The body holds the rules, and the exceptions section holds what a model couldn't know: which folders matter and which "small" changes aren't small. That section is where most of a skill's value sits, and it's usually missing from wiki pages too.
+
+Check it into the repository next to the code it governs. Changes to the policy then go through review like any other change, and the history shows who changed what and why.
+
+## How to write skills your team will keep
+
+**Start with repeated questions.** The best first skills are the questions your team answers every week, and the tasks your agents keep getting wrong. Anthropic's own guidance is to run agents on real tasks, see where they struggle, and write skills for those gaps.
+
+**One task per skill.** "How we release", "How we name database migrations" and "How we write incident updates" are three skills, not one page. Small skills load cleanly and are easier to test.
+
+**Write the description as a trigger.** Say when to use it, in the words people use when they ask for that task. If a skill fires at the wrong time, or never fires, fix the description first.
+
+**Write down the exceptions.** The general rule is often something the model already knows. The exception is the reason the skill exists.
+
+**Test with and without it.** Run a handful of real tasks both ways. If the skill doesn't change the outcome, delete it. If it makes things worse, you've found a stale rule.
+
+**Give every skill an owner and a review date.** Recheck skills when you change models. Some will have become redundant because the model now does the right thing by default.
+
+<Figure caption="A lifecycle for team skills. Security figure: Liu et al., Agent Skills in the Wild, January 2026." tone="navy" wide>
+  <SkillLifecycle />
+</Figure>
+
+## Treat skills like code, because they can run code
+
+A skill can bundle scripts, and it runs with your agent's permissions. That makes a skill downloaded from the internet closer to a dependency than to a document.
+
+The risk is not theoretical. Researchers who analysed 31,132 skills from public marketplaces found that 26.1% contained at least one vulnerability, most often data exfiltration (13.3%) or privilege escalation (11.8%). Skills that bundled scripts were 2.12 times as likely to be vulnerable as instruction-only skills.
+
+So apply the rules you already use for code. Keep team skills in the repository. Review changes in pull requests, with an owner for each folder. Read any third-party skill, including its scripts, before installing it. And be wary of any skill that tells the agent to contact an outside service.
+
+## What to do this week
+
+Ask your team for the three questions they answer most often. Write each one as a skill of under a page, with an honest description and the exceptions spelled out. Put them in the repository, run a few real tasks with and without them, and keep what helps.
+
+Then watch two signals for a month: how often those questions still come up in chat, and how often agent-written pull requests follow the convention without a reviewer pointing it out.
+
+I'm still working out where the line sits between a skill and plain repository instructions such as an `AGENTS.md` file. My current rule is that anything every task needs goes in the repository instructions, and anything only some tasks need becomes a skill. If your team has found a better rule, I'd like to hear it.
+
+---
+
+**Sources**
+
+- [Anthropic: Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) (October 2025, updated December 2025)
+- [Agent Skills specification and overview](https://agentskills.io)
+- [VentureBeat: Anthropic launches enterprise Agent Skills and opens the standard](https://venturebeat.com/ai/anthropic-launches-enterprise-agent-skills-and-opens-the-standard) (December 2025)
+- [GitHub changelog: GitHub Copilot now supports Agent Skills](https://github.blog/changelog/2025-12-18-github-copilot-now-supports-agent-skills/) (December 2025)
+- [OpenAI Codex documentation: Agent Skills](https://developers.openai.com/codex/skills)
+- [9to5Google: Gemini app replacing Gems with skills in November](https://9to5google.com/2026/09/27/gemini-gems-skills/) (September 2026) and [TechRepublic on the migration dates](https://www.techrepublic.com/article/news-gemini-gems-skills-migration/) (September 2026)
+- [Li et al., SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks](https://arxiv.org/abs/2602.12670) (February 2026)
+- [Liu et al., Agent Skills in the Wild: An Empirical Study of Security Vulnerabilities at Scale](https://arxiv.org/abs/2601.10338) (January 2026)
+- [O'Reilly Radar: Agent skills work, but the research shows most teams are building them wrong](https://oreilly.com/radar/agent-skills-work-but-the-research-shows-most-teams-are-building-them-wrong) (May 2026)
+- [Stack Overflow 2024 Developer Survey, professional developers](https://survey.stackoverflow.co/2024/professional-developers) (July 2024)
