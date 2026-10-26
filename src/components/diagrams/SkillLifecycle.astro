@@ -1,0 +1,37 @@
+---
+// Treat team skills like code: a lifecycle from the question to retirement.
+const steps: [string, string][] = [
+  ['Spot', 'A question your team answers every week, or a task the agent keeps getting wrong'],
+  ['Write', 'One task, short, with your exceptions. Description says when to use it'],
+  ['Review', 'Pull request, an owner, and extra care for anything that runs code'],
+  ['Test', 'Run real tasks with and without the skill. Keep it only if it helps'],
+  ['Retire', 'Recheck when models change. Delete what the model now does by itself'],
+];
+---
+<div class="dfig lc" role="img" aria-label="A lifecycle for team skills, treated like code. Spot: a question your team answers every week, or a task the agent keeps getting wrong. Write: one task, short, with your exceptions, and a description that says when to use it. Review: a pull request, an owner, and extra care for anything that runs code. Test: run real tasks with and without the skill and keep it only if it helps. Retire: recheck when models change and delete what the model now does by itself.">
+  <p class="df-title">Manage skills like code, not like pages.</p>
+  <ol>
+    {steps.map(([name, what], i) => (
+      <li style={`--i:${i}`}>
+        <span class="no">{String(i + 1).padStart(2, '0')}</span>
+        <p class="nm">{name}</p>
+        <p class="what">{what}</p>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">26.1% of 31,132 public skills had at least one vulnerability. Review before you install.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.7rem; }
+  li { border: 1px solid var(--df-rule); border-top: 3px solid var(--df-accent); border-radius: 10px; padding: 0.75rem 0.85rem; }
+  li:nth-child(3) { border-top-color: var(--df-hi); }
+  li p { margin: 0; line-height: 1.35; }
+  .no { font: 500 0.72rem var(--font-mono); color: var(--df-muted); }
+  .nm { font-weight: 650; font-size: 1rem; margin: 0.2rem 0 0.3rem !important; }
+  .what { font-size: 0.82rem; color: var(--df-muted); }
+  @media (prefers-reduced-motion: no-preference) {
+    .dfig.motion li { opacity: 0; transform: translateY(6px); transition: opacity 0.45s ease, transform 0.45s ease; transition-delay: calc(var(--i) * 120ms); }
+    .dfig.motion.in-view li { opacity: 1; transform: none; }
+  }
+</style>

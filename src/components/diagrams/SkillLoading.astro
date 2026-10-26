@@ -1,0 +1,40 @@
+---
+// How an agent loads a skill: progressive disclosure in three stages.
+const stages: [string, string, string, string][] = [
+  ['1', 'Always loaded', 'name + description', 'A line or two per skill, so the agent knows it exists'],
+  ['2', 'When the task matches', 'SKILL.md body', 'The steps, rules and exceptions'],
+  ['3', 'Only if needed', 'scripts/, references/', 'Checklists, templates, code to run'],
+];
+---
+<div class="dfig sl" role="img" aria-label="How an agent loads a skill, in three stages. Stage 1, always loaded: the name and description, a line or two per skill so the agent knows it exists. Stage 2, when the task matches: the SKILL.md body with the steps, rules and exceptions. Stage 3, only if needed: bundled scripts and reference files such as checklists, templates and code to run.">
+  <p class="df-title">Agents read a skill in layers, only as deep as the task needs.</p>
+  <div class="stack">
+    {stages.map(([n, when, what, why], i) => (
+      <div class="st" style={`--i:${i};--w:${100 - i * 14}%`}>
+        <span class="n">{n}</span>
+        <div>
+          <p class="when">{when}</p>
+          <p class="what">{what}</p>
+          <p class="why">{why}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="df-note">Because only stage 1 is always in context, a team can keep dozens of skills without crowding the agent.</p>
+</div>
+
+<style>
+  .stack { display: flex; flex-direction: column; gap: 0.6rem; }
+  .st { width: var(--w); min-width: 240px; display: grid; grid-template-columns: auto 1fr; gap: 0.8rem; align-items: start; border: 1px solid var(--df-rule); border-left: 3px solid var(--df-accent); border-radius: 10px; padding: 0.75rem 0.9rem; }
+  .st:first-child { border-left-color: var(--df-hi); }
+  .st p { margin: 0; line-height: 1.35; }
+  .n { font: 500 0.9rem var(--font-mono); color: var(--df-hi); }
+  .when { font: 500 0.7rem var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--df-muted); }
+  .what { font: 500 0.95rem var(--font-mono); color: var(--df-accent); margin: 0.15rem 0 !important; }
+  .why { font-size: 0.85rem; }
+  @media (max-width: 560px) { .st { width: 100%; min-width: 0; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .dfig.motion .st { opacity: 0; transform: translateY(6px); transition: opacity 0.45s ease, transform 0.45s ease; transition-delay: calc(var(--i) * 160ms); }
+    .dfig.motion.in-view .st { opacity: 1; transform: none; }
+  }
+</style>
