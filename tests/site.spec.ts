@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -111,5 +111,32 @@ test('reduced motion shows the review figures finished without animating', async
   await expect(fig).not.toHaveClass(/motion/);
   const transform = await fig.locator('.df-bar').first().evaluate((el) => getComputedStyle(el).transform);
   expect(transform).toBe('none');
+  await ctx.close();
+});
+
+test('agent moderation post shows its figures, animates them and loads its video', async ({ page, request }) => {
+  await page.goto('/blog/moderating-ai-agents', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  const last = figs.last();
+  await expect(last).toHaveClass(/motion/);
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+  const video = page.locator('main video');
+  await expect(video).toHaveCount(1);
+  for (const attr of ['src', 'poster']) {
+    const url = await video.getAttribute(attr);
+    expect(url, `video ${attr}`).toBeTruthy();
+    expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
+  }
+});
+
+test('reduced motion shows the agent moderation figures finished without animating', async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.goto('/blog/moderating-ai-agents');
+  const figs = page.locator('main .dfig');
+  await expect(figs).toHaveCount(4);
+  for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
   await ctx.close();
 });
