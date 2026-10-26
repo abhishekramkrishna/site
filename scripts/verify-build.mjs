@@ -105,13 +105,14 @@ if (rss && !/^<\?xml[\s\S]*<rss[\s\S]*<channel>[\s\S]*<\/channel>\s*<\/rss>\s*$/
 // No other tracker is allowed.
 const umamiId = process.env.PUBLIC_UMAMI_WEBSITE_ID;
 const umamiTag = /<script[^>]+src="https:\/\/cloud\.umami\.is\/script\.js"[^>]*data-website-id="([^"]+)"[^>]*data-do-not-track="true"/;
-const otherTrackers = /googletagmanager\.com|google-analytics\.com|connect\.facebook\.net|static\.hotjar\.com|snap\.licdn\.com/;
+const umamiScript = /<script[^>]+src="https:\/\/cloud\.umami\.is\//;
+const otherTrackers = /<script[^>]+src="https:\/\/(?:www\.)?(?:googletagmanager\.com|google-analytics\.com|connect\.facebook\.net|static\.hotjar\.com|snap\.licdn\.com)\//;
 for (const f of html) {
   const rel = relative(DIST, f);
   const s = readFileSync(f, 'utf8');
   const m = s.match(umamiTag);
   if (umamiId && m?.[1] !== umamiId) fail(`${rel}: missing the Umami analytics script`);
-  if (!umamiId && s.includes('cloud.umami.is')) fail(`${rel}: Umami script present without PUBLIC_UMAMI_WEBSITE_ID`);
+  if (!umamiId && umamiScript.test(s)) fail(`${rel}: Umami script present without PUBLIC_UMAMI_WEBSITE_ID`);
   if (otherTrackers.test(s)) fail(`${rel}: contains a third-party tracker other than Umami`);
 }
 
