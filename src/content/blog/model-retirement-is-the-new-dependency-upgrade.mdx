@@ -1,0 +1,133 @@
+---
+title: "Model retirement is the new dependency upgrade"
+description: GPT-4o and GPT-4.1 leave OpenAI's API on 14 January 2027, after about three months' notice. Model swaps now arrive on someone else's schedule. Plan them like framework upgrades, with evals as the gate.
+pubDate: 2026-10-29
+tags: [agents, strategy, leadership]
+draft: false
+cover:
+  image: ../../assets/covers/model-retirement-is-the-new-dependency-upgrade.png
+  thumb: ../../assets/covers/model-retirement-is-the-new-dependency-upgrade-thumb.png
+  alt: "Your model has an end-of-life date: GPT-4o, GPT-4o mini, GPT-4.1 and GPT-4.1 mini leave OpenAI's API on 14 January 2027, after 92 days of notice. Run a model swap like a framework upgrade: dated snapshots, an eval suite as the gate, canary traffic with the old model as fallback, and a named owner."
+---
+
+import Figure from '../../components/Figure.astro';
+import ModelLifespans from '../../components/diagrams/ModelLifespans.astro';
+import HiddenRegressions from '../../components/diagrams/HiddenRegressions.astro';
+import SwapGate from '../../components/diagrams/SwapGate.astro';
+
+On 14 October 2026, OpenAI told developers that GPT-4o, GPT-4o mini, GPT-4.1 and GPT-4.1 mini will stop working in its API on 14 January 2027. Fine-tuned versions go on the same day.
+
+That is 92 days. OpenAI's own model page still describes GPT-4o as "the best model for most tasks", and it sits inside a great many production systems. Three months is not much time to replace it.
+
+Most teams I talk to still treat a model change as a config change: swap the model ID, run a few prompts, ship. That worked when the old model stayed around. It doesn't any more.
+
+**The short version**
+
+- Hosted models now retire on a fixed date set by the provider. Recent Claude and GPT models lasted 12 to 29 months on the API, with 61 to 92 days' notice. When the date passes, requests fail.
+- A new model changes behaviour the way a major framework version does. Research on recent GPT upgrades found that a 7.3-point gain in the average score hid answers that reliably got worse.
+- Run model swaps like dependency upgrades: keep an inventory, pin versions, compare old and new on your own evals case by case, gate the release on them, and roll out gradually with a fallback.
+
+## Models now have an end-of-life date
+
+Every engineering organisation already knows how to live with end-of-life software. Node.js, Java, Python, React and Postgres all publish support windows, and most teams have a habit, however reluctant, of upgrading before they run out.
+
+Hosted AI models now work the same way, with two differences that make them harder.
+
+**The windows are shorter.** Anthropic's Claude Opus 4.1 was retired on 5 August 2026, twelve months after its release. Claude Sonnet 4 and Opus 4 lasted about thirteen months, and Sonnet 4.5 will retire on 30 November 2026, fourteen months after launch. The GPT-4o snapshot from August 2024 will have lasted about 29 months. An even-numbered Node.js release, by comparison, is supported for about three years.
+
+**The notice is short and set by the provider.** Anthropic commits to at least 60 days' notice for publicly released models, and its last four retirement notices gave between 60 and 62 days. OpenAI's published policy promises at least six months for generally available models, but the GPT-4 series got about three. Google's Gemini API lists shutdown dates as "earliest possible dates" and does not state a minimum notice period.
+
+<Figure caption="How long recent models lasted on their provider's API. Sources: Anthropic and OpenAI deprecation pages, checked 26 October 2026; Node.js release schedule." tone="navy" wide>
+  <ModelLifespans />
+</Figure>
+
+**And there is no staying behind.** You can run an end-of-life version of Node.js for years if you accept the risk. You can't call a retired model. Anthropic's documentation is plain about it: "Requests to retired models fail."
+
+The dates also differ by platform. Microsoft's Azure OpenAI schedule retires the same GPT-4o and GPT-4.1 versions on 14 April 2027, three months after OpenAI's own API, and names a different replacement. If your company buys the same model through two clouds, you have two deadlines.
+
+## Why a model swap is a major version bump
+
+The replacement is usually better on average. It is also different, and the differences land on your product.
+
+OpenAI recommends GPT-6 Luna as the replacement for all four retiring models. Its list price is far lower: $0.10 per million input tokens against $2.50 for GPT-4o. But it reasons by default, and OpenAI's own migration guide tells teams to "start with reasoning effort set to `none`" to get behaviour closer to what they had. That is a breaking change by any other name.
+
+Anthropic's API version of 21 October 2026 removed the `temperature`, `top_p` and `top_k` parameters. A request that sets them now returns an error. Code that has run unchanged for two years can fail on the day you move.
+
+Cheaper models create the same pressure without any deadline. Anthropic's Claude Haiku 5.5, released on 7 October, lists at $0.10 per million input tokens and $0.50 per million output tokens, a tenth of Haiku 4.5's list price. Finance teams will ask why you haven't moved. The honest answer has to be "we're testing it", not "we haven't looked".
+
+The deeper problem is that averages hide what changes. Xiaonan Xu and Wenjing Wu ran 900 benchmark items through three recent GPT upgrades, 50 times each per model, and compared them item by item. In the move from GPT-5.4 to GPT-5.5, the maths score rose 7.3 points, yet 6.0% of the maths items got reliably worse. Across the comparisons, 12% to 24% of items changed outcome in one direction or the other. When the researchers ran each model only once per item, they found none of the 457 reliable changes.
+
+<Figure caption="An upgrade can raise the average and still break specific cases. Source: Xu and Wu, What Aggregate Scores Miss, arXiv, August 2026." tone="navy" wide>
+  <HiddenRegressions />
+</Figure>
+
+Those are public benchmarks, not your workload. But your workload is exactly where it matters: the refund rule, the output format a downstream parser expects, the tone your support team agreed with legal. A higher average score tells you nothing about those.
+
+This isn't new, either. In 2023, researchers at Stanford and Berkeley showed that the same GPT-4 service answered a set of prime-number questions correctly 84% of the time in March and 51% in June. Models change. The only question is whether you find out before your customers do.
+
+## What dependency upgrades already taught us
+
+The good news is that engineering teams already have the discipline. It just hasn't been pointed at models.
+
+| Framework upgrade | Model swap |
+| --- | --- |
+| Lockfile with exact versions | Dated model snapshots, never "latest" aliases in production |
+| Release notes and end-of-life calendar | Provider deprecation pages and shutdown dates, tracked automatically |
+| Test suite in CI | Eval suite: regression cases that must hold, capability cases to improve |
+| Bot that opens upgrade pull requests | Scheduled job that runs the candidate model through your evals |
+| Staged rollout and rollback | Canary traffic, live quality checks, old model kept as fallback |
+| Owner for each dependency | Owner for each model in use, with a review date |
+
+Some of this is now easy to automate. OpenAI's model list endpoint returns a `shutdown_date` for each model. Anthropic's console can export usage by API key and model, which is the fastest way to find the forgotten integration still calling an old one.
+
+## Evals are the gate
+
+A dependency upgrade without tests is a gamble. A model swap without evals is the same gamble, with more ways to lose.
+
+Here is the process I recommend. Run it on a schedule, not only when a retirement notice arrives.
+
+<Figure caption="A model swap run like a dependency upgrade, with evals as the gate." tone="navy" wide>
+  <SwapGate />
+</Figure>
+
+**1. Inventory.** List every model in use: in your code, your config, and the vendor tools your teams have adopted. Give each one an owner and a known shutdown date. Most organisations are surprised by this list.
+
+**2. Pin.** Use dated snapshots in production. An alias that silently moves to a new model is an unreviewed dependency upgrade.
+
+**3. Diff.** Run the current and candidate model through the same eval suite, several times per case. Ten runs is a reasonable floor; the research above used fifty. Compare case by case, not only the average, and look at every case that flipped from pass to fail.
+
+**4. Gate.** Decide the bar before you see the results. My default: the regression suite holds, no critical rule is broken in any run, cost and latency stay inside budget, and a person has read every case that changed.
+
+**5. Canary.** Send a small share of live traffic to the new model, with quality checks on live responses and a rollback that takes one change.
+
+**6. Retire.** Cut over, keep the old model as a fallback until its shutdown date, and set the date for the next review.
+
+The suite itself matters more than the process. In a small eval harness I built recently, using mock data, a candidate agent lifted hard cases from 30% to 80% and, in the same run, dropped its regression cases from 100% to 77%, including refunds it wasn't allowed to make. The headline number said ship. The regression suite said hold. A model swap will produce exactly that pattern, and only an eval suite built from your own failures will show it to you.
+
+As I argued in [Passing evals is not permission to ship](/blog/passing-evals-is-not-permission-to-ship/), evals tell you what changed. Whether to ship is still a decision by risk. For low-risk features a clean eval diff can be enough. For anything that touches money, customers or compliance, a named person signs off on the swap, the same as they would on a database upgrade.
+
+## What to do this quarter
+
+If you lead an engineering team that ships anything built on hosted models, three things are worth doing before the end of the year:
+
+- **Find your 14 January exposure.** Search code and config for GPT-4o and GPT-4.1, including fine-tuned versions, and check your Claude Sonnet 4.5 usage, which retires on 30 November.
+- **Put model end-of-life dates on the same calendar as your other end-of-life dates.** Whoever owns dependency upgrades should own these too.
+- **Make the eval suite a release requirement.** If you can't compare two models on your own cases today, that is the first project, and it will pay for itself on the first swap.
+
+Model choice used to be a decision you made once. It is now maintenance, on someone else's schedule. The teams that treat it that way will move to cheaper and better models quickly. Everyone else will be migrating in a hurry in the second week of January.
+
+---
+
+**Sources**
+
+- [OpenAI API deprecations](https://developers.openai.com/api/docs/deprecations): GPT-4 series notice of 14 October 2026, shutdown 14 January 2027, notice policy (checked 26 October 2026)
+- [OpenAI: Migrating from GPT-4.x to GPT-6 Luna](https://help.openai.com/en/articles/20001600-migrating-from-gpt-4x-to-gpt-6-luna)
+- [OpenAI API reference: list models](https://developers.openai.com/api/reference/resources/models/methods/list) (`shutdown_date` field)
+- [MIXED: OpenAI's own page still calls GPT-4o its flagship, and it leaves the API on January 14](https://mixed-news.com/en/openai-gpt-4o-gpt-4-1-shutdown-january-14-2027-92-days-notice/) (19 October 2026): prices for GPT-6 Luna and GPT-4o
+- [Anthropic: Model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations): retirement dates, 60-day notice floor, removed sampling parameters, usage audit (checked 26 October 2026)
+- [Anthropic: Pricing](https://platform.claude.com/docs/en/about-claude/pricing): Claude Haiku 5.5 and Haiku 4.5 list prices
+- [Google: Gemini API deprecations](https://ai.google.dev/gemini-api/docs/deprecations)
+- [Microsoft: Azure OpenAI model retirement schedule](https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirement-schedule) (last updated 23 September 2026)
+- [Xu and Wu, What Aggregate Scores Miss: Measuring Item-Level Regressions in Commercial LLM API Migrations](https://arxiv.org/abs/2608.17719) (arXiv, August 2026)
+- [Chen, Zaharia and Zou, How Is ChatGPT's Behavior Changing over Time?](https://arxiv.org/abs/2307.09009) (2023)
+- [Node.js previous releases and support schedule](https://nodejs.org/en/about/previous-releases)

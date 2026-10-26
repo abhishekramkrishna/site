@@ -1,0 +1,52 @@
+---
+// How long recent flagship API models lasted, and how much notice came before shutdown.
+// Sources: Anthropic model deprecations page; OpenAI API deprecations page (both checked 26 Oct 2026).
+const max = 36;
+const rows: { name: string; months: number; notice: string; hi?: boolean }[] = [
+  { name: 'Claude Opus 4.1', months: 12, notice: '61 days' },
+  { name: 'Claude Sonnet 4', months: 13, notice: '62 days' },
+  { name: 'Claude Sonnet 4.5', months: 14, notice: '61 days' },
+  { name: 'GPT-4.1', months: 21, notice: '92 days' },
+  { name: 'GPT-4o (Aug 2024)', months: 29, notice: '92 days', hi: true },
+];
+---
+<div class="dfig life" role="img" aria-label="Months each model was available on its provider's API before retirement, and the notice given. Claude Opus 4.1: 12 months, 61 days' notice. Claude Sonnet 4: 13 months, 62 days. Claude Sonnet 4.5: 14 months, 61 days. GPT-4.1: 21 months, 92 days. GPT-4o, August 2024 snapshot: 29 months, 92 days. For comparison, an even-numbered Node.js release is supported for about 36 months, and keeps running after that.">
+  <p class="df-title">Your model has a shorter shelf life than your framework.</p>
+  <div class="head"><span>Model</span><span>Months on the API</span><span>Notice</span></div>
+  {rows.map((r, i) => (
+    <div class="row">
+      <span class="nm">{r.name}</span>
+      <div class="bar-wrap">
+        <div class="df-track"><div class:list={['df-bar', { hi: r.hi }]} style={`width:${(r.months / max) * 100}%;--i:${i}`}></div></div>
+        <span class="df-num">{r.months}</span>
+      </div>
+      <span class="notice">{r.notice}</span>
+    </div>
+  ))}
+  <div class="row ref df-fade">
+    <span class="nm">Node.js LTS line</span>
+    <div class="bar-wrap"><div class="df-track"><div class="df-bar node" style="width:100%;--i:5"></div></div><span class="df-num">~36</span></div>
+    <span class="notice">public schedule</span>
+  </div>
+  <p class="df-note">Months from snapshot release to API shutdown. Anthropic's floor is 60 days' notice. OpenAI's policy says at least 6 months for generally available models; the GPT-4 series got about 3. Google lists only "earliest possible" shutdown dates.</p>
+</div>
+
+<style>
+  .head, .row { display: grid; grid-template-columns: minmax(7.5rem, 9.5rem) 1fr 4.6rem; gap: 0.7rem; align-items: center; }
+  .head { font: 400 0.72rem var(--font-mono); color: var(--df-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+  .head span:last-child, .notice { text-align: right; }
+  .row { padding: 0.45rem 0; border-top: 1px solid var(--df-rule); }
+  .nm { font-size: 0.86rem; font-weight: 550; line-height: 1.25; }
+  .bar-wrap { display: grid; grid-template-columns: 1fr 2rem; gap: 0.5rem; align-items: center; }
+  .bar-wrap .df-num { font-size: 0.85rem; text-align: right; }
+  .df-track { height: 10px; }
+  .df-bar.hi { background: var(--df-hi); }
+  .df-bar.node { background: repeating-linear-gradient(135deg, transparent 0 6px, rgb(159 179 200 / 0.35) 6px 12px); border: 1px dashed var(--df-muted); }
+  .notice { font: 400 0.78rem var(--font-mono); color: var(--df-muted); }
+  .ref .nm { color: var(--df-muted); font-weight: 450; }
+  @media (max-width: 480px) {
+    .head, .row { grid-template-columns: 6.6rem 1fr 3.9rem; gap: 0.45rem; }
+    .nm { font-size: 0.78rem; }
+    .notice { font-size: 0.7rem; }
+  }
+</style>

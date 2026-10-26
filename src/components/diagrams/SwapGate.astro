@@ -1,0 +1,42 @@
+---
+// A model swap run like a dependency upgrade, with evals as the gate. Thresholds are a starting point to adapt.
+const steps: { n: string; name: string; what: string; gate?: string }[] = [
+  { n: '01', name: 'Inventory', what: 'Every model ID in code, config and vendor tools, with an owner and a shutdown date' },
+  { n: '02', name: 'Pin', what: 'Dated snapshots only. No "latest" aliases in production' },
+  { n: '03', name: 'Diff', what: 'Old and new model on the same eval suite, 10+ runs per case, compared case by case' },
+  { n: '04', name: 'Gate', what: 'Ship only if the candidate clears the bar', gate: 'Regression suite holds · no critical-rule breaks · cost and latency inside budget · every flipped case read by a person' },
+  { n: '05', name: 'Canary', what: 'A small share of live traffic, with live quality checks and a one-line rollback' },
+  { n: '06', name: 'Retire', what: 'Cut over, keep the old model as fallback until its shutdown date, file the next review date' },
+];
+---
+<div class="dfig gate" role="img" aria-label="Six steps to swap a model like a dependency upgrade. 1 Inventory: every model ID in code, config and vendor tools, with an owner and shutdown date. 2 Pin: dated snapshots only, no latest aliases in production. 3 Diff: run old and new model on the same eval suite, ten or more runs per case, compared case by case. 4 Gate: ship only if the regression suite holds, no critical rule breaks, cost and latency stay inside budget, and a person reads every case that flipped. 5 Canary: a small share of live traffic with live quality checks and a one-line rollback. 6 Retire: cut over, keep the old model as fallback until its shutdown date, and set the next review date.">
+  <p class="df-title">Treat a model swap like a major version bump.</p>
+  <ol>
+    {steps.map((s, i) => (
+      <li class:list={{ isgate: !!s.gate }}>
+        <span class="n">{s.n}</span>
+        <div>
+          <p class="nm">{s.name}</p>
+          <p class="what">{s.what}</p>
+          {s.gate && <p class="crit">{s.gate}</p>}
+        </div>
+        <div class="df-track"><div class="df-bar" style={`width:100%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">Gate thresholds are a starting point. Set them per workload and risk.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  li { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: 0.7rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.isgate { border: 1.5px solid var(--df-hi); }
+  li .df-track { grid-column: 2; height: 3px; margin-top: 0.45rem; }
+  li.isgate .df-bar { background: var(--df-hi); }
+  .n { font: 500 0.8rem var(--font-mono); color: var(--df-accent); padding-top: 0.12rem; }
+  li.isgate .n, li.isgate .nm { color: var(--df-hi); }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .what { font-size: 0.84rem; color: var(--df-muted); margin-top: 0.15rem; }
+  .crit { font: 400 0.76rem var(--font-mono); color: var(--df-ink); margin-top: 0.4rem; }
+</style>

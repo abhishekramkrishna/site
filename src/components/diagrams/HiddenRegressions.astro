@@ -1,0 +1,35 @@
+---
+// Item-level change hidden by aggregate scores in model upgrades (Xu and Wu, arXiv:2608.17719, Aug 2026).
+// Big numbers fade in instead of using bars: the four figures do not share a scale.
+---
+<div class="dfig hidden" role="img" aria-label="In a study of three GPT model upgrades on 900 benchmark items, run 50 times each, the GPT-5.4 to GPT-5.5 upgrade raised the maths score by 7.3 points, yet 6.0% of maths items reliably got worse. Between 12% and 24% of items reliably changed outcome in each case. A single run per model found none of the 457 reliably changed items.">
+  <p class="df-title">The average went up. Some answers still got reliably worse.</p>
+  <div class="tiles">
+    <div class="tile">
+      <span class="big df-num df-fade">+7.3</span>
+      <p>points of aggregate gain on maths, GPT-5.4 to GPT-5.5</p>
+    </div>
+    <div class="tile hi">
+      <span class="big df-num df-fade">6.0%</span>
+      <p>of items in that same upgrade reliably got worse</p>
+    </div>
+    <div class="tile">
+      <span class="big df-num df-fade">12–24%</span>
+      <p>of items changed outcome, in one direction or the other</p>
+    </div>
+    <div class="tile hi">
+      <span class="big df-num df-fade">0 / 457</span>
+      <p>changed items found when each model was run only once</p>
+    </div>
+  </div>
+  <p class="df-note">Three GPT-5.x upgrades, 900 items, 50 runs per item per model. Xu and Wu, "What Aggregate Scores Miss", August 2026.</p>
+</div>
+
+<style>
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .tile { border: 1px solid var(--df-rule); border-radius: 10px; padding: 0.85rem 0.9rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  .tile.hi { border-color: var(--df-hi); }
+  .tile.hi .big { color: var(--df-hi); }
+  .tile p { margin: 0; font-size: 0.84rem; line-height: 1.35; flex: 1; }
+  .big { font-family: var(--font-sans); font-size: 1.7rem; font-weight: 720; letter-spacing: -0.04em; line-height: 1; }
+</style>

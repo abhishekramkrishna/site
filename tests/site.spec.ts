@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -270,4 +270,17 @@ test('reduced motion shows the tokens figures finished without animating', async
   await expect(figs).toHaveCount(4);
   for (const fig of await figs.all()) await expect(fig).not.toHaveClass(/motion/);
   await ctx.close();
+});
+
+test('model retirement post shows its labelled figures and a readable comparison table', async ({ page }) => {
+  await page.goto('/blog/model-retirement-is-the-new-dependency-upgrade', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(3);
+  for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  await expect(page.locator('main table th').first()).toContainText('Framework upgrade');
+  const table = page.locator('main table');
+  expect(await table.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  const last = figs.last();
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
 });
