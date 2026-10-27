@@ -1,0 +1,109 @@
+---
+title: "When nobody answers the page: fail-stop containment for agents"
+description: Monitoring tells you an autonomous system is going wrong. Nothing guarantees it stops if you don't answer. Fail-stop containment gives it a small, pre-approved way to stop itself, and the open-source Stanch project shows what that looks like in code.
+pubDate: 2026-10-29
+tags: [agents, leadership]
+draft: false
+cover:
+  image: ../../assets/covers/fail-stop-containment-for-agents.png
+  thumb: ../../assets/covers/fail-stop-containment-for-agents-thumb.png
+  alt: "When nobody answers, the system should stop itself. A timeline from the open-source Stanch demo: the heartbeat stops at 0 seconds, a P0 alert fires at 30 seconds, nobody acknowledges it for 60 seconds, and at 90 seconds a pre-approved pause runs, logged before and after. Five stop-only actions, ranked from most to least reversible: pause, disable flag, read-only, quarantine, restart once."
+---
+
+import Figure from '../../components/Figure.astro';
+import ContainmentTimeline from '../../components/diagrams/ContainmentTimeline.astro';
+import StopLadder from '../../components/diagrams/StopLadder.astro';
+import FailStopSteps from '../../components/diagrams/FailStopSteps.astro';
+
+It is 3 a.m. An agent that issues refunds starts approving every request in its queue. Your monitoring notices within a minute and pages the on-call engineer. The engineer is asleep, or on a plane, or the alert lands in a channel nobody reads at night.
+
+Monitoring has done its job. It told someone. Nothing in the stack guarantees that the refunds stop if that someone doesn't answer.
+
+That gap gets wider as more work runs without a person watching it: agents, automations, pipelines, AI-operated workflows. Most of the safety work on agents goes into what they are allowed to do. Much less goes into how they stop.
+
+**The short version**
+
+- Alerting assumes a human wakes up. For systems that act on their own, plan for the case where nobody does.
+- Fail-stop containment gives the system a small set of pre-approved actions that can only make things safer: pause, turn a flag off, go read-only, quarantine, restart once. If a critical alert isn't acknowledged in time, the most conservative one runs, once.
+- Keep the stop path deterministic, outside the system it watches, approved in advance as code, and in shadow mode until you trust it.
+
+## Fail-stop: stop rather than act incorrectly
+
+The idea is old. In distributed systems, a *fail-stop* component is one that, when it fails, halts instead of carrying on with wrong output. Richard Schlichting and Fred Schneider described fail-stop processors in 1983, and the principle runs through how we build databases and consensus systems: a node that stops is a problem the rest of the system can handle; a node that keeps going with bad data is much worse.
+
+An agent that is going wrong is the second kind. It keeps acting, quickly and confidently, and every action can cost money or trust. Making it fail-stop means deciding in advance how it can be stopped, and making sure that stop happens even when the people who could decide aren't there.
+
+## A worked example: Stanch
+
+The clearest implementation of this I've seen is [Stanch](https://github.com/getstanch/stanch), an open-source project (Apache-2.0) built by Marcos Rodrigues Gomes Junior. He describes it as "the dead-man's switch that acts". To *stanch* is to stop a flow, and that is the whole product: it watches services from the outside, alerts a human, and if a critical alert isn't acknowledged in time, it runs the most conservative containment action that was approved in advance. It can't fix anything, by design.
+
+It is early. The README calls it v0.1.0 with unstable APIs, and the acknowledgment flow and autonomous execution described below are v0.2, on the main branch but not yet released. It was designed to guard a five-city transport platform of about 400,000 rides a month, where a staged, shadow-first rollout is in progress; the README says plainly that it will report what has and hasn't run in production as that happens. I like that honesty, and I'll keep to it here: what follows is what the code and docs say, not a production track record.
+
+What makes it worth studying is how small and strict the design is.
+
+### The loop, in 90 seconds
+
+The repository ships a demo you can run with Docker Compose. A small demo service sends a heartbeat every 10 seconds. One command stops the heartbeat, and only the heartbeat: the service's control endpoint stays up, because an incident silences the work, not the operator's hand. Then:
+
+<Figure caption="The Stanch demo loop, from its demo rule and Compose file. Production rules set their own windows; the global default acknowledgment window is 300 seconds." tone="navy" wide>
+  <ContainmentTimeline />
+</Figure>
+
+- **0 s.** The heartbeat stops. For a dead-man's switch, the absence of a pulse is the signal.
+- **30 s.** The rule's silence limit passes and a P0 alert goes to the alert channel.
+- **30 to 90 s.** A 60-second window for a person to acknowledge. An acknowledgment at any point means a human owns the incident, and Stanch stands down.
+- **90 s.** Nobody acknowledged. Stanch sends the pre-approved `pause` action to the demo service's control endpoint, writing an audit entry before the call and another after it.
+
+In a real deployment you would set the windows per rule. The default acknowledgment window is five minutes. The shape stays the same: detect, tell a person, wait a bounded time, then stop the smallest thing that stops the loss.
+
+### Five actions, all of them stop-shaped
+
+The core of the design is a closed list of five actions. In code it is a frozen enumeration, and the tests check that no action can enable, create, transfer, delete or touch DNS. Every action has to declare its blast radius and a one-command revert before the code will load.
+
+<Figure caption="Stanch's five stop actions, ranked as its playbook engine ranks them, from most to least reversible. Blast radius and revert as declared in the project's webhook executors." tone="navy" wide>
+  <StopLadder />
+</Figure>
+
+When a rule approves more than one action, the most conservative one runs. Pause comes first because work just piles up and can be resumed with one call. Restart comes last because it can't be undone.
+
+### The rules around the hand
+
+A few more constraints, each one deliberate, and each one a decision recorded in the project's docs:
+
+- **No model in the action path.** Detection is versioned YAML rules, each with a test. There is no LLM, no heuristic, nothing probabilistic between the alert and the stop. A model may later write a read-only report after the incident, never act as a gate.
+- **Only for P0.** A rule that tries to attach autonomous action to anything below the highest severity refuses to load.
+- **One decision per alert.** If containment runs and fails, it does not retry. As the decision log puts it, retrying is how a repeat incident starts. The rule re-arms only after the alert resolves and a new one opens.
+- **Shadow first, enforcement per rule.** By default an action is only logged as what *would* have run. Enforcement is switched on rule by rule, and there is deliberately no global switch.
+- **Fail closed at boot.** If a rule enforces an action that has no real executor behind it, the service refuses to start, rather than let a placeholder stand in for containment.
+- **It runs outside, and is watched itself.** Stanch is meant to run on its own host, separate from what it watches, and pings an external health-check service so that if it dies, something outside notices.
+- **Business rules, not just uptime.** Besides "has this gone quiet", rules can check numbers the service reports, the kind of invariant written as *payouts per hour must not exceed X*.
+
+## The process I'd take from it
+
+You don't need Stanch to apply this, though it is a good place to start. Here is the process I'd use for any agent or automated service that can take actions with real consequences.
+
+<Figure caption="Fail-stop containment for an autonomous system, in six steps. Adapted from Stanch's design principles; windows and thresholds are yours to set." tone="navy" wide>
+  <FailStopSteps />
+</Figure>
+
+**1. Name the loss.** For each autonomous system, write down what "going wrong" costs and how you'd see it in a number: refunds per hour, emails sent per minute, records changed per run. Uptime is not enough; an agent can be up and very busy doing the wrong thing.
+
+**2. Watch from outside.** The watcher can't share a process, a host or a failure mode with what it watches, or it goes quiet at the same moment. Have the system check in, treat silence as a signal, and have something external watch the watcher.
+
+**3. Pre-approve the stops.** Before anything goes wrong, agree with the system's owner which stop actions are allowed for each failure, the blast radius of each, and the one command that reverses it. Keep the list in git and review changes like code. If you can't name a safe stop for a failure, that is a design problem to fix now, not at 3 a.m.
+
+**4. Give a human the first move.** Page a person and wait a bounded time. Acknowledgment means ownership: the human decides from there. Pick the window from the cost per minute of the failure, not from what feels polite.
+
+**5. If nobody answers, stop once.** Run the most conservative approved action, log before and after, and don't retry automatically. Then keep paging. Containment buys time; it doesn't replace the person.
+
+**6. Shadow before you enforce.** Run every rule observe-only first and read what it *would* have done. Turn on enforcement one rule at a time, starting with the rules whose stop action is cheapest to undo.
+
+## Where this fits
+
+This is the counterpart to something I've written about before. In [Passing evals is not permission to ship](/blog/passing-evals-is-not-permission-to-ship/) I argued that anything irreversible or financial needs a named person to approve it. Fail-stop containment covers the other end: what the system does when that person can't be reached.
+
+It isn't free. A pause is still an outage for whoever was waiting on that lane, so the windows and the ranking matter. A heartbeat only works if the service is wired to send one, and business invariants only work if someone writes them. And a stop-only design accepts that you will sometimes stop something that would have recovered on its own. That is the trade fail-stop systems have always made, and for a system acting on money or customers at 3 a.m., it is the right one.
+
+If you run agents in production, ask one question this week: if your on-call engineer doesn't answer for an hour, what does the agent keep doing? If the honest answer is "everything", give it a way to stop.
+
+*A shout-out to Marcos Rodrigues Gomes Junior for building Stanch in the open, and for writing down every design decision behind it, which made this post possible. The project is at [github.com/getstanch/stanch](https://github.com/getstanch/stanch). Credit for the design and the code is his; any mistakes in describing it are mine.*
