@@ -36,7 +36,7 @@ const required = [
   'og-default.png',
   ...['agents', 'strategy', 'business', 'leadership'].map((t) => `tags/${t}/index.html`),
   // Posts that scheduled social posts link to: a missing one means a live 404
-  ...['what-a-good-agent-eval-looks-like', 'skills-are-the-new-team-wiki', 'stop-counting-tokens', 'model-retirement-is-the-new-dependency-upgrade', 'fail-stop-containment-for-agents'].map((s) => `blog/${s}/index.html`),
+  ...['what-a-good-agent-eval-looks-like', 'skills-are-the-new-team-wiki', 'stop-counting-tokens', 'model-retirement-is-the-new-dependency-upgrade', 'fail-stop-containment-for-agents', 'what-each-part-of-an-agent-harness-is-worth', 'agent-loops-and-graphs-do-different-jobs', 'test-your-agent-skills-like-code'].map((s) => `blog/${s}/index.html`),
 ];
 for (const r of required) if (!existsSync(join(DIST, r))) fail(`missing required file: ${r}`);
 

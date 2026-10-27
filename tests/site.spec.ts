@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -292,6 +292,45 @@ test('fail-stop post shows its labelled figures, and credits and links Stanch', 
   for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
   await expect(page.locator('main a[href="https://github.com/getstanch/stanch"]').first()).toBeVisible();
   await expect(figs.nth(1).locator('li')).toHaveCount(5);
+  const last = figs.last();
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});
+
+test('harness post shows its labelled figures, links the code and says the numbers are from a mock', async ({ page }) => {
+  await page.goto('/blog/what-each-part-of-an-agent-harness-is-worth', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(2);
+  for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/agent-harness-lab"]').first()).toBeVisible();
+  await expect(page.locator('main')).toContainText('mock model');
+  await expect(figs.nth(1).locator('li')).toHaveCount(6);
+  const last = figs.last();
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});
+
+test('loops and graphs post shows its labelled figures, links the code and says the numbers are from a mock', async ({ page }) => {
+  await page.goto('/blog/agent-loops-and-graphs-do-different-jobs', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(2);
+  for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/agent-harness-lab"]').first()).toBeVisible();
+  await expect(page.locator('main')).toContainText('mock model');
+  const last = figs.last();
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});
+
+test('skills post shows its labelled figures, links the code and credits both collections', async ({ page }) => {
+  await page.goto('/blog/test-your-agent-skills-like-code', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(2);
+  for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/agent-harness-lab"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="https://github.com/mattpocock/skills"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="https://github.com/addyosmani/agent-skills"]').first()).toBeVisible();
+  await expect(figs.nth(1).locator('li')).toHaveCount(4);
   const last = figs.last();
   await last.scrollIntoViewIfNeeded();
   await expect(last).toHaveClass(/in-view/);

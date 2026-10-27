@@ -290,6 +290,19 @@ const COVERS = {
     src: 'Chen &amp; Stratton, "Artificial Intelligence in the Firm", Harvard, Aug 2026. 718 firms, Jan 2021 to Mar 2026.',
   },
 
+  'agent-loops-and-graphs-do-different-jobs': {
+    kick: 'Agent loops and agent graphs do different jobs',
+    title: 'The loop makes each attempt good. <em>The graph makes the process safe.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '+10 vs 0', k: 'model calls to recover a late crash: restart vs resume' })}${tile({ big: '20% → 0', k: 'false successes, once the verdict left the agent' })}${tile({ big: '61%', k: 'still escalated without loop controls', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Crash after review: restart', big: '+10', d: 'model calls, the whole run again' })}
+        ${tile({ k: 'Crash after review: resume', big: '+0', d: 'from the last checkpoint' })}
+        ${tile({ k: 'Weak loop inside a graph', big: '61%', d: 'escalated: safe, not solved', hi: true })}
+      </div><div class="strip"><b>Use both:</b> a graph for the steps that must not be skipped, a loop inside the node that does open-ended work.</div>`,
+    src: 'Scripted mock model; graph runtime, checkpoints and timings are real. Code: github.com/abhishekramkrishna/agent-harness-lab.',
+  },
+
   'moderating-ai-agents': {
     kick: 'Moderating AI agents',
     title: 'Gate the action, <em>not just the words.</em>',
@@ -316,6 +329,18 @@ const COVERS = {
         ${verdict('HOLD', 'Any critical failure holds the release')}
       </div><div class="strip"><b>The eval agent read every failed transcript.</b> v2 refunded $900 and $1,500 without approval, and twice said "I've refunded" when no money had moved.</div>`,
     src: 'Eval agent demo: a refund support agent, 10 tasks, 5 trials each, code graders and an LLM judge. Mock data.',
+  },
+
+  'test-your-agent-skills-like-code': {
+    kick: 'Test your agent skills like code',
+    title: 'A skills pack <em>can fail a build.</em>',
+    body: () => `<div class="tiles" style="--n:${T ? 2 : 4}">
+        ${tile({ k: 'Lint', big: '1', d: 'a trigger and the required sections' })}
+        ${tile({ k: 'Collisions', big: '2', d: 'no near-duplicate descriptions' })}
+        ${tile({ k: 'Trigger evals', big: '3', d: 'its own prompts pick it' })}
+        ${tile({ k: 'Composition', big: '4', d: 'skills you type never call each other', hi: true })}
+      </div>${T ? '' : '<div class="strip"><b>Borrowed from Matt Pocock and Addy Osmani,</b> combined into nine skills for building agent harnesses, each with a proof.</div>'}`,
+    src: 'Nine skills and the checker that caught a real mistake: github.com/abhishekramkrishna/agent-harness-lab.',
   },
 
   'skills-are-the-new-team-wiki': {
@@ -353,6 +378,20 @@ const COVERS = {
         ${tile({ k: 'Nobody answered', big: '90 s', d: 'Pre-approved pause runs, once', hi: true })}
       </div><div class="strip"><b>Five actions, all stop-shaped:</b> pause, disable a flag, read-only, quarantine, restart once. No model in the path.</div>`,
     src: 'Demo loop from Stanch (github.com/getstanch/stanch), open source, by Marcos Rodrigues Gomes Junior.',
+  },
+
+  'what-each-part-of-an-agent-harness-is-worth': {
+    kick: 'What each part of an agent harness is worth',
+    title: 'Switch off one control. <em>Watch the failure come back.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '32%', k: 'solved by a minimal agent loop' })}${tile({ big: '20%', k: 'said "done" on broken code' })}${tile({ big: '100%', k: 'solved by the full harness, on 70% fewer tokens', hi: true })}</div>`
+      : `<div class="tiles" style="--n:4">
+        ${tile({ k: 'Minimal loop', big: '32%', d: 'of 300 runs solved' })}
+        ${tile({ k: 'Said "done" on broken code', big: '20%', d: 'with nothing to say no' })}
+        ${tile({ k: 'Without protected tests', big: '69%', d: 'the verifier ran rewritten tests' })}
+        ${tile({ k: 'Full harness', big: '100%', d: 'on about 70% fewer tokens', hi: true })}
+      </div><div class="strip"><b>A check the agent can edit is not a check.</b> Verifier, loop guard, protected paths, retries: each stops one failure.</div>`,
+    src: 'Scripted mock model, 300 seeded runs per configuration. Code: github.com/abhishekramkrishna/agent-harness-lab.',
   },
 
   'model-retirement-is-the-new-dependency-upgrade': {
