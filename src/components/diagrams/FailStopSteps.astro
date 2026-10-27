@@ -1,0 +1,40 @@
+---
+// Fail-stop containment for an autonomous system, as a process. Adapted from Stanch's design principles.
+const steps: { n: string; name: string; what: string; gate?: boolean }[] = [
+  { n: '01', name: 'Name the loss', what: 'What going wrong costs, as a number you can watch: refunds per hour, emails per minute' },
+  { n: '02', name: 'Watch from outside', what: 'Separate host and failure mode. Silence is a signal. Something external watches the watcher' },
+  { n: '03', name: 'Pre-approve the stops', what: 'Stop-only actions, each with a blast radius and a one-command revert, kept in git' },
+  { n: '04', name: 'Give a human the first move', what: 'Page, then wait a bounded window set by the cost per minute. Acknowledgment means ownership' },
+  { n: '05', name: 'If nobody answers, stop once', what: 'The most conservative approved action. Log before and after. No automatic retry. Keep paging', gate: true },
+  { n: '06', name: 'Shadow before you enforce', what: 'Log what would have run. Enforce one rule at a time, cheapest to undo first' },
+];
+---
+<div class="dfig steps" role="img" aria-label="Six steps for fail-stop containment. 1 Name the loss: what going wrong costs, as a number you can watch, such as refunds per hour or emails per minute. 2 Watch from outside: a separate host and failure mode, silence treated as a signal, and something external watching the watcher. 3 Pre-approve the stops: stop-only actions, each with a blast radius and a one-command revert, kept in git. 4 Give a human the first move: page, then wait a bounded window set by the cost per minute; acknowledgment means ownership. 5 If nobody answers, stop once: the most conservative approved action, logged before and after, no automatic retry, and keep paging. 6 Shadow before you enforce: log what would have run, then enforce one rule at a time, cheapest to undo first.">
+  <p class="df-title">Detect, tell a person, wait a bounded time, then stop the smallest thing.</p>
+  <ol>
+    {steps.map((s, i) => (
+      <li class:list={{ isgate: s.gate }}>
+        <span class="n">{s.n}</span>
+        <div>
+          <p class="nm">{s.name}</p>
+          <p class="what">{s.what}</p>
+        </div>
+        <div class="df-track"><div class="df-bar" style={`width:100%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">No model, heuristic or "probably" between detection and the stop.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  li { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: 0.7rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.isgate { border: 1.5px solid var(--df-hi); }
+  li .df-track { grid-column: 2; height: 3px; margin-top: 0.45rem; }
+  li.isgate .df-bar { background: var(--df-hi); }
+  .n { font: 500 0.8rem var(--font-mono); color: var(--df-accent); padding-top: 0.12rem; }
+  li.isgate .n, li.isgate .nm { color: var(--df-hi); }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .what { font-size: 0.84rem; color: var(--df-muted); margin-top: 0.15rem; }
+</style>
