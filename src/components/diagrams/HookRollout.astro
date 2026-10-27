@@ -1,0 +1,41 @@
+---
+// A rollout process for a Claude Code hook, from a repeated instruction to team policy.
+const steps: { n: string; name: string; what: string; gate?: string }[] = [
+  { n: '01', name: 'Find the rule', what: 'The instruction you keep repeating in prompts and code review' },
+  { n: '02', name: 'Pick the event', what: 'Prevent it: PreToolUse. Clean up: PostToolUse. Don’t finish yet: Stop. Inform: SessionStart' },
+  { n: '03', name: 'Pipe-test it', what: 'Feed the script sample JSON. Include harmless commands that look dangerous' },
+  { n: '04', name: 'Run it for real', what: 'Sessions with and without the hook. Check the end state on disk and read the transcripts', gate: 'Look for the other routes to the same effect: echo, printf, sed, cp, a script' },
+  { n: '05', name: 'Fail closed', what: 'Exit 2 to block, onFailure: block, and a stderr message that says what to do instead' },
+  { n: '06', name: 'Promote it', what: 'Commit to .claude/settings.json, review the audit log, then ship it in a plugin or managed settings' },
+];
+---
+<div class="dfig rollout" role="img" aria-label="Six steps to roll out a Claude Code hook. 1 Find the rule: the instruction you keep repeating in prompts and code review. 2 Pick the event: PreToolUse to prevent, PostToolUse to clean up, Stop to keep Claude working, SessionStart to inform. 3 Pipe-test it: feed the script sample JSON, including harmless commands that look dangerous. 4 Run it for real: sessions with and without the hook, checking the end state on disk and reading the transcripts for other routes to the same effect, such as echo, printf, sed, cp or a script. 5 Fail closed: exit 2 to block, set onFailure to block, and write a stderr message that says what to do instead. 6 Promote it: commit to .claude/settings.json, review the audit log, then ship it in a plugin or managed settings.">
+  <p class="df-title">From a repeated instruction to a rule that runs every time.</p>
+  <ol>
+    {steps.map((s, i) => (
+      <li class:list={{ isgate: !!s.gate }}>
+        <span class="n">{s.n}</span>
+        <div>
+          <p class="nm">{s.name}</p>
+          <p class="what">{s.what}</p>
+          {s.gate && <p class="crit">{s.gate}</p>}
+        </div>
+        <div class="df-track"><div class="df-bar" style={`width:100%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  li { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: 0.7rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.isgate { border: 1.5px solid var(--df-hi); }
+  li .df-track { grid-column: 2; height: 3px; margin-top: 0.45rem; }
+  li.isgate .df-bar { background: var(--df-hi); }
+  .n { font: 500 0.8rem var(--font-mono); color: var(--df-accent); padding-top: 0.12rem; }
+  li.isgate .n, li.isgate .nm { color: var(--df-hi); }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .what { font-size: 0.84rem; color: var(--df-muted); margin-top: 0.15rem; }
+  .crit { font: 400 0.76rem var(--font-mono); color: var(--df-ink); margin-top: 0.4rem; }
+</style>

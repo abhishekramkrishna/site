@@ -366,6 +366,19 @@ const COVERS = {
     src: 'Usage metrics stay on the team dashboard, where they help find waste.',
   },
 
+  'claude-code-hooks': {
+    kick: 'Claude Code hooks, tested in 54 sessions',
+    title: '"Please don\'t" is a request. <em>A hook runs every time.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '3/3 → 0/3', k: 'runs where Claude ran rm -rf, with a PreToolUse guard', hi: true })}${tile({ big: '0/3 → 3/3', k: 'runs ending with passing tests, with a Stop test gate' })}${tile({ big: '~40 ms', k: 'per guard check' })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Runs where Claude ran rm -rf build', big: '3/3 → 0/3', ba: 'PreToolUse guard', hi: true })}
+        ${tile({ k: 'Runs that ended with passing tests', big: '0/3 → 3/3', ba: 'Stop hook test gate' })}
+        ${tile({ k: 'Median cost of the guard check', big: '~40 ms', ba: 'per Bash call' })}
+      </div><div class="strip"><b>Match the effect, not the tool.</b> Hooks on Edit and Write missed 5 of 6 edits Claude made through the shell.</div>`,
+    src: 'Claude Code v2.1.311, headless, 3 to 5 runs per cell, 27 Oct 2026.',
+  },
+
   'fail-stop-containment-for-agents': {
     kick: 'Fail-stop containment for agents',
     title: 'When nobody answers, <em>the system stops itself.</em>',
