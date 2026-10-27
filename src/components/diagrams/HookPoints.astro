@@ -1,0 +1,43 @@
+---
+// The five Claude Code hook events that do most of the work, in loop order, and what a hook can do at each.
+// Source: Claude Code hooks reference (code.claude.com/docs/en/hooks), checked 27 Oct 2026.
+const events: { name: string; when: string; can: string; loop?: boolean; hi?: boolean }[] = [
+  { name: 'SessionStart', when: 'A session starts, resumes or is compacted', can: 'Add context: branch, open incidents, rules that compaction dropped' },
+  { name: 'UserPromptSubmit', when: 'You send a prompt, before Claude sees it', can: 'Block the prompt or add context next to it' },
+  { name: 'PreToolUse', when: 'Before every tool call', can: 'Allow, deny or ask · rewrite the input · a deny holds in every permission mode', loop: true, hi: true },
+  { name: 'PostToolUse', when: 'After a tool call succeeds', can: 'Format, lint, give feedback · replace what Claude sees of the output', loop: true },
+  { name: 'Stop', when: 'Claude is about to finish its reply', can: 'Send Claude back to work with a reason, such as failing tests' },
+];
+---
+<div class="dfig hooks" role="img" aria-label="Five Claude Code hook events in the order they fire. SessionStart, when a session starts, resumes or is compacted: add context. UserPromptSubmit, when you send a prompt: block it or add context. Then the tool loop, repeated for every tool call: PreToolUse, before the call: allow, deny or ask, rewrite the input, and a deny holds in every permission mode. PostToolUse, after the call: format, lint, give feedback, or replace the output Claude sees. Stop, when Claude is about to finish: send it back to work with a reason. Hooks exit 0 to continue, exit 2 to block, and any other exit code is a warning that does not block.">
+  <p class="df-title">Five events do most of the work.</p>
+  <ol>
+    {events.map((e, i) => (
+      <li class:list={{ loop: e.loop, hi: e.hi }}>
+        <span class="nm">{e.name}</span>
+        <span class="when">{e.when}</span>
+        <span class="can">{e.can}</span>
+        <div class="df-track"><div class="df-bar" style={`width:100%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">Shaded rows repeat for every tool call. Exit 0 continues, exit 2 blocks and sends stderr to Claude, any other exit code is a warning that does not block.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  li { display: grid; grid-template-columns: minmax(8.5rem, 10rem) 1fr; column-gap: 0.8rem; row-gap: 0.15rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.loop { background: var(--df-track); }
+  li.hi { border: 1.5px solid var(--df-hi); }
+  .nm { grid-row: span 2; font: 500 0.86rem var(--font-mono); color: var(--df-accent); padding-top: 0.1rem; }
+  li.hi .nm { color: var(--df-hi); }
+  .when { font-weight: 620; font-size: 0.9rem; line-height: 1.3; }
+  .can { font-size: 0.82rem; color: var(--df-muted); line-height: 1.35; }
+  li .df-track { grid-column: 2; height: 3px; margin-top: 0.4rem; }
+  li.hi .df-bar { background: var(--df-hi); }
+  @media (max-width: 480px) {
+    li { grid-template-columns: 1fr; }
+    .nm { grid-row: auto; }
+    li .df-track { grid-column: 1; }
+  }
+</style>

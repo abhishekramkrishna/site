@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/claude-code-hooks'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -278,6 +278,20 @@ test('model retirement post shows its labelled figures and a readable comparison
   await expect(figs).toHaveCount(3);
   for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
   await expect(page.locator('main table th').first()).toContainText('Framework upgrade');
+  const table = page.locator('main table');
+  expect(await table.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  const last = figs.last();
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});
+
+test('hooks post shows its labelled figures, code samples and readable exit-code table', async ({ page }) => {
+  await page.goto('/blog/claude-code-hooks', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(3);
+  for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  await expect(page.locator('main pre')).toHaveCount(6);
+  await expect(page.locator('main table th').first()).toContainText('The hook');
   const table = page.locator('main table');
   expect(await table.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
   const last = figs.last();
