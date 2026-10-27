@@ -1,0 +1,112 @@
+---
+title: "Test your agent skills like code"
+description: The best skill collections, from Matt Pocock and Addy Osmani, show how to write a skill. Few show how to know it works. I combined their best patterns into a skills pack for people who build agent harnesses, then wrote a checker that fails the build when a skill is vague, overlapping or wired wrong. It caught a real mistake.
+pubDate: 2026-11-10
+tags: [agents, leadership]
+draft: false
+cover:
+  image: ../../assets/covers/test-your-agent-skills-like-code.png
+  thumb: ../../assets/covers/test-your-agent-skills-like-code-thumb.png
+  alt: "A skills pack can fail a build. Four checks run on every commit: lint for a trigger and required sections, collisions between near-duplicate descriptions, trigger evals that each skill's own prompts pick it, and composition rules so skills a person types never call each other. Patterns borrowed from Matt Pocock's and Addy Osmani's skill collections."
+---
+
+import Figure from '../../components/Figure.astro';
+import SkillSources from '../../components/diagrams/SkillSources.astro';
+import SkillChecks from '../../components/diagrams/SkillChecks.astro';
+
+Picture a team with twelve agent skills. One of them, the release checklist, has stopped firing. Nobody noticed for three weeks, until a release went out without its changelog. When someone finally looked, the cause took a minute to find: a newer skill about writing changelogs had a description close enough to the release skill's that the agent picked it instead, every time.
+
+Nothing was broken in the usual sense. Both skills were well written. Each one, read on its own, was fine. The failure was between them, and nothing was looking there.
+
+In [Skills are the new team wiki](/blog/skills-are-the-new-team-wiki/) I argued that skills are knowledge the agent reads every time a task comes up, and should be managed like code. This post is about the part of "like code" that most skill collections skip: tests.
+
+**The short version**
+
+- Matt Pocock's and Addy Osmani's skill collections are the two I'd study first. Pocock's shows how to make skills small and composable. Osmani's shows how to make them hard to argue with, and how to test that they get picked.
+- I combined their best patterns into nine skills for people who build agent harnesses, each tied to a test or benchmark that shows the failure it prevents.
+- A checker runs four tests on the whole pack on every commit: lint, description collisions, trigger evals and composition rules. It caught a real mistake while I was writing the pack.
+- The routing test is a cheap proxy, not a measurement of how a model picks skills. It is still the cheapest way I know to catch a vague description before it costs you a release.
+
+## What the two best collections get right
+
+[Matt Pocock's skills](https://github.com/mattpocock/skills) are "skills for real engineers". Each one is small and introduced by the failure it fixes: the agent misunderstood you, the agent is too verbose, the code doesn't work. Three ideas in it changed how I write skills:
+
+- **Skills you type versus skills the agent picks up.** Some skills only run when a person invokes them, like `/grill-me`. Others hold reusable discipline, like test-driven development, and the agent may load them on its own. A skill you type may call ones the agent picks up, never another one you type.
+- **Grilling as a building block.** One skill interviews you in rounds over a tree of decisions, asking every open question at the current level at once, each with a recommended answer. Many other skills call it.
+- **Tiny files.** Some skills are one line that calls another. Composition does the work.
+
+[Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) are "production-grade engineering skills", about 25 of them mapped onto a lifecycle from spec to ship. Three ideas from it:
+
+- **Common rationalizations tables.** Each skill lists the excuses for skipping it, with the reply. "The change is obviously right." "It passed before my last small edit." This is the most transferable writing pattern I've seen in any collection, because those excuses are exactly what a model (or an engineer) produces on the way to cutting a corner.
+- **Done-when checklists,** so a skill ends with something checkable rather than a feeling.
+- **Skills that are tested.** A small eval runner checks that each skill's own example prompts route to it, that other skills' prompts don't, and that no two descriptions are near-duplicates.
+
+## Combining them, for a different audience
+
+Both collections are about writing software with an agent. The pack I built is about building the agent harness itself: the loop, the graph, the permissions and the stop conditions around the model. It lives in [agent-harness-lab](https://github.com/abhishekramkrishna/agent-harness-lab), next to the agent loop and graph I wrote about in [What each part of an agent harness is worth](/blog/what-each-part-of-an-agent-harness-is-worth/) and [Agent loops and agent graphs do different jobs](/blog/agent-loops-and-graphs-do-different-jobs/).
+
+<Figure caption="What the agent-harness-lab skills pack borrows from each collection, and what it adds. Credited in each skill that adapts another's structure." tone="navy" wide>
+  <SkillSources />
+</Figure>
+
+Four of the nine are skills you type, and orchestrate a piece of work:
+
+- **`/grill-the-harness`** interviews you until an agent's tools, permissions, budgets, stop conditions, verifier and escalation are decided, and writes them down before any code exists.
+- **`/loop-or-graph`** decides whether work needs an open-ended loop, a fixed graph, or a graph with a loop inside a node.
+- **`/trace-autopsy`** finds the first bad turn in an agent trace, instead of blaming the last error.
+- **`/ship-gate`** stops a launch decided on one lucky run.
+
+Five are discipline the agent picks up on its own: **verify-before-done**, **stop-conditions**, **permission-boundaries**, **checkpoint-discipline**, and **interview-rounds**, which adapts Pocock's grilling and credits it.
+
+Each skill follows the same shape: a description that says when to use it, when *not* to use it, steps, a rationalizations table, red flags, a done-when checklist, and one addition of my own, a **Proof** section. It points at a test or a benchmark row in the repository that shows the failure the skill prevents. The verify-before-done skill, for example, points at the measurement where removing the verifier from an agent loop let a confident "done" through on broken code. A claim in a skill is only as good as its demo, so every skill has one you can run.
+
+## Four checks that can fail a build
+
+Writing good skills is half the job. The other half is knowing they still work after the twelfth one is added. The repository runs four checks on the whole pack, in CI, on every commit.
+
+<Figure caption="The four checks harnesslab skills runs on every commit. Thresholds follow Addy Osmani's agent-skills eval runner, tightened for a smaller pack." tone="navy" wide>
+  <SkillChecks />
+</Figure>
+
+**1. Lint.** Every skill has a name, a description containing a "Use when" trigger, and the required sections. This is the boring check, and it catches the most common failure: a skill whose description says what it is but not when to use it, so the agent never has a reason to load it.
+
+**2. Collisions.** Every pair of descriptions is compared. Above 0.5 similarity is a warning, above 0.75 fails the build. This is the check that would have caught the release checklist losing to the changelog skill.
+
+**3. Trigger evals.** Each skill ships a small file of example prompts: ones that should pick it, and ones that belong to another skill. Its own prompts have to rank it in the top two out of nine. Another skill's prompts must never rank it first.
+
+**4. Composition.** A skill you type must not call another skill you type, which is Pocock's rule, and skills the agent picks up must not reference each other in a cycle. Both are invisible when you read skills one at a time.
+
+## What it caught
+
+Two things happened while I was writing the pack that convinced me this is worth doing.
+
+**The composition check failed on my own skill.** The last step of `/grill-the-harness` told the agent to run `/loop-or-graph` when the shape of the work wasn't obvious. Both are skills you type, so one was invoking the other: exactly the pattern that turns two clear workflows into one tangled one, where a person asked for an interview and ended up in an architecture decision. I'd read that skill several times and not seen it. The fix was to end the interview and *suggest* the next skill, leaving the choice to the person.
+
+**The trigger evals were too lenient at first.** I started with Osmani's threshold, a skill's own prompts in the top three. With only nine skills, top three is a third of the pack, and a deliberately vague description I tried still passed. I tightened it to the top two. A threshold that a bad skill can pass is not testing anything, the same lesson as an agent that can edit its own tests.
+
+## What the test can and can't tell you
+
+The routing check is lexical. It scores descriptions against prompts with TF-IDF, a decades-old text-matching technique, not with the model that will actually choose. A model reads meaning, not word overlap, so a skill can pass this check and still be ignored, or fail it and still be picked.
+
+I use it anyway, for the same reason a linter is worth running though it can't prove a program correct. It costs nothing, runs in milliseconds on every commit, and the descriptions it flags, vague, overlapping, missing the words people actually use, are almost always worth fixing. The stronger test is behavioural: run real tasks with and without the skill, through the real agent, and compare. Osmani's collection has an opt-in tier that does this through headless Claude Code, and Jesse Vincent's superpowers collection describes writing a skill test-first: run a pressure scenario, watch the agent fail without the skill, write the skill, watch it pass. Do that for the skills that matter most. Run the cheap checks on all of them.
+
+## Other collections worth knowing
+
+- **[Anthropic's skills](https://github.com/anthropics/skills)**, the reference implementation of the format, including a skill-creator skill that builds and measures skills.
+- **[Jesse Vincent's superpowers](https://github.com/obra/superpowers)**, a process library: brainstorming before building, writing plans, systematic debugging, verification before completion, and the test-first approach to writing skills above.
+- **[Vercel's skills CLI](https://github.com/vercel-labs/skills)**, the `npx skills` installer most collections now document, and Vercel's own skills for React and Next.js.
+- **Vendor skills**, from companies like Supabase, Cloudflare and Sentry: a product team shipping "how to use our product correctly" as a skill instead of a docs page. I expect this to become as normal as an SDK.
+
+## What to do this week
+
+**Write the description last, as a trigger.** Say when to use the skill, in the words people use when they ask for that task, and when not to.
+
+**Add three prompts that should pick it, and two that shouldn't.** That file is the start of a test suite, and writing it often shows that the description is wrong.
+
+**Run a collision check across your whole set.** Any two skills a model could confuse will be confused, eventually, on the task where it matters.
+
+**Draw the call graph.** Which skills mention which. A skill a person types should never start another one; cycles should not exist.
+
+**Give each skill a proof.** One task, run with and without it, where the outcome differs. If you can't find one, the skill is probably restating something the model already does.
+
+*The skills pack and the checker are at [github.com/abhishekramkrishna/agent-harness-lab](https://github.com/abhishekramkrishna/agent-harness-lab), MIT-licensed; install with `npx skills add abhishekramkrishna/agent-harness-lab` or copy the folders into `.claude/skills/`. Thanks to Matt Pocock and Addy Osmani for building their collections in the open; the patterns credited to them are theirs, and any mistakes in adapting them are mine.*
