@@ -1,0 +1,161 @@
+---
+// Interactive prompt cache simulator for the prompt caching post. Runs the same model as
+// src/cachesim.ts in the browser; the first render (and the no-JS view) is the stable scenario.
+import { run, SCENARIOS, MODELS } from '../../cachesim';
+
+const initial = run('stable', 'claude-sonnet-5-5', 50_000, '5m');
+const total = (r: { read: number; written: number; uncached: number }) => r.read + r.written + r.uncached;
+const pct = (n: number, d: number) => `${((n / d) * 100).toFixed(2)}%`;
+const money = (n: number) => (n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(3)}`);
+const sumCost = initial.reduce((a, r) => a + r.cost, 0);
+const sumBase = initial.reduce((a, r) => a + r.uncachedCost, 0);
+const share = initial.reduce((a, r) => a + r.read, 0) / initial.reduce((a, r) => a + total(r), 0);
+const when = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+---
+<section class="dfig play" aria-label="Prompt cache playground: pick a scenario and replay six requests through a simulated cache">
+  <p class="df-title">Replay six requests through the cache.</p>
+
+  <div class="ctl" role="group" aria-label="Scenario">
+    {SCENARIOS.map((s, i) => (
+      <button type="button" class="pick" data-scenario={s.id} aria-pressed={i === 0 ? 'true' : 'false'}>{s.label}</button>
+    ))}
+  </div>
+  <div class="opts">
+    <label>Model
+      <select data-opt="model">
+        {Object.entries(MODELS).filter(([id]) => id !== 'claude-haiku-4-5').map(([id, m]) => <option value={id}>{m.label}</option>)}
+      </select>
+    </label>
+    <label>Cached prefix
+      <select data-opt="prefix">
+        <option value="10000">10K tokens</option>
+        <option value="50000" selected>50K tokens</option>
+        <option value="200000">200K tokens</option>
+      </select>
+    </label>
+    <label>TTL
+      <select data-opt="ttl">
+        <option value="5m">5 minutes</option>
+        <option value="1h">1 hour</option>
+      </select>
+    </label>
+    <button type="button" class="replay" data-replay>Replay ▶</button>
+  </div>
+  <p class="note" data-note>{SCENARIOS[0].note}</p>
+
+  <div class="legend"><span class="k read">read</span><span class="k write">written</span><span class="k full">full price</span></div>
+  <ol class="reqs" data-reqs>
+    {initial.map((r, i) => (
+      <li class="req" style={`--i:${i}`}>
+        <span class="rl">#{i + 1}<small>{when(r.start)}</small></span>
+        <span class="bar">
+          <span class="s read" style={`width:${pct(r.read, total(r))}`}></span>
+          <span class="s write" style={`width:${pct(r.written, total(r))}`}></span>
+          <span class="s full" style={`width:${pct(r.uncached, total(r))}`}></span>
+        </span>
+        <span class="rc"><b>{money(r.cost)}</b><small>~{r.ttft.toFixed(1)} s</small></span>
+      </li>
+    ))}
+  </ol>
+
+  <div class="tot">
+    <p><span class="df-num" data-share>{Math.round(share * 100)}%</span> of input read from cache</p>
+    <p><span class="df-num" data-cost>{money(sumCost)}</span> for six requests, vs <span data-base>{money(sumBase)}</span> with no caching</p>
+  </div>
+  <p class="sr" aria-live="polite" data-live></p>
+  <p class="df-note">A simulation of the documented rules with list prices, not a measurement. Time to first token uses a simple model fitted to our measured Sonnet 5.5 runs. The time under each request number is when it starts, in minutes and seconds.</p>
+</section>
+
+<style is:global>
+  /* Global, scoped by hand: the request rows are built in the browser and carry no Astro scope attribute */
+  .dfig.play .ctl { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.7rem; }
+  .dfig.play .pick { font: 500 0.78rem var(--font-sans); padding: 0.38rem 0.65rem; border-radius: 999px; border: 1px solid var(--df-rule); background: transparent; color: var(--df-ink); cursor: pointer; }
+  .dfig.play .pick[aria-pressed='true'] { background: var(--df-accent); border-color: var(--df-accent); color: var(--dg-fill); }
+  .dfig.play .opts { display: flex; flex-wrap: wrap; gap: 0.5rem 0.9rem; align-items: end; margin-bottom: 0.6rem; }
+  .dfig.play .opts label { display: grid; gap: 0.2rem; font: 400 0.72rem var(--font-mono); color: var(--df-muted); }
+  .dfig.play select { font: 500 0.82rem var(--font-sans); padding: 0.3rem 0.4rem; border-radius: 6px; border: 1px solid var(--df-rule); background: var(--dg-fill); color: var(--df-ink); }
+  .dfig.play .replay { font: 600 0.8rem var(--font-sans); padding: 0.38rem 0.8rem; border-radius: 6px; border: 1.5px solid var(--df-hi); background: transparent; color: var(--df-ink); cursor: pointer; }
+  .dfig.play .note { font-size: 0.84rem; color: var(--df-muted); margin: 0 0 0.8rem; min-height: 2.3em; line-height: 1.35; }
+  .dfig.play .legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font: 400 0.72rem var(--font-mono); color: var(--df-muted); margin-bottom: 0.5rem; }
+  .dfig.play .k::before { content: ''; display: inline-block; width: 0.8rem; height: 0.55rem; border-radius: 3px; margin-right: 0.35rem; vertical-align: 0.05rem; }
+  .dfig.play .k.read::before, .dfig.play .s.read { background: var(--df-accent); }
+  .dfig.play .k.write::before, .dfig.play .s.write { background: var(--df-hi); }
+  .dfig.play .k.full::before, .dfig.play .s.full { background: var(--df-muted); }
+  .dfig.play .reqs { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  .dfig.play .req { display: grid; grid-template-columns: 3.2rem 1fr 4.6rem; gap: 0.6rem; align-items: center; }
+  .dfig.play .rl { font: 500 0.8rem var(--font-mono); display: grid; }
+  .dfig.play .rl small, .dfig.play .rc small { font: 400 0.68rem var(--font-mono); color: var(--df-muted); }
+  .dfig.play .bar { display: flex; height: 18px; border-radius: 5px; overflow: hidden; background: var(--df-track); }
+  .dfig.play .s { display: block; height: 100%; }
+  .dfig.play .rc { display: grid; text-align: right; font: 500 0.8rem var(--font-mono); }
+  .dfig.play .tot { display: grid; gap: 0.2rem; margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--df-rule); }
+  .dfig.play .tot p { margin: 0; font-size: 0.9rem; }
+  .dfig.play .tot .df-num { font-size: 1.05rem; }
+  .dfig.play .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: no-preference) {
+    .dfig.play .req.enter { opacity: 0; transform: translateX(-6px); }
+    .dfig.play .req.enter.on { opacity: 1; transform: none; transition: opacity 0.35s ease, transform 0.35s ease; }
+    .dfig.play .req.enter .s { transform: scaleX(0); transform-origin: left; }
+    .dfig.play .req.enter.on .s { transform: none; transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s; }
+  }
+</style>
+
+<script>
+  import { run, SCENARIOS, type ScenarioId, type ModelId, type Ttl, type Res } from '../../cachesim';
+
+  const money = (n: number) => (n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(3)}`);
+  const when = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+  const total = (r: Res) => r.read + r.written + r.uncached;
+
+  for (const root of document.querySelectorAll<HTMLElement>('.dfig.play')) {
+    const state = { scenario: 'stable' as ScenarioId };
+    const list = root.querySelector<HTMLOListElement>('[data-reqs]')!;
+    const opt = (k: string) => root.querySelector<HTMLSelectElement>(`[data-opt="${k}"]`)!;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let timers: number[] = [];
+
+    const render = (animate: boolean) => {
+      timers.forEach(clearTimeout);
+      timers = [];
+      const res = run(state.scenario, opt('model').value as ModelId, Number(opt('prefix').value), opt('ttl').value as Ttl);
+      root.querySelector('[data-note]')!.textContent = SCENARIOS.find((s) => s.id === state.scenario)!.note;
+      list.replaceChildren(...res.map((r, i) => {
+        const li = document.createElement('li');
+        li.className = 'req' + (animate && !reduced ? ' enter' : '');
+        const t = total(r);
+        li.innerHTML = `<span class="rl">#${i + 1}<small>${when(r.start)}</small></span>`
+          + `<span class="bar"><span class="s read" style="width:${(r.read / t) * 100}%"></span>`
+          + `<span class="s write" style="width:${(r.written / t) * 100}%"></span>`
+          + `<span class="s full" style="width:${(r.uncached / t) * 100}%"></span></span>`
+          + `<span class="rc"><b>${money(r.cost)}</b><small>~${r.ttft.toFixed(1)} s</small></span>`;
+        if (animate && !reduced) timers.push(window.setTimeout(() => li.classList.add('on'), 60 + i * 420));
+        return li;
+      }));
+      const cost = res.reduce((a, r) => a + r.cost, 0);
+      const base = res.reduce((a, r) => a + r.uncachedCost, 0);
+      const share = res.reduce((a, r) => a + r.read, 0) / res.reduce((a, r) => a + total(r), 0);
+      root.querySelector('[data-share]')!.textContent = `${Math.round(share * 100)}%`;
+      root.querySelector('[data-cost]')!.textContent = money(cost);
+      root.querySelector('[data-base]')!.textContent = money(base);
+      const hits = res.filter((r) => r.read > 0).length;
+      root.querySelector('[data-live]')!.textContent =
+        `${hits} of 6 requests read the cache. ${Math.round(share * 100)}% of input came from cache. ${money(cost)} versus ${money(base)} with no caching.`;
+    };
+
+    root.querySelectorAll<HTMLButtonElement>('[data-scenario]').forEach((b) => b.addEventListener('click', () => {
+      state.scenario = b.dataset.scenario as ScenarioId;
+      root.querySelectorAll('[data-scenario]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      render(true);
+    }));
+    root.querySelectorAll('select').forEach((s) => s.addEventListener('change', () => render(true)));
+    root.querySelector('[data-replay]')!.addEventListener('click', () => render(true));
+
+    // Play once when the playground first scrolls into view.
+    if ('IntersectionObserver' in window && !reduced) {
+      const io = new IntersectionObserver((es) => {
+        if (es.some((e) => e.isIntersecting)) { io.disconnect(); render(true); }
+      }, { threshold: 0.3 });
+      io.observe(root);
+    }
+  }
+</script>
