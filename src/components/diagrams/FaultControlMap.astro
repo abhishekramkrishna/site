@@ -1,0 +1,36 @@
+---
+// Which harness control stops which failure mode, from the one-fault-at-a-time
+// table in agent-harness-lab (results/loop_bench.md).
+const rows: [string, string, string][] = [
+  ['Gets stuck repeating a call', 'Loop guard', 'Warns at 3 identical calls, stops at 6'],
+  ['Rewrites the failing test', 'Protected test files', 'The verifier alone does not catch this'],
+  ['Says "done" after a wrong fix', 'Verifier', 'Harmless only when the fix happens to be right'],
+  ['Hits a rate limit', 'Retries with backoff', 'Without them, the run just ends'],
+  ['Tries a wrong fix first', 'Nothing extra', 'Running the tests was enough'],
+  ['Sends a malformed tool call', 'Nothing extra', 'The error went back to the model either way'],
+];
+---
+<div class="dfig fcm" role="img" aria-label="Which control stops which failure. Gets stuck repeating a call: the loop guard, which warns at 3 identical calls and stops at 6. Rewrites the failing test: protected test files; the verifier alone does not catch this. Says done after a wrong fix: the verifier. Hits a rate limit: retries with backoff; without them the run ends. Tries a wrong fix first: nothing extra, running the tests was enough. Sends a malformed tool call: nothing extra, the error went back to the model either way.">
+  <p class="df-title">Each failure has one control that stops it.</p>
+  <ul>
+    {rows.map(([fault, control, note]) => (
+      <li class:list={{ none: control === 'Nothing extra' }}>
+        <p class="f">{fault}</p>
+        <p class="c">{control}</p>
+        <p class="n">{note}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="df-note">From running each failure mode alone on all six tasks, with each control switched off in turn.</p>
+</div>
+
+<style>
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  li { display: grid; grid-template-columns: 1fr auto; column-gap: 0.8rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  p { margin: 0; line-height: 1.35; }
+  .f { font-weight: 600; font-size: 0.92rem; }
+  .c { font: 500 0.8rem var(--font-mono); color: var(--df-hi); text-align: right; }
+  .none .c { color: var(--df-muted); }
+  .n { grid-column: 1 / 3; font-size: 0.82rem; color: var(--df-muted); margin-top: 0.2rem; }
+  @media (max-width: 520px) { li { grid-template-columns: 1fr; } .c { text-align: left; margin-top: 0.2rem; } }
+</style>

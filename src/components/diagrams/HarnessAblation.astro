@@ -1,0 +1,34 @@
+---
+// Solve rate on the mixed-fault suite of agent-harness-lab (300 runs per row, mock model):
+// the minimal loop, the full harness, and the harness with one control switched off.
+// Source: results/loop_bench.md in github.com/abhishekramkrishna/agent-harness-lab.
+const rows: [string, number, string][] = [
+  ['Minimal loop', 32.3, 'base'],
+  ['Full harness', 100, 'good'],
+  ['Without the protected test files', 68.7, 'bad'],
+  ['Without retries', 71.3, 'bad'],
+  ['Without the loop guard', 71.7, 'bad'],
+  ['Without the verifier', 92.3, 'bad'],
+  ['Without argument validation', 100, 'flat'],
+  ['Without compaction', 100, 'flat'],
+];
+---
+<div class="dfig abl" role="img" aria-label="Share of runs solved on the mixed-fault suite, 300 runs each. Minimal loop 32.3%. Full harness 100%. With one control switched off: without protected test files 68.7%, without retries 71.3%, without the loop guard 71.7%, without the verifier 92.3%, without argument validation 100%, without compaction 100%.">
+  <p class="df-title">Switch off one control and the solve rate drops.</p>
+  {rows.map(([label, v, kind], i) => (
+    <div class:list={['row', kind]}>
+      <div class="lab"><span>{label}</span><span class="df-num">{v}%</span></div>
+      <div class="df-track"><div class="df-bar" style={`width:${v}%;--i:${i}`}></div></div>
+    </div>
+  ))}
+  <p class="df-note">Share of runs where the original tests pass against the agent's final code. 300 runs per row: 6 tasks, 50 seeds, each failure mode on with probability 0.3. Scripted mock model, not an LLM.</p>
+</div>
+
+<style>
+  .row { margin-bottom: 0.55rem; }
+  .lab { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9rem; font-weight: 550; margin-bottom: 0.3rem; }
+  .base .df-bar, .flat .df-bar { background: var(--df-muted); }
+  .base .df-num, .flat .df-num { color: var(--df-muted); }
+  .bad .df-bar { background: var(--df-hi); }
+  .bad .df-num { color: var(--df-hi); }
+</style>
