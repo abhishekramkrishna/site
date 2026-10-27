@@ -1,0 +1,38 @@
+---
+// Extra model calls after one crash, restart vs resume from checkpoint, by the node
+// that crashed. A clean run costs 10 model calls. Source: agent-harness-lab results/graph_bench.md.
+const rows: [string, number, number][] = [
+  ['Inside the fix step', 5, 5],
+  ['At verify', 5, 0],
+  ['During review', 10, 0],
+  ['At the review gate', 10, 0],
+  ['At merge', 10, 0],
+];
+let i = 0;
+---
+<div class="dfig crash" role="img" aria-label="Extra model calls after one crash, out of 10 for a clean run. Crash inside the fix step: 5 on restart, 5 on resume. At verify: 5 on restart, 0 on resume. During review: 10 on restart, 0 on resume. At the review gate: 10 on restart, 0 on resume. At merge: 10 on restart, 0 on resume.">
+  <p class="df-title">A checkpoint turns a crash into one lost step.</p>
+  {rows.map(([label, restart, resume]) => (
+    <div class="grp">
+      <p class="gt">Crash {label.toLowerCase()}</p>
+      <div class="row bad">
+        <div class="lab"><span>Restart from scratch</span><span class="df-num">+{restart}</span></div>
+        <div class="df-track"><div class="df-bar" style={`width:${restart * 10}%;--i:${i++}`}></div></div>
+      </div>
+      <div class="row">
+        <div class="lab"><span>Resume from checkpoint</span><span class="df-num">+{resume}</span></div>
+        <div class="df-track"><div class="df-bar" style={`width:${Math.max(resume * 10, 1)}%;--i:${i++}`}></div></div>
+      </div>
+    </div>
+  ))}
+  <p class="df-note">Extra model calls caused by one simulated crash, after the step did its work but before it was saved. A clean run costs 10. Mean of six tasks, mock model.</p>
+</div>
+
+<style>
+  .grp { margin-bottom: 0.9rem; }
+  .gt { font-size: 0.82rem; color: var(--df-muted); margin: 0 0 0.35rem; }
+  .row { margin-bottom: 0.4rem; }
+  .lab { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.86rem; font-weight: 550; margin-bottom: 0.25rem; }
+  .bad .df-bar { background: var(--df-hi); }
+  .bad .df-num { color: var(--df-hi); }
+</style>
