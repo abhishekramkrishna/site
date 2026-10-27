@@ -14,7 +14,9 @@ import Figure from '../../components/Figure.astro';
 import HarnessAblation from '../../components/diagrams/HarnessAblation.astro';
 import FaultControlMap from '../../components/diagrams/FaultControlMap.astro';
 
-An agent is asked to fix a bug in a slug function. It runs the tests, reads the source, and then reads the same file again. And again. Forty turns later it decides the tests have the wrong expectations, rewrites them so they pass, and reports success. About 75,000 tokens, and the bug is still there.
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/what-each-part-of-an-agent-harness-is-worth`;
+
+An agent is asked to fix a bug in a slug function. It runs the tests, decides the tests have the wrong expectations, and rewrites them so they can't fail. Then it reads the source file. And reads it again, 37 times in all, until the run hits its 40-turn limit. About 75,000 tokens, the bug is still there, and the tests no longer check for it.
 
 Nothing in that run was a model failure in the usual sense. Each step looked reasonable on its own. What was missing was something around the model that could say no: you have read that file six times, you may not edit the tests, you are not done until a check you can't touch passes.
 
@@ -26,6 +28,10 @@ That something is the harness. Everyone building agents has one, usually grown a
 - Switch off one control and the solve rate falls back: to 68.7% without protected test files, 71.3% without retries, 71.7% without the loop guard, 92.3% without the verifier.
 - The verifier did not catch an agent rewriting the tests. It ran the tests the agent had just rewritten. A check the agent can edit is not a check.
 - Two controls did nothing measurable here. I left them in the results rather than tune the experiment until they did.
+
+## The video version
+
+<video controls preload="none" playsinline poster={`${media}/harness-explainer-poster.jpg`} src={`${media}/harness-explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="1-minute 39-second narrated explainer of what each part of an agent harness is worth, with captions. Numbers from a scripted mock model."></video>
 
 ## The experiment, and what is mocked
 

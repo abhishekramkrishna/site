@@ -14,6 +14,8 @@ import Figure from '../../components/Figure.astro';
 import CrashRecovery from '../../components/diagrams/CrashRecovery.astro';
 import LoopVsGraph from '../../components/diagrams/LoopVsGraph.astro';
 
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/agent-loops-and-graphs-do-different-jobs`;
+
 An agent has spent twenty minutes on a bug fix. The fix is written, the tests pass, three reviewers have signed off, and it is waiting for a person to approve the merge. Then the process restarts for a deploy. Where does the work resume?
 
 In most agent code I've read, the answer is "from the beginning". The state lived in memory, in a transcript, in local variables of a function that is no longer running. Every model call is paid for again, and a different run might produce a different fix that the reviewers never saw.
@@ -26,6 +28,10 @@ That is a problem a better loop can't solve. The loop decides what the agent doe
 - With a checkpoint after every step, a crash after review cost nothing to recover. A restart from scratch paid all 10 model calls again.
 - Wrapping a weak loop in a graph made failure safe, not rare. False successes fell from 20.3% to zero, but 61.3% of runs ended escalated to a person. Solving them took the loop's own controls.
 - Use a loop for open-ended work and a graph for a process that must not skip steps. For most real work you want a graph with a loop inside one node.
+
+## The video version
+
+<video controls preload="none" playsinline poster={`${media}/loops-graphs-explainer-poster.jpg`} src={`${media}/loops-graphs-explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="1-minute 31-second narrated explainer of why agent loops and agent graphs do different jobs, with captions. Numbers from a scripted mock model."></video>
 
 ## A graph, built small enough to read
 

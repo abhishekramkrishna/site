@@ -14,6 +14,8 @@ import Figure from '../../components/Figure.astro';
 import SkillSources from '../../components/diagrams/SkillSources.astro';
 import SkillChecks from '../../components/diagrams/SkillChecks.astro';
 
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/test-your-agent-skills-like-code`;
+
 Picture a team with twelve agent skills. One of them, the release checklist, has stopped firing. Nobody noticed for three weeks, until a release went out without its changelog. When someone finally looked, the cause took a minute to find: a newer skill about writing changelogs had a description close enough to the release skill's that the agent picked it instead, every time.
 
 Nothing was broken in the usual sense. Both skills were well written. Each one, read on its own, was fine. The failure was between them, and nothing was looking there.
@@ -26,6 +28,10 @@ In [Skills are the new team wiki](/blog/skills-are-the-new-team-wiki/) I argued 
 - I combined their best patterns into nine skills for people who build agent harnesses, each tied to a test or benchmark that shows the failure it prevents.
 - A checker runs four tests on the whole pack on every commit: lint, description collisions, trigger evals and composition rules. It caught a real mistake while I was writing the pack.
 - The routing test is a cheap proxy, not a measurement of how a model picks skills. It is still the cheapest way I know to catch a vague description before it costs you a release.
+
+## The video version
+
+<video controls preload="none" playsinline poster={`${media}/skills-explainer-poster.jpg`} src={`${media}/skills-explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="1-minute 32-second narrated explainer of testing agent skills like code, with captions. Numbers from a scripted mock model."></video>
 
 ## What the two best collections get right
 
