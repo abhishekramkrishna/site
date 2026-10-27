@@ -1,0 +1,43 @@
+---
+// The Stanch demo loop: missed heartbeat -> P0 -> no ACK -> pre-approved pause.
+// Source: getstanch/stanch examples/demo/demo-incident.yaml and docker-compose.yml (v0.2 on main, Jul 2026).
+const steps: { t: string; name: string; what: string; hi?: boolean; ack?: boolean }[] = [
+  { t: '0 s', name: 'Heartbeat stops', what: 'Only the pulse goes quiet. The control endpoint stays up.' },
+  { t: '30 s', name: 'P0 alert', what: 'The silence limit passes and a person is paged.' },
+  { t: '30–90 s', name: 'Window to acknowledge', what: '60 seconds. Any acknowledgment means a human owns it and Stanch stands down.', ack: true },
+  { t: '90 s', name: 'Pre-approved pause runs', what: 'Once. Logged before and after the call. No retry.', hi: true },
+];
+// Bar widths on a 0 to 90 second scale
+const span: Record<string, [number, number]> = { '0 s': [0, 2], '30 s': [32, 2], '30–90 s': [33.3, 66.7], '90 s': [98, 2] };
+---
+<div class="dfig tl" role="img" aria-label="Timeline of the Stanch demo. At 0 seconds the demo service's heartbeat stops, while its control endpoint stays up. At 30 seconds the silence limit passes and a P0 alert pages a person. From 30 to 90 seconds there is a 60-second window to acknowledge; any acknowledgment means a human owns the incident and Stanch stands down. At 90 seconds, with no acknowledgment, the pre-approved pause action runs once, logged before and after the call, with no retry. Production rules set their own windows; the default acknowledgment window is 300 seconds.">
+  <p class="df-title">If nobody answers, the system stops itself. Once.</p>
+  <ol>
+    {steps.map((s, i) => (
+      <li class:list={{ hi: s.hi, ack: s.ack }}>
+        <span class="df-num t">{s.t}</span>
+        <div>
+          <p class="nm">{s.name}</p>
+          <p class="what">{s.what}</p>
+        </div>
+        <div class="df-track"><div class="df-bar" style={`left:${span[s.t][0]}%;width:${span[s.t][1]}%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">Demo settings on a 0 to 90 second scale. Production rules set their own windows; the default acknowledgment window is 300 seconds.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  li { display: grid; grid-template-columns: 4.6rem 1fr; column-gap: 0.7rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.hi { border: 1.5px solid var(--df-hi); }
+  li .df-track { grid-column: 2; height: 6px; margin-top: 0.5rem; }
+  li .df-bar { min-width: 6px; }
+  li.ack .df-bar { background: var(--df-muted); }
+  li.hi .t, li.hi .nm { color: var(--df-hi); }
+  li.hi .df-bar { background: var(--df-hi); }
+  .t { font-size: 0.82rem; padding-top: 0.1rem; }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .what { font-size: 0.84rem; color: var(--df-muted); margin-top: 0.15rem; }
+</style>

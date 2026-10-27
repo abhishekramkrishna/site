@@ -1,0 +1,47 @@
+---
+// Stanch's closed set of stop actions, in its conservatism order (stanch/actions/engine.py),
+// with blast radius and revert as declared in stanch/actions/webhook.py.
+const rungs: { n: string; name: string; radius: string; revert: string; last?: boolean }[] = [
+  { n: '1', name: 'Pause', radius: 'One lane or queue paused. Work piles up.', revert: 'Resume with one call' },
+  { n: '2', name: 'Disable flag', radius: 'One feature flag turned off. Never on.', revert: 'Re-enable, as a human decision' },
+  { n: '3', name: 'Read-only', radius: 'One domain refuses writes.', revert: 'Switch back to read-write' },
+  { n: '4', name: 'Quarantine', radius: 'One account or entity isolated.', revert: 'Release it' },
+  { n: '5', name: 'Restart once', radius: 'One service bounced, at most once per alert.', revert: 'Cannot be undone', last: true },
+];
+---
+<div class="dfig ladder" role="img" aria-label="Stanch's five stop actions, ranked from most to least reversible. 1 Pause: one lane or queue paused, work piles up, resume with one call. 2 Disable flag: one feature flag turned off, never on; re-enabling is a human decision. 3 Read-only: one domain refuses writes; switch back to read-write. 4 Quarantine: one account or entity isolated; release it. 5 Restart once: one service bounced at most once per alert; it cannot be undone. No action can enable, create, transfer, delete or touch DNS. When a rule approves several, the most conservative runs.">
+  <p class="df-title">The hand only knows how to stop.</p>
+  <ol>
+    {rungs.map((r, i) => (
+      <li class:list={{ last: r.last }}>
+        <span class="n">{r.n}</span>
+        <div>
+          <p class="nm">{r.name}</p>
+          <p class="what">{r.radius}</p>
+        </div>
+        <p class="rev">{r.revert}</p>
+        <div class="df-track"><div class="df-bar" style={`width:${100 - i * 18}%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">Bars show reversibility, most to least. Never in the set: enable, create, transfer, delete, touch DNS. When a rule approves several actions, the most conservative runs.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  li { display: grid; grid-template-columns: 1.6rem 1fr auto; column-gap: 0.7rem; align-items: start; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li .df-track { grid-column: 2 / 4; height: 4px; margin-top: 0.45rem; }
+  li.last { border-color: var(--df-hi); }
+  li.last .df-bar { background: var(--df-hi); }
+  li.last .rev, li.last .n { color: var(--df-hi); }
+  .n { font: 500 0.85rem var(--font-mono); color: var(--df-accent); padding-top: 0.1rem; }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .what { font-size: 0.84rem; color: var(--df-muted); margin-top: 0.15rem; }
+  .rev { font: 400 0.76rem var(--font-mono); color: var(--df-accent); text-align: right; max-width: 11rem; padding-top: 0.15rem; }
+  @media (max-width: 520px) {
+    li { grid-template-columns: 1.6rem 1fr; }
+    .rev { grid-column: 2; text-align: left; max-width: none; margin-top: 0.3rem; }
+    li .df-track { grid-column: 2; }
+  }
+</style>

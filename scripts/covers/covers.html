@@ -341,6 +341,20 @@ const COVERS = {
     src: 'Usage metrics stay on the team dashboard, where they help find waste.',
   },
 
+  'fail-stop-containment-for-agents': {
+    kick: 'Fail-stop containment for agents',
+    title: 'When nobody answers, <em>the system stops itself.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '30 s', k: 'P0 alert after the heartbeat stops' })}${tile({ big: '60 s', k: 'for a person to acknowledge' })}${tile({ big: '1 stop', k: 'pre-approved, logged, never retried', hi: true })}</div>`
+      : `<div class="tiles" style="--n:4">
+        ${tile({ k: 'Heartbeat stops', big: '0 s', d: 'Silence is the signal' })}
+        ${tile({ k: 'P0 alert pages a person', big: '30 s', d: 'Silence limit passed' })}
+        ${tile({ k: 'Window to acknowledge', big: '60 s', d: 'An ACK means a human owns it' })}
+        ${tile({ k: 'Nobody answered', big: '90 s', d: 'Pre-approved pause runs, once', hi: true })}
+      </div><div class="strip"><b>Five actions, all stop-shaped:</b> pause, disable a flag, read-only, quarantine, restart once. No model in the path.</div>`,
+    src: 'Demo loop from Stanch (github.com/getstanch/stanch), open source, by Marcos Rodrigues Gomes Junior.',
+  },
+
   'model-retirement-is-the-new-dependency-upgrade': {
     kick: 'Model retirement is the new dependency upgrade',
     title: 'Your model has <em>an end-of-life date.</em>',
