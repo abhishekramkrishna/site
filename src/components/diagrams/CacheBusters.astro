@@ -1,0 +1,41 @@
+---
+// Measured: 5 sequential requests per scenario on Claude Haiku 5.5 through Claude Code headless
+// (v2.1.311), 27 Oct 2026, a 33K-token prefix. Fan-out: 3 trials of 4 requests. Minimum: 3 requests per model.
+// Raw data: prompt-caching-lab results/runs.jsonl.
+const rows: { name: string; what: string; share: number; hits: string; cost: string; bad?: boolean }[] = [
+  { name: 'Stable prefix', what: 'baseline', share: 80, hits: '4/5', cost: '1.0x' },
+  { name: 'Timestamp at the top of the system prompt', what: 'datetime.now() in the header', share: 0, hits: '0/5', cost: '4.2x', bad: true },
+  { name: 'Timestamp at the end of the system prompt', what: 'still above the breakpoint', share: 0, hits: '0/5', cost: '4.2x', bad: true },
+  { name: 'Same timestamp, moved to the user message', what: 'after the cached prefix', share: 77, hits: '4/5', cost: '1.1x' },
+  { name: 'Config JSON with unstable key order', what: 'json.dumps without sort_keys', share: 0, hits: '0/5', cost: '4.2x', bad: true },
+  { name: 'Two tool lists, alternating', what: 'each list is its own cache', share: 60, hits: '3/5', cost: '1.9x' },
+  { name: '4 requests in parallel', what: 'none can read a write in flight', share: 0, hits: '0/4', cost: '3.5x', bad: true },
+  { name: 'Same prompt on Haiku 4.5', what: '3,470 tokens, minimum 4,096', share: 0, hits: '0/3', cost: 'no cache', bad: true },
+];
+---
+<div class="dfig bust" role="img" aria-label="Share of input served from cache in five requests, measured on Claude Haiku 5.5 through Claude Code. Stable prefix: 80 percent, 4 of 5 requests read the cache, the baseline cost. A timestamp at the top of the system prompt: 0 percent, 0 of 5, 4.2 times the cost. A timestamp at the end of the system prompt: also 0 percent and 4.2 times, because it is still above the breakpoint. The same timestamp moved to the user message: 77 percent, 4 of 5, 1.1 times. Config JSON with unstable key order: 0 percent, 4.2 times. Two tool lists, alternating: 60 percent, 3 of 5, 1.9 times, because each list is its own cache. Four identical requests sent in parallel: 0 of 4 read the cache, 3.5 times the cost of sending one first. The same prompt on Haiku 4.5, 3,470 tokens against a 4,096-token minimum: nothing cached, with no error.">
+  <p class="df-title">None of these returned an error. The bill just went up.</p>
+  {rows.map((r, i) => (
+    <div class:list={['row', { bad: r.bad }]}>
+      <p class="nm">{r.name} <span>{r.what}</span></p>
+      <div class="ln">
+        <div class="df-track"><div class="df-bar" style={`width:${Math.max(r.share, 0.8)}%;--i:${i}`}></div></div>
+        <span class="df-num">{r.share}%</span>
+        <span class="x">{r.hits} · {r.cost}</span>
+      </div>
+    </div>
+  ))}
+  <p class="df-note">Bars: share of input tokens read from cache over the run (the first request always writes, so 80% is the ceiling for five). Then: requests that read the cache, and cost relative to the stable baseline at list price. Claude Haiku 5.5, 33K-token prefix, 1-hour writes, through Claude Code headless.</p>
+</div>
+
+<style>
+  .row { padding: 0.5rem 0; border-top: 1px solid var(--df-rule); }
+  .nm { margin: 0 0 0.3rem; font-size: 0.86rem; font-weight: 600; line-height: 1.3; }
+  .nm span { font-weight: 400; color: var(--df-muted); font-size: 0.78rem; margin-left: 0.25rem; }
+  .ln { display: grid; grid-template-columns: 1fr 2.6rem 6.4rem; gap: 0.5rem; align-items: center; }
+  .ln .df-track { height: 9px; }
+  .ln .df-num { font-size: 0.78rem; text-align: right; }
+  .x { font: 400 0.74rem var(--font-mono); color: var(--df-muted); text-align: right; }
+  .row.bad .x { color: var(--df-hi); }
+  .row.bad .df-num { color: var(--df-hi); }
+</style>

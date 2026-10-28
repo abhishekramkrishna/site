@@ -1,0 +1,197 @@
+---
+title: "Prompt caching, measured: what it saves and what silently breaks it"
+description: Cache reads on the Claude API cost a tenth of normal input or less, and long prompts start much faster. I sent 144 real requests to measure both, then broke the cache on purpose seven ways. Here is what it saved, what cancelled it without an error, and a process and code you can copy.
+pubDate: 2026-10-30
+tags: [agents, business]
+draft: false
+cover:
+  image: ../../assets/covers/prompt-caching-measured.png
+  thumb: ../../assets/covers/prompt-caching-measured-thumb.png
+  alt: "Prompt caching, measured in 144 requests: cache reads cost 95% less on Claude Sonnet 5.5, time to first token on a 152,000-token prompt fell from 4.1 to 1.7 seconds, and with a timestamp in the system prompt 0 of 5 requests hit the cache, with no error and 4.2 times the cost. A cache hit is a byte-identical prefix: tools, then system, then messages. Anything that changes goes last."
+---
+
+import Figure from '../../components/Figure.astro';
+import CachePrefix from '../../components/diagrams/CachePrefix.astro';
+import CacheResults from '../../components/diagrams/CacheResults.astro';
+import CacheBusters from '../../components/diagrams/CacheBusters.astro';
+import CachePlayground from '../../components/diagrams/CachePlayground.astro';
+import CacheProcess from '../../components/diagrams/CacheProcess.astro';
+
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/prompt-caching-measured`;
+
+An agent re-reads its whole prompt on every turn. The instructions, the tool definitions, the documents and every earlier message go back to the model each time it takes a step. In an eight-turn conversation I measured for this post, 97 to 100% of the input on every turn after the first was text the model had already seen.
+
+Prompt caching is how you stop paying full price for that. On the Claude API a cache read costs a tenth of the normal input price, and a twentieth on Claude Opus 5.5 and Sonnet 5.5. Long prompts also start answering sooner. It is one of the few changes that makes an AI product cheaper and faster at the same time, with no change to the answers.
+
+It also fails silently. A cache hit needs the start of the prompt to be byte for byte identical to an earlier request. Put the current time in the system prompt and you get no hits, no error, and a bill four times higher. Most teams I talk to have caching switched on. Far fewer have checked that it is working.
+
+So I measured it: 144 real requests through the Claude API, about $4.40 at list prices, comparing cached and uncached requests and then breaking the cache on purpose.
+
+**The short version**
+
+- On Claude Sonnet 5.5, every cache read cost 95% less than the same input uncached. Time to first token on a 152,000-token prompt fell from 4.1 to 1.7 seconds. Below about 20,000 tokens, speed barely changed; cost still fell 95%.
+- A timestamp anywhere in the system prompt, JSON with unstable key order, or four requests sent in parallel each took the hit rate to zero. None of them raised an error.
+- The fix is a habit more than a feature: keep everything that changes at the end of the prompt, check the usage fields on every response, and test caching in CI like any other behaviour you rely on.
+
+## The short version, in video
+
+<video controls preload="none" playsinline poster={`${media}/summary-poster.jpg`} src={`${media}/summary.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="Narrated summary of prompt caching, with captions: how a cache hit works, what we measured, the mistakes that silently break it, and the process to keep it working"></video>
+
+## How a cache hit works
+
+Every request to the Claude API is rendered in a fixed order: the tool definitions, then the system prompt, then the messages. You mark one or more points in that sequence as cache breakpoints with `cache_control`. When a request arrives, the API hashes everything from the start of the prompt up to each breakpoint and looks for an entry an earlier request wrote with the same hash.
+
+Three rules follow from that, and almost every caching bug breaks one of them:
+
+1. **It is a prefix match.** The hash covers everything before the breakpoint, so one changed byte early in the prompt changes every hash after it. Changing the system prompt invalidates the conversation history behind it. Changing a tool definition invalidates everything.
+2. **Entries are written only at breakpoints.** On each request the API walks back up to 20 blocks from a breakpoint looking for an earlier write. It does not go looking for stable content you forgot to mark.
+3. **Small prompts are not cached at all.** Each model has a minimum: 512 tokens on the newest models, up to 4,096 on Claude Opus 4.6 and Haiku 4.5. Below it, the marker is ignored without an error.
+
+<Figure caption="How a request is cached. Based on Anthropic's prompt caching documentation, checked 27 October 2026." tone="navy" wide>
+  <CachePrefix />
+</Figure>
+
+Entries live for 5 minutes by default, and every hit resets the timer. You can pay for a 1-hour lifetime instead. Caches are kept per model and per workspace, and never shared between organizations.
+
+## What it costs
+
+A cache write costs more than normal input; a read costs much less. The multipliers are the same across Claude models, apart from cheaper reads on the newest ones:
+
+| | Price, as a multiple of normal input | Claude Sonnet 5.5, per million tokens |
+| --- | --- | --- |
+| Normal input | 1x | $2.00 |
+| Cache write, 5-minute lifetime | 1.25x | $2.50 |
+| Cache write, 1-hour lifetime | 2x | $4.00 |
+| Cache read | 0.1x (0.05x on Opus 5.5 and Sonnet 5.5, 0.025x on Fable 5.1) | $0.10 |
+
+The arithmetic is kind. With the 5-minute lifetime, a single read pays back the write premium. With the 1-hour lifetime you need two. After that every read is almost free. Output tokens are not affected, and neither are the answers: caching changes what you pay to process the prompt, not what the model writes.
+
+Cache reads also don't count against input-token rate limits on most Claude models, so a good hit rate raises throughput as well as cutting cost.
+
+## What I measured
+
+I didn't have a bare API key in my environment, so every request went through Claude Code's headless mode (`claude -p`, version 2.1.311). Claude Code calls the Claude Messages API and returns the API's own `usage` block, which reports exactly how many input tokens were read from cache, written to it, or processed at full price. I replaced Claude Code's system prompt with my own and switched off its tools, so the prompt was almost entirely mine. Two things are Claude Code's choice rather than mine: it places the cache breakpoints itself, and in this environment it wrote 1-hour entries.
+
+The large, stable context was real code: Python standard-library source, the kind of text people cache when they put a codebase or a manual in front of a model. Each trial started with a unique first line, so the first request was a guaranteed miss. Costs below are list prices applied to the token counts the API reported.
+
+<Figure caption="Measured on Claude Sonnet 5.5 through Claude Code, 27 October 2026. Three cold and warm pairs per size; medians." tone="navy" wide>
+  <CacheResults />
+</Figure>
+
+Three things stood out.
+
+**The cost saving doesn't depend on size.** Every cached read on Sonnet 5.5 cost 95% less than the same tokens uncached, from 5,000 tokens to 152,000. On Claude Haiku 5.5, with the standard 0.1x read price, it was 90%.
+
+**The speed gain does.** At 5,000 tokens the cached and uncached requests both took about 1.5 seconds to the first token. At 80,000 tokens caching saved about 0.9 seconds, and at 152,000 it cut 4.1 seconds to 1.7. If your prompts are short, cache for cost; don't expect users to notice.
+
+**Conversations cache themselves, if you let them.** In an eight-turn conversation over a 33,000-token context, the first turn wrote the cache and every later turn read 97 to 100% of its input from it. The whole conversation cost 65% less than it would have uncached, and that includes paying 2x for 1-hour writes on a conversation that lasted under a minute.
+
+## Try it: replay six requests through the cache
+
+This is a simulator, not a measurement. It runs the documented rules with list prices, and models time to first token as a straight line fitted to the Sonnet 5.5 runs above. Pick a mistake and watch what it does to six requests.
+
+<Figure caption="An interactive simulation of the documented caching rules. The same model, with tests, is in the prompt-caching-lab repository." tone="navy" wide>
+  <CachePlayground />
+</Figure>
+
+## Seven ways it broke without an error
+
+Then I broke it on purpose. Each scenario sent five requests in a row with the same 33,000-token context on Claude Haiku 5.5, changing one thing.
+
+<Figure caption="Measured on Claude Haiku 5.5 through Claude Code, 27 October 2026. Five sequential requests per scenario; three trials of four for the parallel case." tone="navy" wide>
+  <CacheBusters />
+</Figure>
+
+**1. A timestamp in the system prompt.** `Current time: 2026-10-27T09:14:03Z` at the top of the system prompt: zero hits in five requests, and 4.2 times the cost of the stable run, because every request paid for a fresh write and none read it. Moving the line to the end of the system prompt changed nothing, because it was still before the breakpoint. Moving the same line into the user message fixed it: 4 of 5 requests hit and the cost was about 10% above the stable run. The date is the most common cause I see, closely followed by a user's name or ID in the system prompt.
+
+**2. JSON with unstable key order.** A small config object serialized into the system prompt without sorted keys produced a different byte order on each request, and zero hits. Python dicts keep insertion order, so this usually comes from building the dict from a set, from merging config from several places, or from languages like Go and Swift that randomize map order. The content is identical; the bytes aren't. Serialize anything above the breakpoint with sorted keys.
+
+**3. A different tool list.** Tools render first, so a change there invalidates everything after it. When I alternated between two tool lists, each list became its own cache: two full writes, then hits. A tool list built per user, per tenant or per feature flag means one cache per variant, and none shared between them.
+
+**4. Parallel requests.** An entry becomes readable only once the response that wrote it starts streaming. Four identical requests sent at the same moment all missed, and all four paid for a write. Sending one first and the other three as soon as it finished gave one write and three reads, at 29% of the cost. Fan-out patterns, batch jobs and parallel sub-agents hit this constantly.
+
+**5. A prompt under the model's minimum.** The same prompt was 3,470 tokens on Claude Haiku 4.5, under its 4,096-token minimum, and nothing was cached in three requests. No error, no warning: the usage fields simply showed zero for both reads and writes. On Haiku 5.5, which counts the same text as 4,471 tokens and has a 512-token minimum, it cached at once. Minimums vary between model generations and don't always go down, so re-check after a model upgrade.
+
+**6. Switching models.** Caches are per model. Alternating between Haiku 5.5 and Sonnet 5.5 cost a full write on each model the first time, then each read its own cache. A router that sends the same conversation to different models, or a fallback that kicks in under load, pays that write again each time.
+
+**7. Letting it expire.** The default lifetime is 5 minutes from the start of the last request that used the entry, and generation time counts against it. A user who comes back after six minutes starts cold. Claude Code writes 1-hour entries, and after a 400-second gap my next request still read all 32,883 tokens from cache. The 1-hour write costs 2x instead of 1.25x, so it pays only when gaps between requests are regularly longer than 5 minutes.
+
+Two things I expected to break the cache didn't. Changing effort between low and high on Haiku 5.5 re-wrote only the last 818 tokens once, and left the 32,000-token prefix cached. And the moving breakpoint in a growing conversation is fine: earlier entries stay valid read points.
+
+## Other providers work the same way, with different defaults
+
+The idea isn't specific to Claude. According to each provider's documentation on 27 October 2026, OpenAI caches automatically on supported models, with a 1,024-token minimum on GPT-5.6 and later, optional explicit breakpoints, and a 30-minute or 12-hour lifetime. Google's Gemini models cache implicitly from Gemini 2.5 on, with minimums between 2,048 and 4,096 tokens depending on the model, and offer explicit caches with a lifetime you set. The rule that matters is the same everywhere: a hit needs an identical prefix, so stable content goes first. Prices, minimums and lifetimes differ and change, so check the current page before you plan around them.
+
+## The process I'd copy
+
+<Figure caption="Seven steps to make prompt caching work and keep it working." tone="navy" wide>
+  <CacheProcess />
+</Figure>
+
+**1. Measure before you change anything.** Log the `usage` block of every response. The number to watch is the share of input served from cache: `cache_read_input_tokens` divided by the sum of `cache_read_input_tokens`, `cache_creation_input_tokens` and `input_tokens`. Note that `input_tokens` on its own is only the part after the last breakpoint, which is why caching problems hide in dashboards that only plot it.
+
+**2. Sort the prompt by how often each part changes.** Tool definitions and core instructions change per release. Reference documents change per day or per customer. History changes per turn. The new message changes per request. Put them in that order.
+
+**3. Make the prefix byte-stable.** No clock, request ID or user name above the breakpoint. Sorted keys on any JSON you serialize into the prompt. One model and one tool list for the length of a conversation. Pass history back exactly as the API returned it, without trimming or re-serializing earlier turns.
+
+**4. Place the breakpoints at the boundaries.** One explicit breakpoint at the end of the static prefix guarantees the expensive part is reused. Top-level automatic caching then moves a second breakpoint along the conversation for you. Never put a breakpoint on the part that changes.
+
+```python
+response = client.messages.create(
+    model="claude-sonnet-5-5",
+    max_tokens=4096,
+    cache_control={"type": "ephemeral"},        # automatic: caches the conversation as it grows
+    system=[{
+        "type": "text",
+        "text": INSTRUCTIONS + HANDBOOK,         # byte-stable: no dates, IDs or names
+        "cache_control": {"type": "ephemeral"},  # explicit: the static prefix always has an entry
+    }],
+    messages=history + [{
+        "role": "user",
+        "content": f"(Today is {today}.) {question}",  # what changes goes last
+    }],
+)
+```
+
+**5. Choose the lifetime from the gap between requests.** If requests that share a prefix arrive less than 5 minutes apart, the default lifetime is strictly cheaper, because every hit renews it for free. Between 5 and 60 minutes, use the 1-hour lifetime. Longer than that, either re-warm on a schedule or accept the miss.
+
+**6. Warm once, then fan out.** Before sending many requests with the same prefix in parallel, send one and wait for it to start responding. The Claude API also accepts `max_tokens: 0` to write the cache without generating anything, which is a cheap way to warm a prefix before traffic arrives.
+
+**7. Guard it like any other behaviour.** This is the step teams skip, and it's why caching that worked at launch quietly stops working months later when someone adds a date to the prompt. Add a test that sends the same request twice and asserts the second one reads the cache:
+
+```python
+def test_prompt_prefix_is_cacheable(client):
+    first = client.messages.create(**build_request("What is the refund window?"))
+    second = client.messages.create(**build_request("And for damaged items?"))
+    total = (second.usage.cache_read_input_tokens + second.usage.cache_creation_input_tokens
+             + second.usage.input_tokens)
+    assert second.usage.cache_read_input_tokens / total > 0.8, "the prompt prefix stopped being cacheable"
+```
+
+Then alert in production when the cached share drops. When it does, compare two consecutive request bodies to find the first byte that differs. The Claude API can do that comparison for you with cache diagnostics: send `diagnostics: {"previous_message_id": ...}` on every request, and a response that missed tells you whether the model, the system prompt, the tools or the message history changed. For anything else, the repository below has a small command that diffs two logged payloads:
+
+```text
+$ python -m cachelab diff previous.json next.json
+First divergence: system[0], at character 57
+  previous: ...e: 2026-10-27T09:14:03Z\nYou answer ques
+  next:     ...e: 2026-10-27T09:14:41Z\nYou answer ques
+  likely cause: a timestamp or clock value changed: move it after the last breakpoint (e.g. the latest user turn)
+```
+
+## The code
+
+Everything behind this post is in [prompt-caching-lab](https://github.com/abhishekramkrishna/prompt-caching-lab), MIT licensed:
+
+- `bench/`: the experiments, which call Claude Code headless, and every raw result as JSON lines.
+- `cachelab/sim.py`: the simulator behind the playground above, with tests for each rule.
+- `cachelab/prefix_diff.py`: finds the first divergence between two logged requests and guesses the cause.
+- `cachelab/report.py`: a cache health report from your own usage logs: share served from cache, cost against uncached, and a warning when requests keep writing and never read.
+- `examples/cached_chat.py`: a chat over a large document using the Anthropic SDK, with both breakpoints, cache diagnostics and logging.
+
+Some limits to keep in mind. These are 144 requests, three to five per cell, in one environment on one day; the direction is consistent but the exact latencies will differ on your traffic. Claude Code chose the breakpoints and the 1-hour lifetime, so a hand-built request with 5-minute writes would show a smaller penalty for each miss: about 3.8 times the cost of the stable run rather than 4.2. And list prices change, so check the pricing page before you put these numbers in a forecast.
+
+## Where this fits
+
+I've argued before that [token counts are the wrong way to judge what AI is worth](/blog/stop-counting-tokens/). Caching is the other side of that coin: it lowers the cost of exactly the same work, with no trade-off in quality. That makes it worth treating as a property of your system you test and monitor, not a flag you set once.
+
+If you run anything on a model API this week, look at one number: the share of your input tokens served from cache. If it's well under the share of your prompt that never changes, something early in the prompt is moving. Find it, move it to the end, and add the test so it stays there.

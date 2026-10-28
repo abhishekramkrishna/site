@@ -1,0 +1,74 @@
+---
+// How a Claude API request is cached: a prefix match over tools, system, messages, up to a breakpoint.
+// Source: platform.claude.com/docs/en/build-with-claude/prompt-caching, checked 27 Oct 2026.
+type Seg = { label: string; w: number; kind: 'read' | 'write' | 'full'; mark?: boolean };
+const rows: { title: string; note: string; segs: Seg[] }[] = [
+  {
+    title: 'Turn 2, prefix unchanged',
+    note: 'Everything up to the last entry is read at a tenth of the price or less. Only the new turn is written.',
+    segs: [
+      { label: 'tools', w: 12, kind: 'read' },
+      { label: 'system prompt + documents', w: 44, kind: 'read', mark: true },
+      { label: 'turn 1', w: 16, kind: 'read', mark: true },
+      { label: 'turn 2', w: 14, kind: 'write', mark: true },
+      { label: 'new', w: 7, kind: 'full' },
+    ],
+  },
+  {
+    title: 'Same request, one timestamp in the system prompt',
+    note: 'One changed byte changes the hash of every block after it. Nothing is read; the whole prefix is written again.',
+    segs: [
+      { label: 'tools', w: 12, kind: 'write' },
+      { label: 'system prompt + documents', w: 44, kind: 'write', mark: true },
+      { label: 'turn 1', w: 16, kind: 'write', mark: true },
+      { label: 'turn 2', w: 14, kind: 'write', mark: true },
+      { label: 'new', w: 7, kind: 'full' },
+    ],
+  },
+];
+---
+<div class="dfig prefix" role="img" aria-label="How a request is cached. The prompt is read in a fixed order: tools, then the system prompt, then the messages. Cache breakpoints mark where entries are written. In turn 2 of a conversation with an unchanged prefix, the tools, system prompt and turn 1 are read from cache at a tenth of the base price or less, turn 2 is written at 1.25 times the base price, and only the newest text after the last breakpoint is charged at full price. If one timestamp in the system prompt changes, the hash of every block after it changes: nothing is read, and the tools, system prompt and both turns are written again.">
+  <p class="df-title">A cache hit is a byte-identical prefix. Order: tools, system, messages.</p>
+  <div class="legend">
+    <span class="k read">read from cache: 0.1x or less</span>
+    <span class="k write">written: 1.25x (5 min) or 2x (1 h)</span>
+    <span class="k full">full price: 1x</span>
+    <span class="k mk">breakpoint</span>
+  </div>
+  {rows.map((r, ri) => (
+    <div class="row">
+      <p class="rt">{r.title}</p>
+      <div class="strip">
+        {r.segs.map((s, si) => (
+          <div class:list={['seg', s.kind]} style={`flex:${s.w}`}>
+            <span class="df-track"><span class="df-bar" style={`width:100%;--i:${ri * 5 + si}`}></span></span>
+            <span class="lbl">{s.label}</span>
+            {s.mark && <span class="bp" aria-hidden="true">▼</span>}
+          </div>
+        ))}
+      </div>
+      <p class="rn">{r.note}</p>
+    </div>
+  ))}
+  <p class="df-note">Read prices: 0.1x base on most models, 0.05x on Claude Opus 5.5 and Sonnet 5.5, 0.025x on Claude Fable 5.1.</p>
+</div>
+
+<style>
+  .legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font: 400 0.74rem var(--font-mono); color: var(--df-muted); margin-bottom: 0.9rem; }
+  .k::before { content: ''; display: inline-block; width: 0.8rem; height: 0.55rem; border-radius: 3px; margin-right: 0.35rem; vertical-align: 0.05rem; }
+  .k.read::before { background: var(--df-accent); }
+  .k.write::before { background: var(--df-hi); }
+  .k.full::before { background: var(--df-muted); }
+  .k.mk::before { content: '▼'; width: auto; height: auto; background: none; color: var(--df-ink); font-size: 0.6rem; }
+  .row { padding: 0.7rem 0; border-top: 1px solid var(--df-rule); }
+  .rt { margin: 0 0 0.5rem; font-weight: 650; font-size: 0.9rem; }
+  .rn { margin: 0.45rem 0 0; font-size: 0.82rem; color: var(--df-muted); line-height: 1.35; }
+  .strip { display: flex; gap: 3px; }
+  .seg { position: relative; min-width: 0; }
+  .seg .df-track { display: block; height: 26px; border-radius: 5px; }
+  .seg .df-bar { border-radius: 5px; }
+  .seg.write .df-bar { background: var(--df-hi); }
+  .seg.full .df-bar { background: var(--df-muted); }
+  .lbl { display: block; font: 400 0.68rem var(--font-mono); color: var(--df-muted); margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bp { position: absolute; right: -4px; top: -0.85rem; font-size: 0.6rem; color: var(--df-ink); }
+</style>

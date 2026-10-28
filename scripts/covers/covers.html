@@ -379,6 +379,19 @@ const COVERS = {
     src: 'Claude Code v2.1.311, headless, 3 to 5 runs per cell, 27 Oct 2026.',
   },
 
+  'prompt-caching-measured': {
+    kick: 'Prompt caching, measured in 144 requests',
+    title: 'Cache reads cost 95% less. <em>One timestamp makes it zero.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '-95%', k: 'input cost per cache read, Claude Sonnet 5.5' })}${tile({ big: '4.1 → 1.7 s', k: 'time to first token at 152K tokens' })}${tile({ big: '0/5', k: 'requests that hit with a timestamp in the system prompt', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Input cost per cache read', big: '-95%', ba: 'Claude Sonnet 5.5' })}
+        ${tile({ k: 'Time to first token, 152K-token prompt', big: '4.1 → 1.7 s', ba: 'cold vs cached' })}
+        ${tile({ k: 'Hits with a timestamp in the system prompt', big: '0/5', ba: 'no error, 4.2x the cost', hi: true })}
+      </div><div class="strip"><b>A cache hit is a byte-identical prefix.</b> Tools, then system, then messages. Anything that changes goes last.</div>`,
+    src: 'Claude Code v2.1.311 headless on the Claude API, 27 Oct 2026. Code: prompt-caching-lab.',
+  },
+
   'fail-stop-containment-for-agents': {
     kick: 'Fail-stop containment for agents',
     title: 'When nobody answers, <em>the system stops itself.</em>',

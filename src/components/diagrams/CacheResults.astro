@@ -1,0 +1,49 @@
+---
+// Measured: Claude Sonnet 5.5 through Claude Code headless (v2.1.311), 27 Oct 2026, 3 cold/warm
+// pairs per size, median time to first token. Cost = list price on the API's usage fields.
+// Raw data: prompt-caching-lab results/runs.jsonl.
+const rows = [
+  { tokens: '4.9K', cold: 1.44, warm: 1.51, base: 0.0097, warmCost: 0.0005 },
+  { tokens: '17K', cold: 1.66, warm: 1.44, base: 0.0336, warmCost: 0.0017 },
+  { tokens: '80K', cold: 2.51, warm: 1.63, base: 0.16, warmCost: 0.008 },
+  { tokens: '152K', cold: 4.10, warm: 1.65, base: 0.304, warmCost: 0.0153 },
+];
+const max = 4.2;
+const money = (n: number) => (n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(3)}`);
+---
+<div class="dfig res" role="img" aria-label="Measured on Claude Sonnet 5.5 through Claude Code, median of 3 runs per size. Time to first token, uncached versus read from cache: 4.9 thousand tokens, 1.44 versus 1.51 seconds, no difference; 17 thousand tokens, 1.66 versus 1.44 seconds; 80 thousand tokens, 2.51 versus 1.63 seconds; 152 thousand tokens, 4.10 versus 1.65 seconds, 60 percent faster. Input cost per request at list price, uncached versus read from cache: about 1 cent versus 0.05 cents at 4.9 thousand tokens, and 30 cents versus 1.5 cents at 152 thousand tokens, 95 percent less at every size.">
+  <p class="df-title">Every cache read cost 95% less. Speed only improved once the prompt got long.</p>
+  <div class="legend"><span class="k cold">not cached</span><span class="k warm">read from cache</span></div>
+  <div class="head"><span>Prompt</span><span>Time to first token</span><span>Cost per request</span></div>
+  {rows.map((r, i) => (
+    <div class="row">
+      <span class="tk df-num">{r.tokens}</span>
+      <div class="pair">
+        <div class="ln"><div class="df-track"><div class="df-bar cold" style={`width:${(r.cold / max) * 100}%;--i:${i * 2}`}></div></div><span>{r.cold.toFixed(2)} s</span></div>
+        <div class="ln"><div class="df-track"><div class="df-bar" style={`width:${(r.warm / max) * 100}%;--i:${i * 2 + 1}`}></div></div><span>{r.warm.toFixed(2)} s</span></div>
+      </div>
+      <div class="cost"><span class="c0">{money(r.base)}</span><span class="c1">{money(r.warmCost)}</span></div>
+    </div>
+  ))}
+  <p class="df-note">Claude Sonnet 5.5 ($2 per million input tokens, $0.10 per million cached) through Claude Code headless, 3 runs per size, medians. Each cache read follows a write of the same prefix; the write itself costs 1.25x (5-minute) or 2x (1-hour, which Claude Code used here).</p>
+</div>
+
+<style>
+  .legend { display: flex; gap: 1rem; font: 400 0.74rem var(--font-mono); color: var(--df-muted); margin-bottom: 0.6rem; }
+  .k::before { content: ''; display: inline-block; width: 0.8rem; height: 0.55rem; border-radius: 3px; margin-right: 0.35rem; vertical-align: 0.05rem; }
+  .k.cold::before { background: var(--df-muted); }
+  .k.warm::before { background: var(--df-accent); }
+  .head, .row { display: grid; grid-template-columns: 3.2rem 1fr 4.6rem; gap: 0.7rem; align-items: center; }
+  .head { font: 400 0.72rem var(--font-mono); color: var(--df-muted); padding-bottom: 0.35rem; }
+  .head span:last-child { text-align: right; }
+  .row { padding: 0.55rem 0; border-top: 1px solid var(--df-rule); }
+  .tk { font-size: 0.85rem; }
+  .pair { display: grid; gap: 0.3rem; }
+  .ln { display: grid; grid-template-columns: 1fr 3.2rem; gap: 0.5rem; align-items: center; }
+  .ln .df-track { height: 9px; }
+  .ln span { font: 400 0.76rem var(--font-mono); text-align: right; }
+  .df-bar.cold { background: var(--df-muted); }
+  .cost { display: grid; gap: 0.3rem; text-align: right; font: 400 0.76rem var(--font-mono); }
+  .c0 { color: var(--df-muted); }
+  .c1 { color: var(--df-accent); font-weight: 600; }
+</style>
