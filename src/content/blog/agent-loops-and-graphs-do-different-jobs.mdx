@@ -1,0 +1,121 @@
+---
+title: "Agent loops and agent graphs do different jobs"
+description: A loop makes each attempt good. A graph makes the process safe and recoverable. I built a small durable graph runtime around an agent loop, crashed it at every step and ran it 300 times with faults switched on. What checkpoints are worth, what a graph can't fix, and how to choose.
+pubDate: 2026-11-02
+tags: [agents, leadership]
+draft: false
+cover:
+  image: ../../assets/covers/agent-loops-and-graphs-do-different-jobs.png
+  thumb: ../../assets/covers/agent-loops-and-graphs-do-different-jobs-thumb.png
+  alt: "The loop makes each attempt good; the graph makes the process safe. With a scripted mock model, a crash after review cost a restart all 10 model calls again and a resume from checkpoint none. Wrapping a minimal loop in the graph took false successes from 20.3% to zero but escalated 61.3% of runs to a person; with the full loop harness inside, the graph solved all 300 runs."
+---
+
+import Figure from '../../components/Figure.astro';
+import CrashRecovery from '../../components/diagrams/CrashRecovery.astro';
+import LoopVsGraph from '../../components/diagrams/LoopVsGraph.astro';
+
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/agent-loops-and-graphs-do-different-jobs`;
+
+An agent has spent twenty minutes on a bug fix. The fix is written, the tests pass, three reviewers have signed off, and it is waiting for a person to approve the merge. Then the process restarts for a deploy. Where does the work resume?
+
+In most agent code I've read, the answer is "from the beginning". The state lived in memory, in a transcript, in local variables of a function that is no longer running. Every model call is paid for again, and a different run might produce a different fix that the reviewers never saw.
+
+That is a problem a better loop can't solve. The loop decides what the agent does next. Something else has to decide which steps happen in what order, what survives a crash, and where a person must say yes. That is what agent graphs are for, and it is easy to reach for one for the wrong reason.
+
+**The short version**
+
+- A loop and a graph do different jobs. The loop makes each attempt good. The graph makes the process safe: fixed steps, checks outside the agent, human approval, and recovery from a crash.
+- With a checkpoint after every step, a crash after review cost nothing to recover. A restart from scratch paid all 10 model calls again.
+- Wrapping a weak loop in a graph made failure safe, not rare. False successes fell from 20.3% to zero, but 61.3% of runs ended escalated to a person. Solving them took the loop's own controls.
+- Use a loop for open-ended work and a graph for a process that must not skip steps. For most real work you want a graph with a loop inside one node.
+
+## The video version
+
+<video controls preload="none" playsinline poster={`${media}/loops-graphs-explainer-poster.jpg`} src={`${media}/loops-graphs-explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="1-minute 31-second narrated explainer of why agent loops and agent graphs do different jobs, with captions. Numbers from a scripted mock model."></video>
+
+## A graph, built small enough to read
+
+The code is in [agent-harness-lab](https://github.com/abhishekramkrishna/agent-harness-lab), next to the agent loop I measured in [What each part of an agent harness is worth](/blog/what-each-part-of-an-agent-harness-is-worth/). As there, **every number below comes from a deterministic mock model, not an LLM**: a scripted policy that behaves like a coding agent and can be told to misbehave in seeded ways, such as applying a wrong fix first or claiming "done" without running the tests. The graph runtime, the checkpoints on disk, the test runs and the timings are real.
+
+The runtime and its checkpointer are under 450 lines, in the style used by Google's Pregel and by LangGraph. A run is a series of steps. In each step, every node that is due runs on the same snapshot of the state. Their updates are merged key by key through reducers (overwrite, append, merge) in a fixed order, the new state is checkpointed, and the edges pick which nodes run next.
+
+Five properties make it a harness rather than a flowchart:
+
+- **A checkpoint after every step,** written atomically as JSON. The state has to be plain data, not open files or clients, so a resumed run can rebuild everything it needs on another machine.
+- **A failed step commits nothing.** Resuming a thread continues from the last checkpoint, as if the failed step never started.
+- **Human interrupts.** The graph can pause before a node, persist, and wait. Any process can resume it later with the person's answer.
+- **Bounded cycles.** Retries are ordinary edges back to an earlier node, capped by a step limit and a per-node visit limit, so a cycle can't run forever.
+- **Deterministic parallelism.** Nodes in the same step run in threads, but their updates merge in name order, so timing never changes the result.
+
+## The pipeline: an agent loop inside one node
+
+The demo is a bug-fix pipeline. Only one node is an agent:
+
+1. **Reproduce.** Run the tests and record the failure.
+2. **Fix.** An agent loop works on a fresh copy of the code.
+3. **Verify.** Plain code grades the result against the original tests, which the agent never had a chance to edit. On failure, go back to fix with the rejection in the prompt, or escalate when the attempts run out.
+4. **Review.** Three reviewers run in parallel: is the change small and in scope, did it touch the tests, does it add anything risky such as `eval` or a swallowed exception.
+5. **Gate.** Any reviewer objection escalates.
+6. **Approve.** The graph stops and waits for a person.
+7. **Merge,** or **escalate** to a person with the full history.
+
+One design choice I'd recommend everywhere: a rejected attempt is retried from the original code, with a note of what was rejected, not on top of the previous attempt's edits. Building on a rejected fix tends to leave parts of it in place.
+
+## What a checkpoint is worth
+
+To measure recovery, the benchmark crashes the run once, after a named node has done its work but before its checkpoint is written. Then it recovers in two ways: restart from scratch, or resume from the last checkpoint. Each run needs two fix attempts, so a clean run costs 10 model calls.
+
+<Figure caption="Extra model calls to recover from one crash, by where it happened. A clean run costs 10. Every run completed both ways. Mock model; from results/graph_bench.md in agent-harness-lab." tone="navy" wide>
+  <CrashRecovery />
+</Figure>
+
+Every run finished both ways. The difference is the bill. A crash during review, at the gate or at merge cost a restart the whole run again and cost a resume nothing. A crash at verify cost a restart one full fix attempt and cost a resume nothing.
+
+The first row is the lesson. A crash *inside* the fix node cost both strategies the same, because that node's work was never checkpointed. A checkpoint can only save what has been committed, so the expensive work should be split into steps small enough to commit often. A twenty-minute agent node is twenty minutes you can lose.
+
+## What a graph can't fix
+
+The tempting conclusion is that a graph makes an agent reliable. The third experiment tests that. It runs 300 seeded runs with faults switched on at random, four ways: a minimal loop on its own, the full loop harness on its own, and each of them inside the graph.
+
+<Figure caption="How 300 runs ended, and the mean model calls per run. Mock model; from results/graph_bench.md in agent-harness-lab." tone="navy" wide>
+  <LoopVsGraph />
+</Figure>
+
+Wrapping the minimal loop in the graph did exactly what a graph should. False successes went from 20.3% of runs to zero, because the verdict now came from a node the agent couldn't influence. The retry edge solved a few more runs: 38.7% instead of 32.3%.
+
+But 61.3% of runs ended escalated to a person, and they cost more on the way there: 16.3 model calls per run instead of 11.7, because every retry was another full attempt by an agent that kept making the same mistakes. The graph caught every failure and fixed almost none.
+
+The full loop harness solved all 300 runs whether or not it was inside the graph, at 8.1 model calls. With this mock that is expected, since it always responds well to feedback; a real model won't. The useful finding is the split: the loop's controls (a verifier it can't edit, a loop guard, retries) are what turn an attempt into a success, and the graph is what makes a failed attempt safe, visible and cheap to recover from. You need both, and neither substitutes for the other.
+
+## Parallel steps, without the nondeterminism
+
+The three reviewers each simulate a 250 ms model call. Run one at a time, the review step took 752 ms. With four workers it took 253 ms, the time of the slowest reviewer. The latency is a stand-in; the scheduling is real.
+
+The point isn't the speed-up, which anyone would expect. It is that the parallel run produces exactly the same state as the sequential one, every time, because updates merge in a fixed order rather than in the order threads finish. Agent pipelines that fan out without that rule produce results that depend on timing, which makes them very hard to debug and impossible to replay.
+
+## Loop or graph?
+
+The repository includes a skill for this decision. The short form:
+
+**Use a loop** when the path is unknown in advance: debugging, research, exploring a codebase. The model decides the next step from what it just learned. The controls that matter are in the loop: verification, loop limits, budgets, permissions.
+
+**Use a graph** when the steps are known and must not be skipped: a review before merge, an approval before a payment, a check before a release. The graph enforces the order, so the model can't talk its way past a step.
+
+**Use a graph with a loop inside a node** for most real work. The open-ended part, like writing the fix, is a loop. The process around it, like verifying, reviewing and approving, is a graph.
+
+And a few warning signs that the choice was wrong:
+
+- **A graph with a node per tool call.** You have rebuilt a loop out of edges, and lost the model's ability to choose.
+- **A loop with "now run the reviewer" in the prompt.** A step that must happen is a node, not an instruction.
+- **A long agent node with no checkpoint inside it.** That is where your crashes will cost the most.
+- **A retry edge without a cap.** Bound every cycle in code.
+
+## What to do this week
+
+Take one agent workflow your team runs and ask four questions. If the process restarts at the worst moment, how much work is lost? Which step does the agent's own claim of success decide, and could plain code decide it instead? Where must a person say yes, and is that enforced or requested in a prompt? Is every retry bounded?
+
+If any answer is uncomfortable, you probably don't need a framework to fix it. You need a checkpoint, a verifier the agent can't edit, and one node that waits for a person.
+
+The repository also ships the decision above as an agent skill, alongside eight others for people who build harnesses. How that pack was put together, and tested, is the subject of [Test your agent skills like code](/blog/test-your-agent-skills-like-code/).
+
+*The runtime, the pipeline and the benchmark are in [agent-harness-lab on GitHub](https://github.com/abhishekramkrishna/agent-harness-lab), MIT-licensed. One of its examples crashes a run and resumes it, so you can watch it happen. The design borrows openly from Pregel and LangGraph; any mistakes in it are mine.*

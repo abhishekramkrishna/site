@@ -1,0 +1,45 @@
+---
+// How 300 runs ended, for a minimal loop and a full harness, each run alone or inside
+// the fix-verify-review graph. Source: agent-harness-lab results/graph_bench.md.
+const rows: { name: string; solved: number; falseOk: number; escalated: number; calls: number }[] = [
+  { name: 'Minimal loop', solved: 32.3, falseOk: 20.3, escalated: 0, calls: 11.7 },
+  { name: 'Minimal loop inside the graph', solved: 38.7, falseOk: 0, escalated: 61.3, calls: 16.3 },
+  { name: 'Full harness', solved: 100, falseOk: 0, escalated: 0, calls: 8.1 },
+  { name: 'Full harness inside the graph', solved: 100, falseOk: 0, escalated: 0, calls: 8.1 },
+];
+---
+<div class="dfig lvg" role="img" aria-label="How 300 runs ended. Minimal loop: 32.3% solved, 20.3% claimed done on broken code, 11.7 model calls per run. Minimal loop inside the graph: 38.7% solved, no false successes, 61.3% escalated to a person, 16.3 model calls. Full harness: 100% solved, 8.1 model calls. Full harness inside the graph: 100% solved, 8.1 model calls.">
+  <p class="df-title">The graph makes failure safe. The loop makes success likely.</p>
+  {rows.map((r, i) => {
+    const other = Math.max(0, 100 - r.solved - r.falseOk - r.escalated);
+    return (
+      <div class="row">
+        <div class="lab"><span>{r.name}</span><span class="df-num">{r.calls} calls</span></div>
+        <div class="stack" style={`--i:${i}`}>
+          <span class="s ok" style={`width:${r.solved}%`}></span>
+          <span class="s esc" style={`width:${r.escalated}%`}></span>
+          <span class="s lie" style={`width:${r.falseOk}%`}></span>
+          <span class="s other" style={`width:${other}%`}></span>
+        </div>
+        <p class="nums">{r.solved}% solved{r.escalated ? ` · ${r.escalated}% handed to a person` : ''}{r.falseOk ? ` · ${r.falseOk}% "done" on broken code` : ''}</p>
+      </div>
+    );
+  })}
+  <p class="legend"><span class="k ok"></span>Solved <span class="k esc"></span>Handed to a person <span class="k lie"></span>"Done" on broken code <span class="k other"></span>Failed and stopped</p>
+  <p class="df-note">300 runs per row, the same mixed failure modes as the loop benchmark. Scripted mock model, not an LLM.</p>
+</div>
+
+<style>
+  .row { margin-bottom: 0.9rem; }
+  .lab { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9rem; font-weight: 550; margin-bottom: 0.3rem; }
+  .stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--df-track); }
+  .s { display: block; height: 100%; }
+  .ok { background: var(--df-accent); }
+  .esc { background: var(--df-muted); }
+  .lie { background: var(--df-hi); }
+  .other { background: var(--df-track); }
+  .nums { font: 400 0.76rem var(--font-mono); color: var(--df-muted); margin: 0.3rem 0 0; }
+  .legend { font-size: 0.78rem; color: var(--df-muted); display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; align-items: center; margin: 0.4rem 0 0; }
+  .k { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 3px; margin-right: 0.3rem; vertical-align: -0.1rem; border: 1px solid var(--df-rule); }
+  .k.ok { background: var(--df-accent); } .k.esc { background: var(--df-muted); } .k.lie { background: var(--df-hi); } .k.other { background: var(--df-track); }
+</style>

@@ -1,0 +1,31 @@
+---
+// What the agent-harness-lab skills pack took from two leading collections, and what it adds.
+const cols: { h: string; sub: string; items: string[]; hi?: boolean }[] = [
+  { h: 'Matt Pocock', sub: 'mattpocock/skills', items: ['Small skills, each named after the failure it fixes', 'Skills the user types vs skills the agent picks up', 'Interviews in rounds, each question with a recommended answer'] },
+  { h: 'Addy Osmani', sub: 'addyosmani/agent-skills', items: ['"Common rationalizations" tables', 'A checklist for when the job is done', 'Trigger evals and description-collision checks'] },
+  { h: 'Added here', sub: 'agent-harness-lab', items: ['Skills about building the harness, not using it', 'A Proof section: every skill points at a test or benchmark', 'One failure taxonomy shared by skills, traces and tests'], hi: true },
+];
+---
+<div class="dfig src" role="img" aria-label="What the skills pack borrows and adds. From Matt Pocock's skills: small skills each named after the failure it fixes; skills the user types versus skills the agent picks up; interviews in rounds with a recommended answer per question. From Addy Osmani's agent-skills: common rationalizations tables; a checklist for when the job is done; trigger evals and description-collision checks. Added here: skills about building the harness rather than using it; a proof section where every skill points at a test or benchmark; one failure taxonomy shared by skills, traces and tests.">
+  <p class="df-title">Borrow the best patterns. Then make them prove themselves.</p>
+  <div class="cols">
+    {cols.map((c) => (
+      <div class:list={['col', { hi: c.hi }]}>
+        <p class="h">{c.h}</p>
+        <p class="sub">{c.sub}</p>
+        <ul>{c.items.map((it) => <li>{it}</li>)}</ul>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; }
+  .col { border: 1px solid var(--df-rule); border-radius: 10px; padding: 0.85rem 0.95rem; }
+  .col.hi { border-color: var(--df-hi); }
+  .h { font-weight: 650; font-size: 0.95rem; margin: 0; }
+  .hi .h { color: var(--df-hi); }
+  .sub { font: 400 0.72rem var(--font-mono); color: var(--df-muted); margin: 0.1rem 0 0.5rem; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { font-size: 0.86rem; line-height: 1.35; padding: 0.4rem 0; border-top: 1px solid var(--df-rule); }
+</style>

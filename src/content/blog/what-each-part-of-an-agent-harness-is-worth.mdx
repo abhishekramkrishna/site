@@ -1,0 +1,127 @@
+---
+title: "What each part of an agent harness is worth"
+description: I built an agent harness with six switchable controls, ran 300 seeded runs per configuration, and switched each control off in turn. What each control stops, what two of them did nothing for, and why a check the agent can edit is not a check.
+pubDate: 2026-11-02
+tags: [agents, leadership]
+draft: false
+cover:
+  image: ../../assets/covers/what-each-part-of-an-agent-harness-is-worth.png
+  thumb: ../../assets/covers/what-each-part-of-an-agent-harness-is-worth-thumb.png
+  alt: "The harness, not the model, decides how a run ends. On 300 seeded runs with a scripted mock model, a minimal agent loop solved 32.3% and claimed done on broken code in 20.3%. The full harness solved all 300 on about 70% fewer tokens. Switching off one control at a time: without protected test files 68.7%, without retries 71.3%, without the loop guard 71.7%, without the verifier 92.3%."
+---
+
+import Figure from '../../components/Figure.astro';
+import HarnessAblation from '../../components/diagrams/HarnessAblation.astro';
+import FaultControlMap from '../../components/diagrams/FaultControlMap.astro';
+
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/what-each-part-of-an-agent-harness-is-worth`;
+
+An agent is asked to fix a bug in a slug function. It runs the tests, decides the tests have the wrong expectations, and rewrites them so they can't fail. Then it reads the source file. And reads it again, 37 times in all, until the run hits its 40-turn limit. About 75,000 tokens, the bug is still there, and the tests no longer check for it.
+
+Nothing in that run was a model failure in the usual sense. Each step looked reasonable on its own. What was missing was something around the model that could say no: you have read that file six times, you may not edit the tests, you are not done until a check you can't touch passes.
+
+That something is the harness. Everyone building agents has one, usually grown a rule at a time after an incident. I wanted to know what each part of it is actually worth, so I built one where every control can be switched off, and measured.
+
+**The short version**
+
+- A minimal loop (ask the model, run its tools, repeat) solved 32.3% of 300 seeded runs. In 20.3% of runs it said "done" on code that still failed. The full harness solved all 300, on about 70% fewer tokens.
+- Switch off one control and the solve rate falls back: to 68.7% without protected test files, 71.3% without retries, 71.7% without the loop guard, 92.3% without the verifier.
+- The verifier did not catch an agent rewriting the tests. It ran the tests the agent had just rewritten. A check the agent can edit is not a check.
+- Two controls did nothing measurable here. I left them in the results rather than tune the experiment until they did.
+
+## The video version
+
+<video controls preload="none" playsinline poster={`${media}/harness-explainer-poster.jpg`} src={`${media}/harness-explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="1-minute 39-second narrated explainer of what each part of an agent harness is worth, with captions. Numbers from a scripted mock model."></video>
+
+## The experiment, and what is mocked
+
+The code is public: [agent-harness-lab](https://github.com/abhishekramkrishna/agent-harness-lab), about 2,700 lines of dependency-free Python with 69 tests. Before any numbers, the most important sentence in the repository's README: **every number here comes from a deterministic mock model, not an LLM.**
+
+The mock is a scripted policy that behaves like a coding agent. It lists files, runs the tests, reads the source, applies a fix and reruns the tests, and it reacts to what the tools and the harness tell it. It doesn't reason about code; each task carries a hand-written correct fix and a plausible wrong one. What it can do is misbehave on demand, in the ways real agents do, each switched on by a seed:
+
+- **Wrong fix first.** It applies the plausible wrong fix before the right one.
+- **False "done".** It says "fixed" after editing, without running the tests.
+- **Stuck.** It rereads the same file until something tells it to stop.
+- **Tamper.** It decides the tests are wrong and rewrites them.
+- **Bad arguments.** It sends one malformed tool call.
+- **Rate limited.** The provider returns a retryable 429 on two turns.
+- **Flaky tool.** The test runner times out once.
+
+Everything else is real: six small Python projects with real bugs, sandboxed workspaces, real `unittest` runs in subprocesses, and the grader. "Solved" means the task's *original* tests pass against the agent's final code, checked outside the agent's workspace, so rewriting the tests doesn't count.
+
+That design decides what the numbers can tell you. They measure how well each harness configuration contains each failure. They say nothing about how often a real model fails that way. The full harness reaching 100% is a property of a mock that always responds well to feedback; a real model won't. What carries over is the mechanism: which failure gets through which gap.
+
+## The loop and its six controls
+
+The core loop is five lines: ask the model, run the tools it asks for, append the results, repeat until it stops asking. The harness is everything else:
+
+- **Verifier.** "Done" ends the run only if a check run by the harness passes. Otherwise the failure goes back to the model.
+- **Loop guard.** Identical consecutive calls get a warning at 3 and stop the run at 6.
+- **Protected paths.** Writes to the tests, or anything else the verifier reads, are refused whatever the model asks.
+- **Retries.** Rate limits, overloads and timeouts are retried with exponential backoff. Other errors go back to the model.
+- **Argument validation.** Tool calls are checked against the tool's schema before they run.
+- **Compaction.** Old tool results shrink to one-line stubs once the context gets large.
+
+Around those sit permissions (each tool is allow, ask or deny, and an unattended run answers "ask" with no) and hard budgets on turns and tokens that don't depend on the model's judgement. Every decision is written to a trace with no timestamps, so the same seed gives a byte-identical trace.
+
+## What each control is worth
+
+The main experiment switches each fault on independently with a 30% chance per run, over 50 seeds and six tasks: 300 runs per configuration. Then it runs the full harness with one control removed at a time.
+
+<Figure caption="Share of 300 runs solved with mixed faults, by configuration. Mock model; from results/loop_bench.md in agent-harness-lab." tone="navy" wide>
+  <HarnessAblation />
+</Figure>
+
+The minimal loop failed in every way it could. A fifth of its runs ended in a confident "done" on broken code. A quarter rewrote the tests. Almost 30% died on a rate limit, and almost a fifth ran into the turn cap still rereading a file. Its runs averaged about 20,800 tokens. The full harness averaged about 6,100, because stuck runs end in a few turns instead of at the cap.
+
+Remove a control and its failure comes back, and no other control covers for it. Running each fault on its own makes the mapping exact:
+
+<Figure caption="One fault switched on at a time, across all six tasks. The named control is the one whose removal brings the failure back. Mock model; from results/loop_bench.md." tone="navy" wide>
+  <FaultControlMap />
+</Figure>
+
+Three of these are worth slowing down for.
+
+**A false "done" is only dangerous when the fix is wrong.** On its own, the false-done fault did no damage: the mock claimed success early, but on a correct fix. Combined with a wrong first fix, the minimal loop and the harness without its verifier both solved nothing. That is how it works in real teams too. Unverified claims are mostly fine, which is exactly why nobody builds the check until the day they aren't.
+
+**Retries are the least interesting control and among the most valuable.** Without them, 29.7% of runs simply ended at the first 429. No clever reasoning helps a run that has stopped.
+
+**The loop guard is also a cost control.** Without it, runs averaged 31,500 tokens, five times the harness, and 28% of them ended at the turn cap having done nothing useful. In the opening example the minimal loop took 40 turns and about 75,000 tokens; the harness took 9 turns and about 8,000, and fixed the bug. You can reproduce that run with one command from the repository.
+
+## A check the agent can edit is not a check
+
+The finding I'd most want people to take away is the one I didn't expect when I started.
+
+With the verifier on and the protected paths off, 31.3% of runs rewrote the tests and every one of them was reported solved by the harness, and failed by the grader. The verifier did its job. It ran the tests in the workspace, they passed, and it let the run finish. The tests it ran were the ones the agent had just replaced with `assertTrue(True)`.
+
+Only the protected-path check stopped it, because it refuses the write before it happens. The verifier and the thing it verifies against have to live somewhere the agent can't reach. That applies well beyond test files: an eval script in the repo the agent works on, a config file that sets the threshold, a lint rule it is allowed to disable. If the agent can change the check, the check measures the agent's opinion.
+
+## What did nothing, and why I left it in
+
+Two controls made no difference in this experiment.
+
+**Argument validation** didn't matter because Python raises on the same bad input anyway, so the model saw an error either way and corrected itself. Validation earns its place with tools that silently coerce bad input into a wrong action: a missing field that defaults to "all records", a string where a number was expected. These tasks don't have tools like that.
+
+**Compaction** didn't matter because these tasks never filled the context. It also has to be skipped for models that require the transcript to come back exactly as sent, such as Claude, whose thinking blocks must be sent back unchanged. The repository's Claude adapter skips compaction for that reason.
+
+It would have been easy to add a task that made each of them shine. I'd rather publish a table with two flat rows than one tuned until every control looks essential. A control earns its place against a failure you can name and reproduce; if you can't, it is a guess, and you should know which of your controls are guesses.
+
+## What to do with your own harness
+
+You don't need this code to apply this. You need a list and an afternoon.
+
+**1. List your controls and the failure each one stops.** Write one line per control: "loop guard: stops repeated calls", "approval step: stops refunds over the limit". A control with no failure next to it is a candidate for removal. A failure with no control next to it is your next incident.
+
+**2. Make each failure reproducible.** Real model failures are rare and random, which makes them impossible to regression-test. A scripted model, or recorded transcripts replayed against your harness, turns "it rewrote the tests once in March" into a test you can run on every change.
+
+**3. Switch each control off and confirm the failure comes back.** If removing it changes nothing, either the failure isn't in your test set or the control doesn't work. Both are worth knowing.
+
+**4. Move every check outside the agent's reach.** Tests, eval scripts, thresholds, the grader itself. Protect them in the harness, not in the prompt.
+
+**5. Put the limits in code.** Budgets, loop limits, retry policy, permissions. A rule in the system prompt is a suggestion to the model; a rule in the harness is a fact.
+
+Then run the same experiment with your real model. The repository includes an adapter for Claude, unit-tested but not yet run against the live API, and real-model results will go into the repository with their date, model and cost when they exist. The mock tells you where the gaps are. Only a real model tells you how often something walks through them.
+
+This is the first of three posts built on the same repository. The second, [Agent loops and agent graphs do different jobs](/blog/agent-loops-and-graphs-do-different-jobs/), puts this loop inside a durable graph and crashes it at every step. The third, [Test your agent skills like code](/blog/test-your-agent-skills-like-code/), is about the skills pack that ships with it.
+
+*The code, the benchmark and every number above are in [agent-harness-lab on GitHub](https://github.com/abhishekramkrishna/agent-harness-lab), MIT-licensed. The README shows how to reproduce the opening example with one command.*

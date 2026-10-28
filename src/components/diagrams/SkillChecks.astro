@@ -1,0 +1,35 @@
+---
+// The four checks agent-harness-lab runs on its skills pack on every commit (harnesslab skills).
+const checks: [string, string, string][] = [
+  ['Lint', 'Every description says when to use the skill. Required sections exist.', 'Unusable skills'],
+  ['Collisions', 'No two descriptions are near-duplicates. Warn at 0.5 similarity, fail at 0.75.', 'Two skills fighting for the same prompt'],
+  ['Trigger evals', 'Each skill’s own prompts rank it in the top 2. Prompts that belong to another skill never rank it first.', 'Vague descriptions the agent never picks'],
+  ['Composition', 'A skill the user types never calls another skill the user types. No reference cycles.', 'Workflows that hijack each other'],
+];
+---
+<div class="dfig chk" role="img" aria-label="Four checks run on the skills pack on every commit. Lint: every description says when to use the skill and required sections exist; catches unusable skills. Collisions: no two descriptions are near-duplicates, warn at 0.5 similarity and fail at 0.75; catches two skills fighting for the same prompt. Trigger evals: each skill's own prompts rank it in the top 2 and prompts that belong to another skill never rank it first; catches vague descriptions the agent never picks. Composition: a skill the user types never calls another skill the user types, and there are no reference cycles; catches workflows that hijack each other.">
+  <p class="df-title">A skills pack can fail a build.</p>
+  <ol>
+    {checks.map(([name, rule, catches], i) => (
+      <li>
+        <span class="n">{i + 1}</span>
+        <div>
+          <p class="nm">{name}</p>
+          <p class="rule">{rule}</p>
+          <p class="catch">Catches: {catches}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">Collision thresholds and trigger evals follow Addy Osmani's agent-skills; the composition rule follows Matt Pocock's skills. Routing is scored lexically, a cheap proxy for how a model picks skills.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  li { display: grid; grid-template-columns: 1.6rem 1fr; column-gap: 0.7rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  .n { font: 500 0.85rem var(--font-mono); color: var(--df-accent); padding-top: 0.1rem; }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .rule { font-size: 0.86rem; margin-top: 0.15rem; }
+  .catch { font: 400 0.76rem var(--font-mono); color: var(--df-hi); margin-top: 0.3rem; }
+</style>
