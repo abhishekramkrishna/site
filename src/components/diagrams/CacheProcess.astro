@@ -1,0 +1,42 @@
+---
+// The process from the prompt caching post, as steps. Built on the Claude prompt caching docs
+// and the measured runs in prompt-caching-lab.
+const steps: { n: string; name: string; what: string; gate?: boolean }[] = [
+  { n: '01', name: 'Measure first', what: 'Log usage on every response. Served-from-cache share = reads / (reads + writes + uncached input)' },
+  { n: '02', name: 'Sort by how often it changes', what: 'Tools and instructions, then documents, then history, then the new turn. Stable first, volatile last' },
+  { n: '03', name: 'Make the prefix byte-stable', what: 'No clock, IDs or per-user text above the breakpoint. Sorted JSON keys. One model and tool list per conversation' },
+  { n: '04', name: 'Place the breakpoints', what: 'One at the end of the static prefix, automatic caching for the conversation. Never on the part that varies' },
+  { n: '05', name: 'Pick the TTL from the gap', what: 'Under 5 minutes between requests: 5-minute TTL. 5 to 60 minutes: 1 hour. Longer: re-warm or accept the miss' },
+  { n: '06', name: 'Warm once, then fan out', what: 'An entry is readable only after the first response starts. Send one, then the parallel rest' },
+  { n: '07', name: 'Guard it like a test', what: 'Assert a repeat request reads the cache in CI. Alert when the share drops. Diff two payloads to find the cause', gate: true },
+];
+---
+<div class="dfig steps" role="img" aria-label="Seven steps to make prompt caching work and keep it working. 1 Measure first: log the usage block of every response; the share of input served from cache is cache reads divided by reads plus writes plus uncached input. 2 Sort by how often it changes: tools and instructions, then documents, then history, then the new turn; stable first, volatile last. 3 Make the prefix byte-stable: no clock, IDs or per-user text above the breakpoint, sorted JSON keys, and one model and tool list per conversation. 4 Place the breakpoints: one at the end of the static prefix, plus automatic caching for the conversation, never on the part that varies. 5 Pick the TTL from the gap between requests: under 5 minutes, the 5-minute TTL; 5 to 60 minutes, 1 hour; longer, re-warm or accept the miss. 6 Warm once, then fan out: an entry is readable only after the first response starts, so send one request, then the parallel rest. 7 Guard it like a test: assert in CI that a repeat request reads the cache, alert when the share drops, and diff two payloads to find the cause.">
+  <p class="df-title">Seven steps. The last one is the one teams skip.</p>
+  <ol>
+    {steps.map((s, i) => (
+      <li class:list={{ isgate: s.gate }}>
+        <span class="n">{s.n}</span>
+        <div>
+          <p class="nm">{s.name}</p>
+          <p class="what">{s.what}</p>
+        </div>
+        <div class="df-track"><div class="df-bar" style={`width:100%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">Caching fails without an error. The usage fields are the only signal that it is working.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  li { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: 0.7rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.isgate { border: 1.5px solid var(--df-hi); }
+  li .df-track { grid-column: 2; height: 3px; margin-top: 0.45rem; }
+  li.isgate .df-bar { background: var(--df-hi); }
+  .n { font: 500 0.8rem var(--font-mono); color: var(--df-accent); padding-top: 0.12rem; }
+  li.isgate .n, li.isgate .nm { color: var(--df-hi); }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .what { font-size: 0.84rem; color: var(--df-muted); margin-top: 0.15rem; }
+</style>

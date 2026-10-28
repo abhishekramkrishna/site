@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -297,6 +297,32 @@ test('hooks post shows its labelled figures, code samples and readable exit-code
   const last = figs.last();
   await last.scrollIntoViewIfNeeded();
   await expect(last).toHaveClass(/in-view/);
+});
+
+test('prompt caching post shows its labelled figures, video and a working cache playground', async ({ page }) => {
+  await page.goto('/blog/prompt-caching-measured', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(4);
+  for (const fig of await figs.all()) expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  const video = page.locator('main video');
+  await expect(video).toHaveCount(1);
+  await expect(video).toHaveAttribute('src', /\/images\/blog\/prompt-caching-measured\/summary\.mp4$/);
+  await expect(video).toHaveAttribute('poster', /summary-poster\.jpg$/);
+  await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/prompt-caching-lab"]')).toHaveCount(1);
+
+  const play = page.locator('main .dfig.play');
+  await play.scrollIntoViewIfNeeded();
+  await expect(play.locator('.req')).toHaveCount(6);
+  await expect(play.locator('[data-share]')).toHaveText('83%');
+  await play.getByRole('button', { name: 'Timestamp in system prompt' }).click();
+  await expect(play.getByRole('button', { name: 'Timestamp in system prompt' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(play.locator('[data-share]')).toHaveText('0%');
+  await expect(play.locator('[data-live]')).toContainText('0 of 6 requests read the cache');
+  await play.getByRole('button', { name: '6-minute gaps' }).click();
+  await expect(play.locator('[data-share]')).toHaveText('0%');
+  await play.locator('select[data-opt="ttl"]').selectOption('1h');
+  await expect(play.locator('[data-live]')).toContainText('5 of 6 requests read the cache');
+  expect(await play.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
 });
 
 test('fail-stop post shows its labelled figures, and credits and links Stanch', async ({ page }) => {
