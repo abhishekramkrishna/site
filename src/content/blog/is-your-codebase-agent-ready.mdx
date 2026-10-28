@@ -1,0 +1,139 @@
+---
+title: "Is your codebase agent-ready? A 10-point audit"
+description: OpenAI, Spotify and Stripe all found the same thing. Coding agents do well in a codebase built for them and badly in one that isn't. Here is a 10-point audit built from what they published, my scores for my own two repos, and a scorer for yours.
+pubDate: 2026-11-03
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/is-your-codebase-agent-ready.png
+  thumb: ../../assets/covers/is-your-codebase-agent-ready-thumb.png
+  alt: "Is your codebase agent-ready? A 10-point audit. Agents do better with consistent code and worse in fragmented code, according to Spotify. OpenAI keeps its agent instructions to a map of about 100 lines. Stripe gives agents at most two rounds of CI. My own two repos scored 14 and 13 out of 20."
+---
+
+import Figure from '../../components/Figure.astro';
+import AuditScores from '../../components/diagrams/AuditScores.astro';
+import AuditScorer from '../../components/diagrams/AuditScorer.astro';
+
+When a team tells me their coding agent "doesn't get our codebase", they usually mean the agent wrote code that works and doesn't fit. It used the wrong pattern, skipped a convention nobody wrote down, or said it was done when the build was red.
+
+The fix most teams reach for is a better model or a longer prompt. The companies getting the most out of agents did something else: they changed the codebase. Three public engineering posts from this year say so directly.
+
+- **Spotify** says that when Claude has consistent code to reference, it "performs significantly better", and that in fragmented codebases its performance is "measurably worse" ([Spotify Engineering, June 2026](https://engineering.atspotify.com/2026/6/code-with-claude-coding-is-no-longer-the-constraint)).
+- **OpenAI** built a product of about a million lines with no hand-written code, and spent much of the effort making the repo legible to the agent: a short map instead of a long instruction file, linters whose errors tell the agent how to fix them, and a full app and observability stack for every change ([OpenAI, February 2026](https://openai.com/index/harness-engineering/)).
+- **Stripe** merges over a thousand agent-written pull requests a week. Its agents run in isolated machines with no production or internet access, get lint results in under five seconds, and get at most two rounds of CI ([Stripe, February 2026](https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents)).
+
+Those are self-reported numbers from large teams with platform groups behind them. The practices underneath are not. Most of them are a few days of work in any repo, and you can check for each one in minutes. So I turned them into a 10-point audit, scored my own two public repos against it, and built a scorer for yours.
+
+**The short version**
+
+- Score each point 0 (missing), 1 (partly) or 2 (in place). Under 9 of 20, agents will write code that doesn't fit. From 9 they're useful with a person watching. From 15 you can hand them queued work.
+- My site scored 14 and my agent-harness-lab repo scored 13. Both did well on the things that help people too, like fast tests. Both lost points where only an agent notices: knowledge kept outside the repo, never-rules written as sentences, and nobody cleaning up.
+- If you fix three things, fix these: one command that means done, hard limits in configuration rather than prose, and a short map that names both.
+
+## The 10 points
+
+### 1. A short map for agents
+
+An agent starts every session knowing nothing about your repo. It needs one file that says what the repo is, where things live and which commands to run: `AGENTS.md`, `CLAUDE.md` or both.
+
+Short is the point. OpenAI tried one large instruction file first and found that "too much guidance becomes non-guidance". It now keeps `AGENTS.md` to about 100 lines and calls it "the table of contents", pointing to versioned docs for the detail. The Claude Code docs make the same case: the file is loaded into every session, so every line costs attention on every task, and they recommend staying under 200 lines ([Claude Code best practices](https://code.claude.com/docs/en/best-practices)).
+
+**Check:** open the file. Is it under about 150 lines? Could a new engineer find where to make a typical change from it in a minute?
+
+### 2. One command that means done
+
+The single most useful line in that file, according to the Claude Code docs, is the command that checks the work. An agent that can't check itself says it's done when it isn't. An agent that has to assemble five commands from a CI file will run three of them.
+
+**Check:** is there one command that runs everything CI runs, and does the map name it?
+
+### 3. Feedback in seconds
+
+Agents iterate. A check that takes twenty minutes gets run once, at the end, if at all. Stripe runs the relevant lints on every push in under five seconds, and caps CI at two rounds: the agent is expected to fix what it can locally first. Spotify credits its lint system for giving Claude "immediate feedback" so it "corrects itself".
+
+**Check:** can lint, types and the tests for the area you changed run locally in under a minute?
+
+### 4. Rules a machine enforces, with the fix in the error
+
+Every codebase has rules: which layer may call which, where config is read, how errors are logged. If a rule only lives in reviewers' heads, an agent will break it at volume. OpenAI enforces its architecture with custom linters and structural tests, and writes their error messages "to inject remediation instructions into agent context". The error doesn't just say what's wrong. It says what to do instead.
+
+**Check:** pick your three most-repeated review comments. Is each one a lint or a test? Does its error message say how to fix it?
+
+### 5. Knowledge lives in the repo
+
+OpenAI treats anything outside the repository, such as a chat thread or a doc in another tool, as invisible to the agent, so it has to be written into the repo. Its design docs, plans and decision logs are versioned files the agent can read and a CI job checks for staleness.
+
+**Check:** think of the last thing a new joiner had to ask a person. Is the answer now in a file in the repo?
+
+### 6. One way to do each thing
+
+This is Spotify's finding, and it matches what I see. An agent learns your conventions by copying what's nearby. If there are three ways to call the database, it will pick one at random, or invent a fourth. Spotify publishes a "golden state" for each type of component and lets teams check themselves against it.
+
+**Check:** for the three most common kinds of change, is there one obvious example to copy? Are the old patterns migrated or clearly marked as deprecated?
+
+### 7. A clean environment in one step
+
+An agent should be able to start from a fresh checkout, install, build and test without asking anyone. That is also what lets you run several at once without them stepping on each other. Stripe's agents run in pre-warmed machines that start in 10 seconds. OpenAI boots the whole app once per git worktree.
+
+**Check:** clone into an empty container. Does one documented setup step get you to green tests, with pinned versions?
+
+### 8. The agent can see the result
+
+Reading code is not the same as seeing what it does. OpenAI gives its agent browser control for screenshots and DOM snapshots, and a temporary logs, metrics and traces stack for each change, so it can verify a fix the way an engineer would. For a web app that can be as simple as browser tests the agent can run and screenshots it can look at.
+
+**Check:** can the agent run the app, see the screen, and read the logs of what it just ran?
+
+### 9. Hard limits are configuration, not prose
+
+"Never push to main" in a prompt is a request. The model follows it nearly every time, and nearly is not a policy. The Claude Code docs say it plainly: if something has to happen every time, make it a hook, a deny rule or a managed setting. I tested this in [an earlier post on Claude Code hooks](/blog/claude-code-hooks/): a 40-millisecond guard took a destructive command from 3 of 3 runs to 0 of 3. Stripe goes further: its agents' machines can't reach production or the internet at all, which is why they can run without asking permission for each step.
+
+**Check:** list your never-rules. Is each one a hook, a deny rule, a sandbox, a protected branch or a required check?
+
+### 10. Someone cleans up after the agents
+
+Agents copy patterns, including bad ones, and they do it quickly. OpenAI's team at first spent every Friday, 20% of the week, cleaning up after its agent. That didn't scale, so it encoded its rules and now runs background agents that look for drift, update quality grades and open small refactor PRs, most of which "can be reviewed in under a minute and automerged". A separate recurring agent finds stale docs. Spotify has merged more than 2.5 million automated maintenance PRs this way.
+
+**Check:** is there a recurring job, human or agent, that finds drift and stale docs and opens small PRs?
+
+## My two repos, scored
+
+I scored the two public repos I work on most: this site, an Astro blog with a strict CI gate, and [agent-harness-lab](https://github.com/abhishekramkrishna/agent-harness-lab), a Python harness I built for earlier posts. I scored only what is checked into each repo, and timed the checks in a fresh cloud container on 28 October 2026.
+
+<Figure caption="My own scoring of my own repos, 28 October 2026. The same ten points as the scorer below." tone="navy" wide>
+  <AuditScores />
+</Figure>
+
+**This site: 14 of 20.** The strong points are the ones I built for myself. `CLAUDE.md` is 82 lines with a project map and the commands. `npm run validate` runs all six CI checks: type check, build and verification together took 23 seconds, and the full gate with 92 browser tests at desktop and mobile widths took about 80 seconds. Every post uses the same schema and the same figure component.
+
+It lost points in four places:
+
+- **Point 5, knowledge, scored 1.** How a post is actually produced, from the cover and social images to the tracked links, lives in a shared project folder outside the repo. An agent starting from the repo alone would not find it.
+- **Point 7, environment, scored 1.** There is a lockfile and a Node version, but no setup script. My first full run in a fresh cloud container failed: the browser tests couldn't start their preview server there, and needed an environment variable to find the browser. I worked around both by hand, which an agent shouldn't have to do.
+- **Point 9, hard limits, scored 1.** CI and secret scanning are enforced. But "never commit to main" and "never publish without the owner" are sentences in `CLAUDE.md`, with no hooks or deny rules in the repo.
+- **Point 10, cleanup, scored 0.** Nothing runs on a schedule. Every new post is added by hand to lists in the tests and the build check, which is exactly the kind of thing that drifts.
+
+**agent-harness-lab: 13 of 20.** Its 68 tests run in 8 seconds and lint and strict type checks in 3, every task and skill has the same shape, and the README is unusually clear about what is real and what is mocked. But:
+
+- **Points 1 and 2 scored 1 each.** There is no `AGENTS.md` or `CLAUDE.md`. The README is written for people and is mostly results tables. CI runs five separate steps, and there is no single command that runs them.
+- **Point 9 scored 0.** This is the one I find funny. The harness inside the repo refuses to let its agent edit the tests. An agent working on the repo itself has no such limit.
+
+Neither score surprised me once I wrote it down, and that is the value of an audit like this. Every gap was something I would have explained away one at a time.
+
+## Score your own
+
+<Figure caption="Click a level for each point. Nothing is stored or sent." tone="navy" wide>
+  <AuditScorer />
+</Figure>
+
+## Where to start
+
+If your total is low, don't start with point 10. Start where an agent hurts you most today:
+
+1. **Write the command, then the map.** Make one command that runs every check, then a short file that names it and says where things live. This is an afternoon.
+2. **Move your never-rules into configuration.** Protected branches, required checks, and a hook or deny rule for each thing an agent must never do. I wrote up [how to do this with Claude Code hooks](/blog/claude-code-hooks/).
+3. **Turn your top review comments into lints** with error messages that say how to fix them. This is where agents start fitting in instead of just working.
+
+Then put the knowledge in the repo, as [skills are starting to do for team wikis](/blog/skills-are-the-new-team-wiki/), and schedule the cleanup.
+
+A caveat on the evidence. The company numbers are self-reported, from teams with far more engineers than most readers have, and none of them published a controlled comparison. My scores are my own judgement against my own checklist. What I'd trust is the direction: every team that wrote publicly about running agents at scale ended up changing the codebase, not just the model.
+
+None of this is extra work just for agents, either. A short map, one command, fast checks and rules in code are what a new engineer needs on their first day. Agents are simply new joiners who arrive every session and never get to ask.

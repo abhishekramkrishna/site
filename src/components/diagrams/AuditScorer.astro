@@ -1,0 +1,78 @@
+---
+// Interactive version of the 10-point audit: readers score their own repo, 0 to 2 per point,
+// and get a total and what it means. Points and bands come from src/audit.ts. Nothing is stored or sent.
+import { POINTS, MAX, band } from '../../audit';
+
+const levels = ['Missing', 'Partly', 'In place'];
+const start = band(0);
+---
+<section class="dfig scorer" aria-label="Score your own repo against the 10-point audit">
+  <p class="df-title">Score your own repo. It takes about ten minutes with the repo open.</p>
+  <ol>
+    {POINTS.map((p) => (
+      <li>
+        <div class="txt">
+          <p class="nm"><span class="n">{String(p.n).padStart(2, '0')}</span>{p.name}</p>
+          <p class="ck">{p.check}</p>
+        </div>
+        <div class="opts" role="group" aria-label={`Point ${p.n}: ${p.name}`}>
+          {levels.map((l, s) => (
+            <button type="button" data-point={p.n} data-score={s} aria-pressed={s === 0 ? 'true' : 'false'}>{l}</button>
+          ))}
+        </div>
+      </li>
+    ))}
+  </ol>
+  <div class="out" aria-live="polite">
+    <p class="tot"><b data-total>0</b><span>/ {MAX}</span></p>
+    <div>
+      <p class="bl" data-band>{start.label}</p>
+      <p class="ad" data-advice>{start.advice}</p>
+    </div>
+  </div>
+  <p class="df-note">Your answers stay in this page. The bands are my judgement, not a benchmark: use them to pick what to fix first.</p>
+</section>
+
+<script>
+  import { band } from '../../audit';
+
+  for (const root of document.querySelectorAll<HTMLElement>('.dfig.scorer')) {
+    const scores = new Map<string, number>();
+    const update = () => {
+      const sum = [...scores.values()].reduce((a, b) => a + b, 0);
+      const b = band(sum);
+      root.querySelector('[data-total]')!.textContent = String(sum);
+      root.querySelector('[data-band]')!.textContent = b.label;
+      root.querySelector('[data-advice]')!.textContent = b.advice;
+    };
+    root.querySelectorAll<HTMLButtonElement>('button[data-point]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const point = btn.dataset.point!;
+        scores.set(point, Number(btn.dataset.score));
+        root.querySelectorAll(`button[data-point="${point}"]`).forEach((x) => x.setAttribute('aria-pressed', String(x === btn)));
+        update();
+      });
+    });
+  }
+</script>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; }
+  li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem 1rem; align-items: center; padding: 0.65rem 0; border-top: 1px solid var(--df-rule); }
+  p { margin: 0; }
+  .n { font: 500 0.76rem var(--font-mono); color: var(--df-accent); margin-right: 0.5rem; }
+  .nm { font-weight: 650; font-size: 0.92rem; line-height: 1.3; }
+  .ck { font-size: 0.8rem; line-height: 1.35; color: var(--df-muted); margin-top: 0.15rem; }
+  .opts { display: flex; gap: 0.3rem; }
+  .opts button { font: 500 0.74rem var(--font-mono); color: var(--df-ink); background: transparent; border: 1px solid var(--df-rule); border-radius: 999px; padding: 0.3rem 0.6rem; cursor: pointer; white-space: nowrap; }
+  .opts button[aria-pressed='true'] { background: var(--df-accent); border-color: var(--df-accent); color: var(--dg-fill); }
+  .opts button:focus-visible { outline: 2px solid var(--df-hi); outline-offset: 2px; }
+  .out { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: center; margin-top: 0.9rem; padding: 0.8rem 1rem; border: 1.5px solid var(--df-hi); border-radius: 12px; }
+  .tot { font: 600 1.9rem/1 var(--font-mono); color: var(--df-hi); white-space: nowrap; }
+  .tot span { font-size: 0.9rem; color: var(--df-muted); margin-left: 0.25rem; }
+  .bl { font-weight: 650; font-size: 0.95rem; }
+  .ad { font-size: 0.82rem; color: var(--df-muted); line-height: 1.4; margin-top: 0.15rem; }
+  @media (max-width: 560px) {
+    li { grid-template-columns: 1fr; }
+  }
+</style>

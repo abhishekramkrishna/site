@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -395,4 +395,30 @@ test('skills post shows its labelled figures, links the code, credits both colle
   const last = figs.last();
   await last.scrollIntoViewIfNeeded();
   await expect(last).toHaveClass(/in-view/);
+});
+
+test('agent-ready audit post shows both repos scored and a working scorer', async ({ page }) => {
+  await page.goto('/blog/is-your-codebase-agent-ready', { waitUntil: 'networkidle' });
+  const scores = page.locator('main .dfig.audit[role="img"]');
+  await expect(scores).toHaveCount(1);
+  await expect(scores).toHaveAttribute('aria-label', /This site: 14 of 20\. agent-harness-lab: 13 of 20\./);
+  await expect(scores.locator('li')).toHaveCount(10);
+  await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/agent-harness-lab"]')).toHaveCount(1);
+
+  const scorer = page.locator('main .dfig.scorer');
+  await scorer.scrollIntoViewIfNeeded();
+  await expect(scorer.locator('li')).toHaveCount(10);
+  await expect(scorer.locator('[data-total]')).toHaveText('0');
+  await expect(scorer.locator('[data-band]')).toHaveText('Not ready yet');
+  for (let n = 1; n <= 5; n++) await scorer.locator(`button[data-point="${n}"][data-score="2"]`).click();
+  await expect(scorer.locator('[data-total]')).toHaveText('10');
+  await expect(scorer.locator('[data-band]')).toHaveText('Ready for supervised agents');
+  await scorer.locator('button[data-point="1"][data-score="1"]').click();
+  await expect(scorer.locator('button[data-point="1"][data-score="1"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(scorer.locator('button[data-point="1"][data-score="2"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(scorer.locator('[data-total]')).toHaveText('9');
+  for (let n = 6; n <= 8; n++) await scorer.locator(`button[data-point="${n}"][data-score="2"]`).click();
+  await expect(scorer.locator('[data-total]')).toHaveText('15');
+  await expect(scorer.locator('[data-band]')).toHaveText('Ready for background agents');
+  expect(await scorer.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
 });
