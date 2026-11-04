@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -452,4 +452,16 @@ test('subagent post shows its ledger, cites its sources and gives the right verd
   await tick('parallel');
   await expect(checker.locator('button[data-q="parallel"]')).toHaveAttribute('aria-pressed', 'false');
   await expect(verdict).toHaveText('Keep it in the main loop');
+});
+
+test('Uber ADR post shows the benchmark figure with Uber\'s numbers and links the repo and paper', async ({ page }) => {
+  await page.goto('/blog/ubers-adr-securing-coding-agents', { waitUntil: 'networkidle' });
+  const fig = page.locator('main .dfig.adrb[role="img"]');
+  await expect(fig).toHaveCount(1);
+  await expect(fig).toHaveAttribute('aria-label', /ADR: caught 28 of 42 attacks, 0 false alarms on 260 benign tasks/);
+  await expect(fig).toHaveAttribute('aria-label', /LlamaFirewall: caught 8 of 42 attacks, 40 false alarms/);
+  await expect(fig.locator('.row')).toHaveCount(4);
+  await expect(page.locator('main a[href="https://github.com/uber/ADR"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="https://arxiv.org/abs/2605.17380"]')).toHaveCount(1);
+  expect(await fig.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
 });

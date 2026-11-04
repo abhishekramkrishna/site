@@ -1,0 +1,116 @@
+---
+title: "What Uber's ADR shows about securing the coding agents your engineers already use"
+description: Uber open-sourced ADR, the system it runs to watch and secure the coding agents on its engineers' laptops. It has run for over ten months on 7,200+ machines and 10,000+ agent sessions a day. Here is how it works, what Uber's numbers show, and seven lessons you can use without adopting it.
+pubDate: 2026-11-04
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/ubers-adr-securing-coding-agents.png
+  thumb: ../../assets/covers/ubers-adr-securing-coding-agents-thumb.png
+  alt: "Uber's ADR, open-sourced: deployed for more than ten months on over 7,200 machines and 10,000 agent sessions a day. On its benchmark it caught 28 of 42 attacks with zero false alarms. A secret-scanning hook blocked credential leaks with 97.2% precision. Your security tools see what an agent did. ADR records why."
+---
+
+import Figure from '../../components/Figure.astro';
+import AdrBench from '../../components/diagrams/AdrBench.astro';
+
+Ask a security team what Claude Code did on an engineer's laptop yesterday and you'll usually get a list of files written, processes started and network connections made. That's what endpoint security tools were built to record. What they can't tell you is *why*: which prompt started it, what the agent reasoned, which tool it called, and whether any of that matched what the engineer asked for.
+
+That gap is the subject of [ADR](https://github.com/uber/ADR) (Agentic AI Detection and Response), a system Uber built to secure the AI agents its employees use (Claude Code, Cursor, Codex, GitHub Copilot CLI and others) and has now open-sourced under Apache 2.0. It comes with a paper accepted to MLSys 2026, [*ADR: An Agentic Detection System for Enterprise Agentic AI Security*](https://arxiv.org/abs/2605.17380), with production numbers that are rare in this space.
+
+I read the repository and the paper. Every number below is Uber's, from the paper or the README, checked on 4 November 2026. I haven't run ADR in production or re-run its benchmark.
+
+**The short version**
+
+- ADR has run at Uber for more than ten months, on over 7,200 machines, covering more than 10,000 agent sessions a day. It found hundreds of exposed credentials across 26 categories.
+- Its detector uses two tiers: a cheap first pass that clears obvious benign sessions, and a reasoning agent with access to source code, threat intelligence and policy for everything else. On Uber's benchmark it caught 28 of 42 attacks with zero false alarms, at $0.024 a task.
+- The most useful finding is about where to stop things. Detecting a leaked credential after the fact was too late, so Uber added a plain regex-and-entropy check in a pre-prompt hook. It blocked credential leaks with 97.2% precision.
+
+## What's in the repository
+
+ADR has five parts. Three of them are open source today:
+
+| Part | What it does | Open source? |
+| --- | --- | --- |
+| **Discovery** | Inventories the AI tools on a machine: apps, CLI agents, IDE extensions, local model runtimes, MCP servers, skills and plugins, and flags unknown ones for review | Yes, `Discovery/` |
+| **Sensor** | Reads the agents' own local session logs and rebuilds each session: prompt, reasoning, tool calls, results and environment | Yes, `Sensor/` |
+| **Benchmark and Detector** | ADR-Bench, the two-tier detector, three baseline detectors, and the scripts that reproduce the paper's figures | Yes, `Detection/` |
+| **Explorer** | Offline red teaming that generates hard attack variants and feeds them back to the detector | No |
+| **Prevention** | Blocks unsafe actions before they happen | No, "stay tuned" |
+
+The repository had about 1,900 stars when I checked. The Sensor covers Claude Code, Cursor, Codex, GitHub Copilot CLI, DeepSeek Harness, opencode, Claude Desktop, Gemini CLI and Cline. It runs on macOS, Linux and Windows.
+
+## How it works
+
+### Record why, not just what
+
+Uber gives a simple example of the gap. An engineer asks the agent to "summarize this Jira ticket". The agent reads the engineer's SSH keys and makes an HTTP request. Endpoint tools see a file read and a network call, both of which happen thousands of times a day. Only the user's prompt shows that this agent was way off task.
+
+So the Sensor records four things for every session: the user's prompts, the agent's reasoning, the sequence of tool calls with their arguments and results, and the environment (configured MCP servers, installed packages). It gets them without changing any agent. It parses the SQLite databases and JSONL logs the tools already keep on disk, runs once an hour, and takes 0.182 seconds per run on average.
+
+The paper also explains why Uber didn't use a gateway that intercepts traffic to the model and the MCP servers. A gateway means changing every agent's configuration, it doesn't handle streaming responses, and it sees only part of the story. It misses the local environment and the context behind each call.
+
+### Triage everything cheaply, investigate the rest
+
+At 10,000 sessions a day, running a large model over every event costs too much. The detector uses two tiers, modelled on how a security operations team works:
+
+- **Tier 1, triage**, screens every event for high recall: credential access, permission and role changes, risky commands. It only clears sessions that are clearly benign. When in doubt, it escalates.
+- **Tier 2, investigation**, is a reasoning agent (Claude in the open-source version) with three MCP servers of its own: one to read the source code of the tools the agent used, one for threat intelligence, and one for company policy.
+
+On ADR-Bench, triage alone settled 40.7% of tasks at $0.017 and 2.3 seconds each. The full reasoning path cost $0.029 and took 29.7 seconds. Across all tasks the average was $0.024 and 18.5 seconds.
+
+The context servers matter more than any rule. Taking away source-code access cut the share of attacks caught from 67% to 57%, the biggest drop of any component. Many attacks only look malicious once you read what the tool actually does. Taking away threat intelligence cut it to 58.5%. Taking away the policy server barely changed anything.
+
+### Red team it before you trust it
+
+The Explorer, which isn't in the open-source release, runs an evolutionary loop in a sandbox. One agent generates attack variants, another tests them, and the strongest, scored on how far they get, how harmless they look and how much damage they could do, are written to a threat repository that Tier 2 reads. When the detector misses an attack in testing, the fix is new context for Tier 2, not a new hand-written rule.
+
+## What the numbers show
+
+ADR-Bench is the benchmark Uber built from its own telemetry and public incident reports: 302 tasks in the paper (42 attacks, 260 benign), 133 MCP servers and 17 attack techniques across five tactics. The repository has since grown to 304 tasks and 134 servers. Uber compared ADR with three published detectors:
+
+<Figure caption="Uber's reported results on ADR-Bench, from Table 2 of the ADR paper (MLSys 2026). Not re-run by me." tone="navy" wide>
+  <AdrBench />
+</Figure>
+
+The point isn't that ADR caught every attack. It caught two thirds. The point is that the baselines raised 30 to 40 false alarms on 260 benign tasks. In a security team, a false alarm means a person stops and investigates. A detector that's wrong that often gets ignored, and then it might as well not exist. Uber says it chose precision over recall on purpose for that reason. It also showed the trade-off: sending every task straight to Tier 2 caught more attacks (80.5% instead of 67%), but added two false alarms and cost 29% more.
+
+Production is messier than the benchmark, and the paper says so. Of the sessions that reached a human reviewer, 34% were real issues, 17% were real but harmless (mostly Uber's own offensive-security team and penetration tests), and 49% were false positives, usually long sessions working across large codebases. Even a system built around precision sends people a lot of noise. Plan for that from the start.
+
+## The finding I'd act on first: detection is too late for secrets
+
+The most common real finding in production was credential exposure: hundreds of cases, across 26 categories, of secrets shared outside the company in agent sessions. Detecting them showed two problems. There were too many to review by hand, and by the time an alert came in, the secret had already left. Detection found the problem but couldn't undo it.
+
+So Uber moved the check earlier. Cursor and Claude Code both support hooks: scripts the agent runs at fixed points, which can watch, change or block what passes through. Uber added a pre-prompt hook that scans each prompt with regular expressions and an entropy threshold before it's sent, and blocks it if it finds a secret. Across 212 unique credentials, it caught 206 with 6 false positives: **97.2% precision**, from a check that uses no model at all.
+
+The paper is clear about where that approach stops working. Simple checks work for attacks with a fixed pattern, like a secret string. They fail for attacks that only make sense once you understand what a tool does and what the user meant. That's the split I'd copy: block what has a pattern in a hook, and send what needs judgement to a slower reviewer. I wrote about building exactly this kind of hook in [Claude Code hooks: turn "please don't" into rules that run every time](/blog/claude-code-hooks/).
+
+## Two attacks it caught
+
+The paper describes two exercises in some detail:
+
+- **An internal capture-the-flag.** An attacker added a custom shell tool to an engineer's assistant, then sent a misleading prompt telling the agent to run `curl | python3` "for sandbox testing". ADR matched the agent's reasoning to the tool calls and flagged the misuse.
+- **A recreation of the Agent Flayer attack**, published by Zenity Labs. A malicious email automatically creates a Jira ticket with hidden instructions. When an engineer's Cursor, connected to Jira over MCP, reads the ticket, the instructions make the agent read local config files and send credentials out over HTTP. ADR flagged the prompt injection, the credential access and the outbound transfer, and linked all three to the same session.
+
+The second attack is the one to remember. Nothing in it needed the engineer to do anything unusual. The agent read a ticket, which is its job.
+
+## Seven lessons, with or without ADR
+
+You don't need to deploy ADR to use what Uber learned. Here is what I'd take from it:
+
+1. **Start with an inventory.** You can't secure agents and MCP servers you don't know are installed. ADR Discovery is a good place to start: it needs only the Python standard library, doesn't run the binaries it finds, sends nothing over the network by default, and reports what it couldn't check so a partial scan doesn't look clean. `uv run adr-discovery --dry-run --explain` shows exactly what it would collect, without writing anything.
+2. **Log intent alongside actions.** Prompts and tool calls are what let you tell a real attack from normal work. Most agents already keep these logs on disk. Decide who can read them before you collect them.
+3. **Triage cheaply, investigate expensively.** A fast first pass that clears the obvious cases makes careful review affordable for the rest.
+4. **Choose precision, and budget for noise anyway.** Even with zero false alarms on the benchmark, half the production alerts were false. Size the review team for that.
+5. **Give the reviewer context, not more rules.** Access to the tools' source code improved detection more than anything else Uber tested.
+6. **Block patterns at the hook.** Secrets have a shape. A dumb check before the prompt leaves the machine beats a smart one that alerts after the secret is gone. Pair it with the containment I described in [fail-stop containment for agents](/blog/fail-stop-containment-for-agents/).
+7. **Treat privacy as part of the design.** Uber redacts secrets from stored sessions, keeps them for 13 months, limits access to security staff, and had legal, privacy and risk teams review the system before it shipped. Agent session logs contain what your engineers were thinking about. Treat them that way.
+
+## Before you run it
+
+A few cautions from the repository itself. The `Detection/` benchmark is labelled a research artifact, not for production use. It pins some dependencies with known vulnerabilities to match the paper's results, ships fake credentials and prompt-injection payloads on purpose, and should only run in an isolated container or VM. The detector calls the Anthropic and OpenAI APIs, so a full benchmark run costs money; the README describes a keyless smoke test. The Prevention and Explorer parts that made ADR work at Uber aren't released yet.
+
+## Where this fits
+
+Most teams I talk to adopted coding agents faster than their security practice could follow, and [usually more than they admit](/blog/your-teams-use-more-ai-than-they-admit/). ADR is the first detailed public account I've seen of a large company closing that gap in production, with numbers good and bad. Its main lesson isn't about a particular model or tool. Record what the agent was asked and why it acted. Spend reasoning only where it's needed. Put the simple, certain checks in front of the agent instead of behind it.
+
+If you do one thing this week, find out which agents and MCP servers are installed on your team's machines. You'll likely find more than you expected.
