@@ -418,6 +418,20 @@ const COVERS = {
     src: 'Uber, "ADR: An Agentic Detection System for Enterprise Agentic AI Security", MLSys 2026, and github.com/uber/ADR. Read 4 Nov 2026.',
   },
 
+  'claude-code-mods': {
+    kick: 'Claude Code mods, explained',
+    title: 'Skills change what it knows. <em>A mod changes what you see.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '3 ways', k: 'skills, MCP and hooks change what the agent does' })}${tile({ big: 'Mod', k: 'a band, a pane, a slash command, a gate on every call', hi: true })}</div>`
+      : `<div class="tiles" style="--n:4">
+        ${tile({ k: 'Skill', big: 'Know', ba: 'a playbook it follows' })}
+        ${tile({ k: 'MCP server', big: 'Reach', ba: 'a tool or an API' })}
+        ${tile({ k: 'Hook', big: 'Run', ba: 'a script on an event' })}
+        ${tile({ k: 'Mod', big: 'See', ba: 'band, pane, command, gate', hi: true })}
+      </div><div class="strip"><b>Receipt</b> 3 files changed · tests passing · 1 blocked · $0.08</div>`,
+    src: 'Claude Code mods: TypeScript modules that listen to events and draw on the screen.',
+  },
+
   'is-your-codebase-agent-ready': {
     kick: 'Is your codebase agent-ready? A 10-point audit',
     title: 'Agents copy what they find. <em>Make it worth copying.</em>',

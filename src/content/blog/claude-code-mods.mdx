@@ -1,0 +1,122 @@
+---
+title: "Claude Code mods: what they are and how to use them"
+description: Skills, hooks and MCP change what the agent does. A mod also changes the screen you work in. Here is what a mod is, where it fits next to the others, the five places it can show up, and how to try one safely.
+pubDate: 2026-11-06
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/claude-code-mods.png
+  thumb: ../../assets/covers/claude-code-mods-thumb.png
+  alt: "Claude Code mods: change the screen you work in. A band above the prompt reads 3 files changed, tests passing, 1 blocked, $0.08. Skills teach the agent, MCP gives it tools, hooks run scripts, and a mod adds to what you see and control."
+---
+
+import Figure from '../../components/Figure.astro';
+import ModChoice from '../../components/diagrams/ModChoice.astro';
+import ModSurfaces from '../../components/diagrams/ModSurfaces.astro';
+import ModAnatomy from '../../components/diagrams/ModAnatomy.astro';
+
+You ask the agent to fix a bug. It reads six files, runs the tests, edits two files, runs the tests again, tries to delete a build folder and writes a new test. Forty tool calls scroll past. Then it says "Done."
+
+What did it actually do? Until now, the honest answer was: read the diff and scroll back through the transcript.
+
+Here is the same session with one extra line above the prompt:
+
+```
+Receipt  3 files changed · tests passing · 1 blocked · $0.08   [Open] [Hide]
+```
+
+That line is a **mod**. Claude Code didn't ship it. It is about 280 lines of TypeScript I wrote for my own sessions, and it updates as the agent works.
+
+**The short version**
+
+- A mod is a small TypeScript module that listens to Claude Code's events and can draw on its screen.
+- Skills teach the agent how. MCP gives it tools. Hooks run scripts on events. A mod can do what a hook does, from code, and it can also add a band, a pane, a slash command or a toast.
+- Every mod uses one pattern: when an event arrives, pass it on, change it or stop it.
+- A mod runs code inside your session. Read it before you load it, like any dependency.
+
+## What a mod is
+
+Claude Code fires an event at each step of its work: when a session starts, when a tool is about to run, when a turn ends, when you type a slash command, when part of the screen is drawn. A mod is a module that subscribes to some of those events.
+
+It is packaged as a plugin, so it sits in a folder with a small manifest. Inside is ordinary TypeScript, including JSX for anything it draws. You can test it with mocks, the way you'd test any other code, and hot-reload it while you work.
+
+That last part matters more than it sounds. The agent's screen used to be fixed. Now it is something you can change.
+
+## Where mods fit next to skills, hooks and MCP
+
+Claude Code already had three ways to extend it, and they still do their jobs. A mod doesn't replace them. The question is which one fits the change you want.
+
+<Figure caption="Four ways to extend Claude Code. They stack: a mod can sit next to the skills, hooks and MCP servers you already use." tone="navy">
+  <ModChoice />
+</Figure>
+
+A useful rule of thumb:
+
+- If you want the agent to **know** something, such as your team's review checklist, write a skill.
+- If you want it to **reach** something, such as your issue tracker, add an MCP server.
+- If you want a rule to **run every time**, such as "never touch `.env`", a hook is the simplest tool.
+- If you want to **see** something the screen doesn't show, or enforce a rule with real logic and state, write a mod.
+
+I wrote about [hooks as rules that run every time](/blog/claude-code-hooks/) last week. Mods start from the same idea, a handler on an event, and add two things: the handler is code with its own state, and it can draw.
+
+## The five places a mod can show up
+
+<Figure caption="The parts of the Claude Code screen a mod can add to or act on." tone="teal" wide>
+  <ModSurfaces />
+</Figure>
+
+1. **A band above the prompt.** One line that is always in view. Good for a running count, a status or a warning.
+2. **A pane beside the chat.** A panel that stays open and updates as the agent works. Good for a list, a log or a dashboard.
+3. **Slash commands.** Your own `/something` that runs your code. Good for one-step actions, like copying a summary.
+4. **Toasts.** A short notice that comes and goes. Good for "copied" or "budget at 80%".
+5. **A gate on tool calls.** Code that sees every tool call before and after it runs. It can let it through, change it or refuse it, with a reason the agent reads.
+
+The first four are about what you see. The fifth is about what the agent can do. Most useful mods combine one of each: a gate that watches, and a band that tells you.
+
+## How a mod works
+
+A mod is three files.
+
+<Figure caption="The files in a mod, and the one pattern every handler follows." tone="navy" wide>
+  <ModAnatomy />
+</Figure>
+
+The interesting one is `register.tsx`. It calls `on()` for each event it cares about. Here is a handler that watches every shell command the agent runs:
+
+```tsx
+on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+  const ran = await next(e)        // let the command run
+  await track($, e, ran)           // note what happened
+  return ran                       // hand the result back unchanged
+})
+```
+
+`next(e)` is the key idea. Call it and the command runs. Call it with a changed event and the changed command runs. Don't call it, return your own answer instead, and the command never runs. Every mod is some mix of those three moves.
+
+Drawing works the same way. The band above the prompt is an event too. Your handler returns a few `Box`, `Text` and `Button` elements, and Claude Code renders them in the terminal or the desktop app.
+
+One habit worth copying: wrap every handler so that if your code throws, the agent's call carries on as normal. A mod that observes should never be the reason a session breaks.
+
+## How to try one safely
+
+You don't need to install anything permanently. Point Claude Code at a mod's folder for one session:
+
+```bash
+claude --plugin-dir ./path/to/the-mod
+```
+
+Close the session and it is gone.
+
+A mod runs code inside your session, with the same reach as the agent. So treat it like a dependency you are about to add. Five checks before you load one:
+
+1. **Read the hooks.** Open `register.tsx` and see which events it listens to. A display-only mod has no reason to touch tool calls.
+2. **Check what it gates.** If it can stop or change a tool call, make sure you understand when.
+3. **Check what it sends out.** Look for network calls. A receipt or a budget meter needs none.
+4. **Pin the version.** Load a commit you have read, not whatever is newest.
+5. **Try it in a throwaway repo first.** Watch one real session before you use it on work that matters.
+
+## What comes next
+
+The band at the top of this post is a real mod called **show-your-work**. It keeps a running receipt of the session and copies it as Markdown for the pull request with one command.
+
+Tomorrow's post covers ten mods worth building for teams that run agents on real code, including that one, and what real sessions taught me that my first version got wrong. There's a 74-second video too.

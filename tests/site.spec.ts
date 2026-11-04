@@ -482,3 +482,19 @@ test('failover post shows its labelled ladder, triage and tiers figures without 
   await last.scrollIntoViewIfNeeded();
   await expect(last).toHaveClass(/in-view/);
 });
+
+test('mods explainer post shows its labelled figures without overflow and links the hooks post', async ({ page }) => {
+  await page.goto('/blog/claude-code-mods', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(3);
+  for (const fig of await figs.all()) {
+    expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+    expect(await fig.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  }
+  await expect(page.locator('main .dfig.choice li')).toHaveCount(4);
+  await expect(page.locator('main .dfig.surfaces .zone')).toHaveCount(5);
+  await expect(page.locator('main .dfig.anatomy .moves li')).toHaveCount(3);
+  await expect(page.locator('main a[href$="/blog/claude-code-hooks/"]')).toHaveCount(1);
+  await expect(page.locator('main pre').first()).toBeVisible();
+});
+
