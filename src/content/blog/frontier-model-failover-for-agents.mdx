@@ -1,0 +1,160 @@
+---
+title: "Your agent needs a plan for when the model goes down"
+description: Frontier model APIs fail for hours at a time, and sometimes they fail without an error. A practical guide to failover for agents, from retries to a second model, and how much of it each workload needs.
+pubDate: 2026-11-04
+tags: [agents, reliability, strategy, leadership]
+draft: false
+cover:
+  image: ../../assets/covers/frontier-model-failover-for-agents.png
+  thumb: ../../assets/covers/frontier-model-failover-for-agents-thumb.png
+  alt: "Your agent needs a plan for when the model goes down. OpenAI's API was degraded for 5 hours 22 minutes on 29 September 2026. Failover is a ladder: retry, reroute to another region, switch platform, fall back to a tested model, or degrade. Climb only as far as the failure needs."
+---
+
+import Figure from '../../components/Figure.astro';
+import FailoverLadder from '../../components/diagrams/FailoverLadder.astro';
+import ErrorTriage from '../../components/diagrams/ErrorTriage.astro';
+import FailoverTiers from '../../components/diagrams/FailoverTiers.astro';
+
+On 29 September 2026, OpenAI's status page reported elevated errors across ChatGPT, Codex and the API, including the Agents API. It lasted 5 hours and 22 minutes and touched 30 components, twelve of them APIs.
+
+If your support agent, your coding agent or your order workflow called one of those APIs that afternoon, it stopped. The question for an engineering leader isn't whether that will happen to your provider. It will. The question is what your agent does next.
+
+Most teams I talk to have an answer for their database and none for their model. The model is the one dependency they treat as if it were always on.
+
+**The short version**
+
+- Every frontier provider has multi-hour outages, and the cloud platforms they run on have their own. Some failures return no error at all: the model just gets worse.
+- Failover is a ladder: retry, reroute to another region, switch to another platform serving the same model, fall back to a different model, or degrade gracefully. Each rung changes more, so climb only as far as the failure needs.
+- A fallback model is only a fallback if it has passed your evals. Otherwise it's an untested release that ships during an incident.
+- Decide per workload. A nightly batch job needs a queue. An agent on the revenue path needs a second platform with quota already granted, and a drill.
+
+## The model is a dependency that fails
+
+Outages are not rare events at the edge of the distribution. They are routine.
+
+**Providers go down for hours.** OpenAI's December 2024 outage ran for about four hours, after a new telemetry service overloaded the Kubernetes control plane in many clusters and services lost DNS. The September 2026 incident was longer. On Anthropic's side, StatusGator's record of the Claude status page shows seven incidents with elevated errors on Claude models in the single week from 22 to 28 October 2026, each lasting 10 to 40 minutes.
+
+**The clouds underneath go down too.** On 12 June 2025, an invalid automated quota update to Google Cloud's API management system was distributed globally and rejected external API requests. The Vertex AI Gemini API was among the affected products, with residual impact for about seven and a half hours. On 19 and 20 October 2025, a race condition in DynamoDB's DNS automation in AWS's us-east-1 region set off an event that lasted about 14 and a half hours across DynamoDB, EC2, Lambda and load balancers.
+
+That AWS outage carries a lesson that is easy to miss. AWS's summary doesn't name Bedrock. It didn't need to. An agent whose model call succeeds is still down if its state store, queue or functions live in the failed region. Failover for the model is worth little if everything around the model has a single home.
+
+**And some failures send no error at all.** In August and September 2025, three infrastructure bugs degraded Claude's answers. At the worst hour, one of them affected 16% of Claude Sonnet 4 requests. Anthropic's postmortem is candid: "The evaluations we ran simply didn't capture the degradation users were reporting." Two of the three bugs affected only Anthropic's own API; the postmortem says "Third-party platforms were not affected." A team serving the same model through Bedrock or Vertex AI was fine, but no status code would have told anyone to switch.
+
+## Failover is a ladder
+
+When the model fails, there are five things you can do. They are ordered by how much they change, and that order is the design principle.
+
+<Figure caption="Five rungs of failover for a hosted model, cheapest and safest first." tone="navy" wide>
+  <FailoverLadder />
+</Figure>
+
+**1. Retry.** Most failures last seconds. Anthropic's SDKs already retry connection errors, rate limits and server errors twice by default with exponential backoff, and honour the `retry-after` header. The danger is retrying in too many places. Marc Brooker's piece in the Amazon Builders' Library works through a five-layer stack where every layer retries three times: the database at the bottom sees 243 times the load, "making it unlikely to ever recover." Retry at one layer only, and cap it. Google's SRE book allows up to three attempts per request and only retries while retries are under 10% of a client's requests.
+
+**2. Reroute to another region.** This is the cheapest real failover, and the platforms now do it for you. Amazon Bedrock's cross-region inference profiles spread requests across a list of regions. Vertex AI's global endpoint for Claude sends each request to any region with capacity. The Claude API itself defaults to `inference_geo: "global"`, which may run inference "in any available geography for optimal performance and availability."
+
+The cost is control over where your data goes. Bedrock's global profiles include all commercial regions and "can change over time as AWS adds more commercial Regions." AWS also warns not to rely on the prefix of a profile ID to know where requests go, and notes that prompts and outputs "may be stored in the opt-in Regions for abuse detection purposes." Google says its global endpoint "does not guarantee that requests will be processed in any specific location." If you have residency obligations, the geographic options exist: Bedrock's US, EU and APAC profiles, Vertex AI's regional endpoints, and Anthropic's US-only inference at 1.1 times the standard price.
+
+**3. Switch platform, same model.** Claude is served through Anthropic's API, Amazon Bedrock, Google's Vertex AI and Microsoft Foundry. The same model through a second platform is the strongest protection against a provider-specific incident, because the behaviour should be close to identical. The 2025 bugs show it isn't guaranteed to be, which is why you still run your evals against it. Everything around the model differs: quotas, credentials, which features are supported and when, and the shape of some requests.
+
+**4. Fall back to a different model.** This is the rung that most failover designs jump straight to, and the one that most often goes wrong. A different model, even a different version from the same provider, is a behaviour change. As I wrote in [Model retirement is the new dependency upgrade](/blog/model-retirement-is-the-new-dependency-upgrade/), an upgrade can lift the average score and still break specific cases. A fallback you haven't run through your eval suite is an untested release, deployed automatically, at the worst possible moment.
+
+**5. Degrade.** Sometimes the right answer is not another model. Queue the work and finish it later. Narrow the task to what a smaller model does reliably. Hand the case to a person. Tell the user plainly what is happening. Anthropic's own error guidance suggests exactly this for overloads: queue the job or show a "busy, try again in a minute" message.
+
+## Classify the failure before you react
+
+A single "on error, fail over" rule does real harm. It fails over on errors that another provider can't fix, and it misses the failures that matter most.
+
+<Figure caption="What to do with each kind of model failure." tone="navy" wide>
+  <ErrorTriage />
+</Figure>
+
+A few of these deserve a sentence each.
+
+**Spend caps look like rate limits.** On the Claude API, a 429 that comes without a `retry-after` header means the organisation has hit its tier's monthly spend cap, and it keeps failing until access resumes. Code that retries every 429 will hammer the API until the month turns.
+
+**Streams fail after success.** Anthropic's docs note that with streaming, an error can arrive after the API has already returned a 200. For an agent halfway through a task, the fix is not to replay the request from the top but to resume from the last checkpoint, without repeating any side effect that already happened. That is the same argument I made in [Agent loops and agent graphs do different jobs](/blog/agent-loops-and-graphs-do-different-jobs/): durable checkpoints are what make a crash cheap.
+
+**Refusals are not outages.** Gateways can fail over on content-policy errors. LiteLLM has a `content_policy_fallbacks` setting, and OpenRouter can fall back on moderation flags. For a product that is sometimes useful. For an agent with tools, quietly sending a refused request to a model that might say yes is a way around your own safety design. Send it to a person instead.
+
+**Quality drops trip nothing.** The only defence against silent degradation is a live check of output quality: a sample of production responses graded against your evals, with an alert when the score moves. Treat that alert like a circuit breaker. It is the signal that tells you to move traffic to the second platform.
+
+## What doesn't travel with the request
+
+Switching platform or model mid-run is harder for an agent than for a chatbot, because an agent carries state. Three kinds of state don't move cleanly.
+
+**Prompt caches.** Anthropic isolates caches by organisation and, on its own API, by workspace, and a hit needs a 100% identical prefix. By default an entry lives for five minutes. A request that fails over to another account or platform starts with a cold cache, so for the first calls you pay full input price and full latency. Vertex AI's global endpoint does route cached requests to the region holding the cache, falling back to the next region if it's at capacity. If you measured your savings as I did in [Prompt caching, measured](/blog/prompt-caching-measured/), budget for losing them during a failover.
+
+**Reasoning.** Extended thinking blocks are bound to the models that can read them. Anthropic's documentation says that when the current model can't read a thinking block from an earlier turn, "the API drops it from that request without an error." Thinking blocks from Claude Sonnet 5.5 and Haiku 5.5 work only in the account that produced them or one linked to it. An agent that fails over mid-task keeps its transcript but can lose its earlier reasoning, silently.
+
+**Tool definitions and parameters.** Providers describe tools in different shapes, support different features at different times, and reject different parameters. Anthropic's API version of October 2026 removed `temperature`, `top_p` and `top_k`; a request that still sends them now fails. Keep one internal schema for tools and prompts, and translate at the edge, so a fallback is a configuration change rather than a code change.
+
+My default for agents follows from this: **pin each run to one model and platform, and fail over at step boundaries.** A new run can start anywhere. A run in progress should finish where it started, or stop at a checkpoint and resume on the fallback from there, with a record of the switch in its trace.
+
+## The patterns that do the work
+
+None of the machinery here is new. It is standard reliability engineering pointed at a model.
+
+- **A gateway in front of every model call.** One place to hold retries, timeouts, fallbacks, keys, budgets and logs. LiteLLM, OpenRouter and the cloud providers' own gateways all do this. LiteLLM, for example, takes a deployment out of rotation after `allowed_fails` failures for `cooldown_time` seconds, and has separate fallbacks for rate limits, oversized context and policy errors.
+- **Circuit breakers.** After repeated failures, stop sending traffic to a target for a while instead of letting every request discover the outage on its own. Probe it, and bring it back gradually.
+- **Spillover, where you pay for reserved capacity.** Azure OpenAI can send overflow from a provisioned deployment to a standard one when the reserved capacity returns a 429, a long-context 400, or a 500 or 503. Spilled requests are billed at standard rates and marked with response headers, so you can see how often it happens.
+- **Quota before you need it.** A second platform is only a failover if its quota can take your traffic. Get the quota raised now. Asking for it during someone else's outage is asking at the same moment as everyone else.
+- **No hedging against yourself.** Sending every request to two providers at once doubles cost and can double side effects. Google explicitly tells Vertex AI users not to send the same request to its global and regional endpoints at the same time.
+
+## Security and cost are part of the design
+
+Every fallback path is a new place your data goes. Treat it that way.
+
+**Each provider in the chain needs the same review as the primary.** Data processing terms, retention, residency, and who can see logs. OpenRouter, for example, falls back to other providers by default, and its data-collection setting defaults to "allow"; you have to set it to "deny", or turn on its zero-data-retention option, to keep requests away from providers that keep data. Most gateways have equivalents. Check the default before you rely on it.
+
+**Fallback models get the same guardrails.** The system prompt, tool permissions, output checks and approval steps must apply on every path. A fallback that skips the guardrails because it was wired up in a hurry is the easiest way in for anyone who can induce an outage.
+
+**Failover changes the bill.** Cold caches, spillover at standard rates, US-only inference at a 10% premium, and quota you reserve but rarely use all cost money. OpenRouter bills at the price of whichever model served the request. Put a budget on the fallback path and alert when traffic stays on it.
+
+## How much failover does each workload need?
+
+You don't need the full ladder everywhere. Decide per workload, by what an outage costs.
+
+<Figure caption="How much failover each kind of workload needs. A starting point to adapt." tone="navy" wide>
+  <FailoverTiers />
+</Figure>
+
+Four questions settle most of it:
+
+- **What does an hour of downtime cost here?** If the honest answer is "a delayed report", a queue and an alert are enough.
+- **Is a person waiting?** If so, you need retries, regional rerouting and a clear message within seconds, not minutes.
+- **Can the data leave its geography?** If not, failover stays inside the boundary, and degrading gracefully comes before crossing it.
+- **Would a different model be acceptable?** Only your eval suite can answer this. If you can't run the fallback through it today, you don't have a fallback model yet.
+
+## What to do this quarter
+
+If you lead a team shipping agents on hosted models, four things are worth doing before the end of the year:
+
+- **Map your single points of failure.** For each agent, list the model, the platform, the region, and the state store, queue and functions around it. Mark every place with one home.
+- **Fix the error handling first.** One retry layer with a budget. Separate handling for spend caps, overloads, timeouts and refusals. This costs days and prevents the worst incidents.
+- **Stand up one second path for your most important agent.** Usually the same model on a second platform, with quota granted and your eval suite run against it.
+- **Run a failover drill.** Turn the primary off in staging, or for a small share of production traffic, and watch what the agent does. The first drill always finds something.
+
+Model choice used to be a one-time decision. Then it became maintenance on someone else's schedule. Failover is the same discipline applied to the bad afternoon: know where your agent goes when the model goes away, and test that it gets there.
+
+---
+
+**Sources**
+
+- [OpenAI status: Elevated errors across ChatGPT, Codex, and the API including the Agents API](https://status.openai.com/incidents/01M3Q4RK1SM4EMK445GGPG7C0N) (29 September 2026), and [MIXED: OpenAI's outage on 29 September lasted 5 hours 22 minutes and affected 30 components](https://mixed-news.com/de/openais-ausfall-am-29-september-dauerte-funf-stunden-und-22-minuten-und-betraf-30-komponenten/) (1 October 2026)
+- [OpenAI status: API, ChatGPT and Sora facing issues](https://status.openai.com/incidents/ctrsv3lwd797) (incident report for 11 December 2024)
+- [StatusGator: Anthropic outage history](https://statusgator.com/services/anthropic/outage-history) (incidents from 22 to 28 October 2026, checked 4 November 2026)
+- [Google Cloud Service Health: multiple products affected, 12 June 2025](https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW)
+- [AWS: Summary of the Amazon DynamoDB service disruption in the Northern Virginia (US-EAST-1) Region](https://aws.amazon.com/message/101925/) (October 2025)
+- [Anthropic: A postmortem of three recent issues](https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues) (September 2025)
+- [Anthropic: Claude API errors](https://platform.claude.com/docs/en/api/errors): 429, 529, spend caps, SDK retries, errors after a 200 in streams
+- [Anthropic: Data residency](https://platform.claude.com/docs/en/manage-claude/data-residency): `inference_geo`, US-only pricing
+- [Anthropic: Prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching): isolation, exact prefix matching, cache lifetime
+- [Anthropic: Preserved thinking](https://platform.claude.com/docs/build-with-claude/preserved-thinking): thinking blocks across models and accounts
+- [Anthropic: Model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations): removed sampling parameters
+- [AWS: Supported Regions and models for inference profiles](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference-support.html) (Amazon Bedrock cross-region inference)
+- [Google Cloud: Global endpoint for Claude models generally available on Vertex AI](https://cloud.google.com/blog/products/ai-machine-learning/global-endpoint-for-claude-models-generally-available-on-vertex-ai) (July 2025)
+- [Microsoft: Manage traffic with spillover for provisioned deployments](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/spillover-traffic-management)
+- [LiteLLM: Fallbacks (provider failover)](https://docs.litellm.ai/docs/proxy/reliability)
+- [OpenRouter: Routing guides](https://openrouter.ai/docs/guides/routing/llms-full.txt): model and provider fallbacks, data collection, zero data retention
+- [Marc Brooker, Amazon Builders' Library: Timeouts, retries and backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/)
+- [Google SRE book, chapter 21: Handling overload](https://sre.google/sre-book/handling-overload/)

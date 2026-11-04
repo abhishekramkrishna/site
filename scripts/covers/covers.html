@@ -290,6 +290,19 @@ const COVERS = {
     src: 'Chen &amp; Stratton, "Artificial Intelligence in the Firm", Harvard, Aug 2026. 718 firms, Jan 2021 to Mar 2026.',
   },
 
+  'frontier-model-failover-for-agents': {
+    kick: 'Failover for frontier models',
+    title: 'Your agent needs a plan for <em>when the model goes down.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '5h 22m', k: 'OpenAI API degraded, 29 Sep 2026, 30 components' })}${tile({ big: '16%', k: 'of Sonnet 4 requests degraded at the worst hour, with no error' })}${tile({ big: '5 rungs', k: 'retry, reroute, switch platform, fall back, degrade', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'OpenAI API, 29 Sep 2026', big: '5h 22m', d: 'degraded, across 30 components' })}
+        ${tile({ k: 'Claude quality bugs, Aug 2025', big: '16%', d: 'of Sonnet 4 requests at worst, no error' })}
+        ${tile({ k: 'The failover ladder', big: '5 rungs', d: 'climb only as far as the failure needs', hi: true })}
+      </div><div class="strip"><b>Retry</b> → <b>reroute</b> to another region → <b>switch platform</b>, same model → <b>fall back</b> to a model on your evals → <b>degrade</b>.</div>`,
+    src: 'OpenAI status (29 Sep 2026); Anthropic postmortem (Sep 2025).',
+  },
+
   'when-to-spin-up-a-subagent': {
     kick: 'When to spin up a subagent',
     title: 'Default to one loop. <em>Split by context, not by team.</em>',

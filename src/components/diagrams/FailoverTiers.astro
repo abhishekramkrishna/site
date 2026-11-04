@@ -1,0 +1,35 @@
+---
+// How much failover each kind of workload needs. A starting point to adapt per workload.
+const tiers: { name: string; eg: string; need: string[]; hi?: boolean }[] = [
+  { name: 'Can wait', eg: 'Batch jobs, nightly reports, internal summaries', need: ['Retries with a budget', 'A durable queue', 'An alert'] },
+  { name: 'User is waiting', eg: 'Copilots, chat, search answers', need: ['Rungs 1 and 2: retry and reroute', 'A circuit breaker', 'A clear "busy" message'] },
+  { name: 'Business stops', eg: 'Support agents, order flows, anything on the revenue path', need: ['Rungs 1 to 4, with the fallback model on your evals', 'A second platform with quota already granted', 'A failover drill each quarter'], hi: true },
+  { name: 'Data must stay put', eg: 'Regulated, residency-bound or contract-bound data', need: ['Fail over only inside the approved geography', 'Every fallback provider passes the same data review', 'Degrade before you leave the boundary'] },
+];
+---
+<div class="dfig tiers" role="img" aria-label="How much failover each workload needs. Can wait, such as batch jobs and internal summaries: retries with a budget, a durable queue and an alert. User is waiting, such as copilots and chat: retry and reroute, a circuit breaker, and a clear busy message. Business stops, such as support agents and order flows: retry, reroute, switch platform and an evaluated fallback model, a second platform with quota already granted, and a failover drill each quarter. Data must stay put, such as regulated or residency-bound data: fail over only inside the approved geography, every fallback provider passes the same data review, and degrade before leaving the boundary.">
+  <p class="df-title">Buy the failover the workload needs, not the maximum.</p>
+  <div class="grid">
+    {tiers.map((t) => (
+      <div class:list={['t', { hi: t.hi }]}>
+        <p class="nm">{t.name}</p>
+        <p class="eg">{t.eg}</p>
+        <ul>{t.need.map((n) => <li>{n}</li>)}</ul>
+      </div>
+    ))}
+  </div>
+  <p class="df-note">Rungs refer to the failover ladder above. Tiers are a starting point, set per workload.</p>
+</div>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .t { padding: 0.7rem 0.8rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  .t.hi { border: 1.5px solid var(--df-hi); }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; color: var(--df-accent); }
+  .hi .nm { color: var(--df-hi); }
+  .eg { font-size: 0.8rem; color: var(--df-muted); margin-top: 0.15rem; }
+  ul { margin: 0.5rem 0 0; padding-left: 1rem; font-size: 0.83rem; line-height: 1.4; }
+  li + li { margin-top: 0.2rem; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+</style>
