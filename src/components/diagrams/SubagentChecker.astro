@@ -1,0 +1,73 @@
+---
+// Interactive "subagent or main loop?" check: readers tick what is true of the work they want to
+// hand off and get a verdict. Questions and the verdict rule come from src/subagent.ts. Nothing is stored or sent.
+import { QUESTIONS, verdict } from '../../subagent';
+
+const groups = [
+  { kind: 'reason', title: 'Reasons to split' },
+  { kind: 'blocker', title: 'Reasons to keep it' },
+] as const;
+const start = verdict([]);
+---
+<section class="dfig checker" aria-label="Check whether a piece of agent work should be a subagent or stay in the main loop">
+  <p class="df-title">Tick what is true of the work you want to hand off.</p>
+  {groups.map((g) => (
+    <div class="grp">
+      <p class:list={['gt', g.kind]}>{g.title}</p>
+      <ul>
+        {QUESTIONS.filter((q) => q.kind === g.kind).map((q) => (
+          <li>
+            <button type="button" data-q={q.id} aria-pressed="false">
+              <span class="box" aria-hidden="true"></span>
+              <span class="txt"><span class="ask">{q.ask}</span><span class="why">{q.why}</span></span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+  <div class="out" aria-live="polite">
+    <p class="bl" data-verdict>{start.label}</p>
+    <p class="ad" data-advice>{start.advice}</p>
+  </div>
+  <p class="df-note">Your answers stay in this page. The rule is my reading of the sources below, not a benchmark: use it to decide what to measure.</p>
+</section>
+
+<script>
+  import { verdict } from '../../subagent';
+
+  for (const root of document.querySelectorAll<HTMLElement>('.dfig.checker')) {
+    const on = new Set<string>();
+    root.querySelectorAll<HTMLButtonElement>('button[data-q]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.q!;
+        if (on.has(id)) on.delete(id);
+        else on.add(id);
+        btn.setAttribute('aria-pressed', String(on.has(id)));
+        const v = verdict(on);
+        root.querySelector('[data-verdict]')!.textContent = v.label;
+        root.querySelector('[data-advice]')!.textContent = v.advice;
+      });
+    });
+  }
+</script>
+
+<style>
+  .grp + .grp { margin-top: 0.9rem; }
+  p { margin: 0; }
+  .gt { font: 500 0.74rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+  .gt.reason { color: var(--df-accent); }
+  .gt.blocker { color: var(--df-hi); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  button { display: grid; grid-template-columns: 1.1rem minmax(0, 1fr); gap: 0.7rem; align-items: start; width: 100%; text-align: left; font: inherit; color: var(--df-ink); background: transparent; border: 1px solid var(--df-rule); border-radius: 10px; padding: 0.55rem 0.75rem; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--df-hi); outline-offset: 2px; }
+  .box { width: 1.05rem; height: 1.05rem; margin-top: 0.1rem; border: 1.5px solid var(--df-muted); border-radius: 4px; }
+  button[aria-pressed='true'] { border-color: var(--df-accent); }
+  button[aria-pressed='true'] .box { background: var(--df-accent); border-color: var(--df-accent); }
+  .txt { display: grid; gap: 0.12rem; }
+  .ask { font-weight: 650; font-size: 0.9rem; line-height: 1.3; }
+  .why { font-size: 0.8rem; line-height: 1.35; color: var(--df-muted); }
+  .out { margin-top: 0.9rem; padding: 0.8rem 1rem; border: 1.5px solid var(--df-hi); border-radius: 12px; }
+  .bl { font-weight: 650; font-size: 1rem; color: var(--df-hi); }
+  .ad { font-size: 0.84rem; color: var(--df-muted); line-height: 1.4; margin-top: 0.2rem; }
+</style>

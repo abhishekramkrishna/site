@@ -1,0 +1,46 @@
+---
+// What a subagent costs and what it buys, each with the published source behind it.
+// Sources: Anthropic (Oct 2026 article; June 2025 research system), Cognition (Apr 2026),
+// Claude Code team (Apr 2026), LangChain (June 2025). Linked in the post.
+const costs: { k: string; d: string }[] = [
+  { k: 'Lossy handoffs', d: 'It sees a brief, you get back a summary. Details fall out both ways.' },
+  { k: 'Tokens', d: 'Anthropic\'s multi-agent research used about 15× the tokens of a chat, against about 4× for one agent.' },
+  { k: 'Latency', d: 'Each call is a nested loop. One team saw a single loop run about 2× faster.' },
+  { k: 'Sprawl', d: 'Each subagent brings its own prompt, owner and evals. Nobody owns the whole.' },
+];
+const buys: { k: string; d: string }[] = [
+  { k: 'A clean context', d: 'Read dozens of files, return a page. The main context stays focused.' },
+  { k: 'Parallel reading', d: 'Up to 90% less time on Anthropic\'s complex research queries.' },
+  { k: 'Fresh eyes', d: 'A reviewer that did not write the code finds what the author misses.' },
+  { k: 'Its own access', d: 'Read-only tools, or a different model, for one part of the job.' },
+];
+---
+<div class="dfig ledger" role="img" aria-label="What a subagent costs and what it buys. Costs: lossy handoffs, because it sees a brief and returns a summary; tokens, about 15 times a chat for Anthropic's multi-agent research against about 4 times for a single agent; latency, because each call is a nested loop, and one team saw a single loop run about twice as fast; sprawl, because each subagent brings its own prompt, owner and evals. Buys: a clean context; parallel reading, up to 90% less time on complex research queries; fresh eyes for review; and its own permissions or model.">
+  <p class="df-title">Every subagent is a trade. Make it on purpose.</p>
+  <div class="cols">
+    <div class="col cost">
+      <p class="h">What it costs</p>
+      <ul>{costs.map((c) => <li><b>{c.k}</b><span>{c.d}</span></li>)}</ul>
+    </div>
+    <div class="col buy">
+      <p class="h">What it buys</p>
+      <ul>{buys.map((c) => <li><b>{c.k}</b><span>{c.d}</span></li>)}</ul>
+    </div>
+  </div>
+  <p class="df-note">Figures as published by Anthropic, for their own systems. Sources linked below.</p>
+</div>
+
+<style>
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  p { margin: 0; }
+  .h { font: 500 0.74rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.45rem; }
+  .cost .h { color: var(--df-hi); }
+  .buy .h { color: var(--df-accent); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+  li { display: grid; gap: 0.12rem; padding: 0.55rem 0.7rem; border: 1px solid var(--df-rule); border-left-width: 3px; border-radius: 8px; }
+  .cost li { border-left-color: var(--df-hi); }
+  .buy li { border-left-color: var(--df-accent); }
+  b { font-size: 0.9rem; font-weight: 650; }
+  span { font-size: 0.8rem; line-height: 1.35; color: var(--df-muted); }
+  @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
+</style>
