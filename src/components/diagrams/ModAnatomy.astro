@@ -1,0 +1,41 @@
+---
+// What a mod is made of: three files, and one pattern for every event.
+const files = [
+  { name: '.claude-plugin/plugin.json', what: 'Its name and version' },
+  { name: 'hooks/hooks.json', what: 'Points Claude Code at the module' },
+  { name: 'hooks/register.tsx', what: 'The code: which events to listen to, and what to draw', hi: true },
+];
+const moves = [
+  { name: 'Pass it on', what: 'Let the call run, and note what happened' },
+  { name: 'Change it', what: 'Hand on a changed event' },
+  { name: 'Stop it', what: 'Answer the call yourself, so it never runs', hi: true },
+];
+---
+<div class="dfig anatomy" role="img" aria-label="A mod is three files: plugin.json with its name and version, hooks.json that points Claude Code at the module, and register.tsx with the code. For each event the code receives, it can pass it on and note what happened, hand on a changed event, or stop it so it never runs.">
+  <p class="df-title">Three files, and one pattern for every event.</p>
+  <div class="cols">
+    <ul class="files">
+      {files.map((f) => <li class:list={{ hi: f.hi }}><span class="nm">{f.name}</span><span class="what">{f.what}</span></li>)}
+    </ul>
+    <div class="flow">
+      <p class="ev"><span class="mono">on(event, next)</span> runs for every event you listen to</p>
+      <ul class="moves">
+        {moves.map((m) => <li class:list={{ hi: m.hi }}><b>{m.name}</b><span>{m.what}</span></li>)}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+  .files li { padding: 0.55rem 0.7rem; border: 1px solid var(--df-rule); border-radius: 9px; display: grid; gap: 0.1rem; }
+  .files li.hi { border-color: var(--df-accent); background: var(--df-track); }
+  .nm, .mono { font: 500 0.8rem var(--font-mono); color: var(--df-accent); overflow-wrap: anywhere; }
+  .what, .moves span { font-size: 0.78rem; color: var(--df-muted); line-height: 1.3; }
+  .ev { font-size: 0.82rem; margin: 0 0 0.5rem; line-height: 1.35; }
+  .moves li { padding: 0.5rem 0.7rem; border: 1px solid var(--df-rule); border-radius: 9px; display: grid; gap: 0.1rem; }
+  .moves li.hi { border-color: var(--df-hi); }
+  .moves b { font-size: 0.88rem; font-weight: 620; }
+  @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
+</style>

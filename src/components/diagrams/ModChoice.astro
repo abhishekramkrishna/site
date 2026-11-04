@@ -1,0 +1,33 @@
+---
+// Four ways to extend Claude Code, and the job each one does. Only a mod adds to the screen itself.
+const ways: { name: string; job: string; how: string; hi?: boolean }[] = [
+  { name: 'Skill', job: 'Teach it how', how: 'A written playbook the agent loads when a task matches' },
+  { name: 'MCP server', job: 'Give it a tool', how: 'Reach a service or an API the agent can call' },
+  { name: 'Hook', job: 'Run a script on an event', how: 'A command that runs before or after a step, every time' },
+  { name: 'Mod', job: 'Change what you see and control', how: 'TypeScript that listens to events and draws on the screen: a band, a pane, a slash command, a gate', hi: true },
+];
+---
+<div class="dfig choice" role="img" aria-label="Four ways to extend Claude Code. A skill teaches it how, with a written playbook. An MCP server gives it a tool. A hook runs a script on an event. A mod changes what you see and control, with TypeScript that listens to events and draws on the screen.">
+  <p class="df-title">Only a mod changes the screen itself.</p>
+  <ol>
+    {ways.map((w) => (
+      <li class:list={{ hi: w.hi }}>
+        <span class="nm">{w.name}</span>
+        <span class="job">{w.job}</span>
+        <span class="how">{w.how}</span>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">They stack. A mod can sit next to the skills, hooks and MCP servers you already use.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  li { display: grid; grid-template-columns: minmax(7rem, 8.5rem) 1fr; column-gap: 0.8rem; row-gap: 0.15rem; padding: 0.65rem 0.8rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.hi { border: 1.5px solid var(--df-hi); background: var(--df-track); }
+  .nm { grid-row: span 2; font: 500 0.86rem var(--font-mono); color: var(--df-accent); padding-top: 0.1rem; }
+  li.hi .nm { color: var(--df-hi); }
+  .job { font-weight: 620; font-size: 0.92rem; line-height: 1.3; }
+  .how { font-size: 0.82rem; color: var(--df-muted); line-height: 1.35; }
+  @media (max-width: 480px) { li { grid-template-columns: 1fr; } .nm { grid-row: auto; } }
+</style>
