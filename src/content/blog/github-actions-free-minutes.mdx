@@ -1,0 +1,189 @@
+---
+title: "GitHub Actions free minutes: where they go, how to stretch them, and what to use instead"
+description: The free GitHub Actions allowance for private repositories is $12 of compute a month. That is 2,000 minutes on Linux and 193 on macOS. Here is where the minutes go, ten workflow changes that stretch them, what other CI platforms give you free, and how runner companies are making CI cheaper and faster.
+pubDate: 2026-11-04
+tags: [engineering, business]
+draft: false
+cover:
+  image: ../../assets/covers/github-actions-free-minutes.png
+  thumb: ../../assets/covers/github-actions-free-minutes-thumb.png
+  alt: "GitHub Actions on a private repository: the Free plan includes $12 of compute a month, which buys 2,000 minutes on a 2-core Linux runner, 1,200 on Windows and 193 on macOS. Each job is rounded up to a whole minute. Third-party runners start at a fifth of GitHub's Linux price."
+---
+
+import Figure from '../../components/Figure.astro';
+import QuotaMinutes from '../../components/diagrams/QuotaMinutes.astro';
+
+Most developers meet the GitHub Actions quota the same way: a private side project, a few busy weeks, and then a workflow that stops running with a billing message. Public repositories never see it, because standard runners are free there. Private repositories get a monthly allowance, and it goes faster than the headline number suggests.
+
+The headline number used to be "2,000 minutes". GitHub's billing docs now state the allowance as money: **$12 of compute a month on the Free plan, $18 on Pro and Team, $300 on Enterprise Cloud**. How many minutes that buys depends entirely on which runner you pick. On a standard Linux runner it is 2,000. On macOS it is 193.
+
+I checked every number below against GitHub's own documentation and each vendor's own pricing page on 4 November 2026. Prices in CI move a lot, and GitHub reworked its own over the last year, so check the linked page before you plan a budget around any of them.
+
+**The short version**
+
+- Free gets $12 of Actions compute a month for private repositories, Pro and Team get $18. That is 2,000 or 3,000 minutes on Linux, 1,200 or 1,800 on Windows, and 193 or 290 on macOS. Every job is rounded up to a whole minute.
+- Most wasted minutes come from runs nobody needed: superseded pushes, docs-only changes, hung jobs that sit until the 6-hour limit. Three lines of YAML fix most of it.
+- If you have outgrown the allowance, paying GitHub is often cheaper than you expect ($0.006 a Linux minute). If you want more for the money, third-party runners swap in with a one-line `runs-on` change and charge from about a fifth of that.
+
+## What you actually get
+
+<Figure caption="Minutes per month included with a private repository, by runner. Allowances and rates from GitHub's billing documentation, checked 4 November 2026." tone="navy" wide>
+  <QuotaMinutes />
+</Figure>
+
+The rules that matter, from [GitHub's billing docs](https://docs.github.com/en/billing/concepts/product-billing/github-actions) and [runner pricing reference](https://docs.github.com/en/billing/reference/actions-runner-pricing):
+
+| | Free | Pro | Team | Enterprise Cloud |
+| --- | --- | --- | --- | --- |
+| Included compute a month | $12 | $18 | $18 | $300 |
+| On a 2-core Linux runner ($0.006/min) | 2,000 min | 3,000 min | 3,000 min | 50,000 min |
+| Artifact storage | 500 MB | 1 GB | 2 GB | 50 GB |
+| Cache storage, per repository | 10 GB | 10 GB | 10 GB | 10 GB |
+| Concurrent jobs (macOS) | 20 (5) | 40 (5) | 60 (5) | 500 (50) |
+
+Five details catch people out:
+
+1. **Each job is rounded up to the nearest whole minute.** A matrix of ten jobs that each take 15 seconds bills ten minutes, not two and a half.
+2. **What happens at the limit depends on your payment method.** Without one on file, usage is blocked once the allowance is spent. With one, you pay for the overage, which is why GitHub lets you set budgets and sends alerts at 90% and 100%.
+3. **Larger runners can't use the allowance.** They are billed from the first minute, need a payment method, and are only available on Team and Enterprise Cloud.
+4. **Jobs on GitHub-hosted runners stop at 6 hours.** Unless you set `timeout-minutes`, a hung job will sit there until that limit and bill every minute of it ([limits reference](https://docs.github.com/en/actions/reference/limits)).
+5. **Public repositories and self-hosted runners don't touch the allowance.** Standard runners in public repositories are free, and so are self-hosted runners, for now. More on "for now" below.
+
+## What changed in the last year
+
+GitHub has been reworking Actions pricing since December 2025, and three changes affect free-tier users:
+
+- **Hosted runners got cheaper.** On 1 January 2026 GitHub cut hosted runner prices by up to 39%, depending on machine type ([changelog](https://github.blog/changelog/2025-12-16-coming-soon-simpler-pricing-and-a-better-experience-for-github-actions/)). A 2-core Linux minute is now $0.006.
+- **Two cheaper standard runners arrived.** `ubuntu-slim`, a 1-vCPU Linux runner at $0.002 a minute, went generally available in January 2026 for short jobs; it runs in a container and stops jobs at 15 minutes ([changelog](https://github.blog/changelog/2026-01-22-1-vcpu-linux-runner-now-generally-available-in-github-actions/)). And arm64 standard runners (`ubuntu-24.04-arm`, `windows-11-arm`) became available in private repositories, at $0.005 a minute for Linux ([changelog](https://github.blog/changelog/2026-01-29-arm64-standard-runners-are-now-available-in-private-repositories)).
+- **A fee on self-hosted runners was announced and then postponed.** The same December announcement added a $0.002-a-minute platform charge on self-hosted runner minutes from March 2026, counted against your included allowance. Within days GitHub postponed it "to take time to re-evaluate our approach", with no new date. Self-hosted minutes are free today, but I wouldn't build a plan that assumes they always will be.
+
+The cache changed too: the 10 GB per repository is still included, and since November 2025 you can raise a repository's limit above it and pay $0.07 per GB-month for the extra ([changelog](https://github.blog/changelog/2025-11-20-github-actions-cache-size-can-now-exceed-10-gb-per-repository/)).
+
+## Agents make this worse
+
+There is a newer reason the allowance runs out. Coding agents open pull requests and push fixes much faster than people do, and every push runs the whole workflow. An agent that iterates by pushing and waiting for CI can spend in an afternoon what a person spends in a week. I wrote about this in [the agent-readiness audit](/blog/is-your-codebase-agent-ready/): the teams getting the most from agents give them fast local checks, so CI confirms work instead of being the place it gets debugged. That is also the cheapest CI policy you can have.
+
+## Ten changes that stretch the allowance
+
+In roughly the order I'd do them. The first four cost nothing and touch only YAML.
+
+**1. Measure first.** The billing page in your account settings shows usage by repository and by runner SKU, and the [billing usage API](https://docs.github.com/en/rest/billing/usage) gives the same as data. Most accounts have one or two workflows doing most of the spending. Find them before changing anything.
+
+**2. Cancel runs that a newer push has made pointless.** If you push three times in five minutes, only the last run matters:
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+```
+
+The condition keeps every run on `main`, where you usually want each commit checked, and cancels superseded runs on branches.
+
+**3. Don't run what didn't change.** A README edit shouldn't run the full test suite on three operating systems:
+
+```yaml
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+```
+
+One catch: if a required status check is skipped by a path filter, the pull request waits on it forever. Either make that check not required, or skip inside the job with a changed-files step so the check still reports.
+
+**4. Set a timeout on every job.** The default is 360 minutes. One job hanging on a network call can burn 18% of a Free allowance on its own:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+```
+
+**5. Cache dependencies.** Most setup actions do it with one input, keyed on your lockfile:
+
+```yaml
+- uses: actions/setup-node@v4
+  with:
+    node-version: 22
+    cache: npm
+```
+
+`setup-python`, `setup-go` and `setup-java` have the same option. For Docker builds, cache layers with `cache-from` and `cache-to: type=gha` in `docker/build-push-action`. Keep an eye on the 10 GB per repository: entries are evicted when it is full, and caches that are never hit are just upload time.
+
+**6. Use the cheapest runner that does the job.** Linting, labelling, formatting and small scripts rarely need two cores: `runs-on: ubuntu-slim` costs a third as much, as long as the job finishes inside 15 minutes. Most Node, Python, Go and Rust builds run unchanged on `ubuntu-24.04-arm`, which costs about 17% less than x64.
+
+**7. Run macOS and Windows only where they earn it.** A minute on macOS costs about ten Linux minutes. Run the cross-platform matrix on `main` or nightly, and only Linux on every pull request:
+
+```yaml
+strategy:
+  matrix:
+    os: ${{ github.event_name == 'pull_request' && fromJSON('["ubuntu-latest"]') || fromJSON('["ubuntu-latest","macos-latest","windows-latest"]') }}
+```
+
+**8. Fewer, longer jobs for small steps.** Because each job rounds up to a minute, splitting lint, type check and format into three 20-second jobs bills three minutes. One job running all three bills one. Keep jobs separate when they are long enough that running them in parallel saves real time.
+
+**9. Make it public if it can be.** Standard runners in public repositories are free, with no allowance. For a library, a template or a personal site, this is the simplest fix of all.
+
+**10. Bring your own runner.** A self-hosted runner on a spare machine or a cheap cloud VM runs jobs without touching the allowance, and its jobs can last up to 5 days instead of 6 hours. The cost moves to you: patching, disk, and above all security. Never attach a persistent self-hosted runner to a public repository, because a pull request from a fork can run code on it. Use ephemeral runners that are thrown away after each job; [Actions Runner Controller](https://github.com/actions/actions-runner-controller), GitHub's own Kubernetes operator, does that for you.
+
+## Or just pay
+
+This is the option developers skip. Past the allowance, a 2-core Linux minute costs $0.006: another 10,000 minutes a month is $60. If your team's time is worth anything, a workflow that blocks on quota is far more expensive than the overage. Add a payment method, set a budget a little above your expected spend, and let the alerts tell you when something changes.
+
+The real cost problems are elsewhere: macOS at $0.062 a minute, and larger runners, which never draw from the allowance. That is where the third-party runners below pay off.
+
+## Other CI platforms, and what they include free
+
+If you're choosing CI for a private project from scratch, here is what each platform includes on its free plan, from each vendor's own pricing page on 4 November 2026:
+
+| Platform | Free allowance for private projects | Worth knowing |
+| --- | --- | --- |
+| [GitHub Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions) | $12 of compute: 2,000 Linux minutes | Unlimited self-hosted minutes, for now |
+| [GitLab CI](https://about.gitlab.com/pricing/) | 400 compute minutes | Free plan limited to 5 users per private top-level group. Self-hosted runners don't use minutes |
+| [CircleCI](https://circleci.com/pricing/) | 30,000 credits: up to 6,000 minutes on the smallest Docker class, 3,000 on Linux Medium | 30 concurrent jobs, self-hosted runners included |
+| [Azure Pipelines](https://azure.microsoft.com/en-au/pricing/details/devops/) | 1 hosted parallel job, 1,800 minutes | 1 self-hosted parallel job with unlimited minutes |
+| [Bitbucket Pipelines](https://www.atlassian.com/software/bitbucket/pricing) | 50 build minutes | Extra minutes are $10 per 1,000 |
+
+On raw free minutes, CircleCI is the most generous and GitHub is second. But moving CI platforms is rarely worth it for free minutes alone: your workflows, marketplace actions, secrets and branch protection all live in GitHub. For most teams the better move is to keep Actions as the orchestrator and change where the jobs run.
+
+## How companies are attacking the problem
+
+A whole category of companies now sells GitHub Actions runners. You install a GitHub App and change one line, `runs-on: ubuntu-latest` to the provider's label. Your workflows, secrets and logs stay in GitHub, and none of it draws on your GitHub allowance. They compete in four ways.
+
+**Faster hardware, so jobs need fewer minutes.** GitHub's standard runners are general-purpose cloud VMs. Several providers run on newer, faster CPUs, and charge less per minute as well. Blacksmith says its runners are twice as fast as GitHub's; Ubicloud runs on AMD EPYC Genoa and Ryzen 9 machines on top of its open-source cloud. A job that finishes in half the time costs half the minutes, at any price.
+
+**Cache next to the runner.** Restoring dependencies over the network is often the slowest step in a short job. Depot advertises unlimited cache storage at up to 1,000 MiB/s; Blacksmith claims 4x faster cache downloads and sells Docker layer caching.
+
+**Your cloud, at cost.** RunsOn and WarpBuild's bring-your-own-cloud option start runners in your own AWS (or GCP and Azure) account, on spot instances where possible, and charge a licence or small fee on top. You pay the cloud provider's price per second.
+
+**Billing by the second.** Depot tracks usage per second instead of rounding each job up to the minute, which matters most for the many short jobs that make up a typical workflow.
+
+The headline prices, from each vendor's own page on 4 November 2026:
+
+| Provider | 2 vCPU Linux x64, per minute | Free each month | Model |
+| --- | --- | --- | --- |
+| GitHub-hosted | $0.006 | $12 of compute (Free plan) | GitHub's cloud |
+| [Depot](https://depot.dev/docs/github-actions/runner-types) | $0.006 | Depends on plan | Managed, per-second tracking, fast cache |
+| [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/pricing) | $0.004 | 3,000 minutes | Managed, faster hardware |
+| [Ubicloud](https://ubicloud.com/docs/about/pricing) | $0.00125 | $2.50 credit: 1,250 minutes | Managed, open-source cloud |
+| [RunsOn](https://runs-on.com/pricing/) | AWS cost, about $0.0014 for 4 vCPU on spot | Free for non-commercial use | Your AWS account, licence from €300 a year |
+| [Actions Runner Controller](https://github.com/actions/actions-runner-controller) | Your cluster's cost | Open source | Your Kubernetes cluster |
+
+These are list prices for the smallest machine, and per-minute price is only half of it. A runner that costs a third as much but takes twice as long saves a third, not two thirds. The only comparison that counts is your own workflow, run on both, timed and costed. Most of these providers include enough free minutes to do exactly that.
+
+One risk to price in: if GitHub brings back a per-minute fee on self-hosted runners, it would apply to most of these providers too, because to GitHub their runners are self-hosted. At $0.002 a minute that would take Blacksmith's 2 vCPU price from $0.004 to $0.006, the same as GitHub's own.
+
+The other way to spend fewer minutes is to do less work. Monorepo tools such as Nx and Turborepo, and build systems such as Bazel and Gradle, keep a remote cache of build and test outputs and skip any step whose inputs haven't changed, on your laptop and in CI. On a large repository that removes more minutes than any runner swap.
+
+## What I'd do
+
+For a private project on the Free plan:
+
+1. Add `concurrency`, `paths-ignore` and `timeout-minutes` to every workflow this week. It is ten minutes of work.
+2. Cache dependencies, move small jobs to `ubuntu-slim` and builds that work on arm64 to `ubuntu-24.04-arm`, and keep macOS off pull requests.
+3. If you still run out, add a payment method and a budget. At $0.006 a Linux minute, that is usually the cheapest fix.
+4. If your spend is growing or macOS is the cost, try one third-party runner on your slowest workflow for a week and compare cost and time per run.
+5. Self-host only if you're ready to run it properly: ephemeral runners, never on public repositories.
+
+None of this is permanent. GitHub has reworked Actions pricing within the last year and has a fee for self-hosted runners in the drawer. Read your usage once a month, the same way you'd read a cloud bill, and the quota stops being a surprise.

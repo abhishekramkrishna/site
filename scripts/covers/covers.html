@@ -379,6 +379,19 @@ const COVERS = {
     src: 'Claude Code v2.1.311, headless, 3 to 5 runs per cell, 27 Oct 2026.',
   },
 
+  'github-actions-free-minutes': {
+    kick: 'GitHub Actions on a private repository',
+    title: 'Your free CI is $12 a month. <em>On macOS that is 193 minutes.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '2,000', k: 'minutes on a 2-core Linux runner' })}${tile({ big: '193', k: 'minutes on macOS, same $12', hi: true })}${tile({ big: '$0.00125', k: 'a minute for a managed 2 vCPU runner (Ubicloud)' })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Linux, 2 vCPU', big: '2,000 min', ba: '$0.006 a minute' })}
+        ${tile({ k: 'macOS, same $12', big: '193 min', ba: '$0.062 a minute', hi: true })}
+        ${tile({ k: 'Third-party runners', big: 'from $0.00125', ba: 'one-line runs-on change' })}
+      </div><div class="strip"><b>Every job rounds up to a whole minute. Concurrency, path filters and timeouts win most of it back.</b></div>`,
+    src: 'GitHub billing docs and vendor pricing pages, checked 4 Nov 2026. Free plan, private repositories, standard runners.',
+  },
+
   'is-your-codebase-agent-ready': {
     kick: 'Is your codebase agent-ready? A 10-point audit',
     title: 'Agents copy what they find. <em>Make it worth copying.</em>',

@@ -1,0 +1,55 @@
+---
+// How many minutes the included GitHub Actions allowance buys on each standard runner.
+// The allowance is a dollar amount ($12 on Free, $18 on Pro and Team); minutes = allowance / per-minute rate.
+// Rates and allowances from docs.github.com (actions-runner-pricing and product-billing/github-actions),
+// checked 4 Nov 2026. Larger runners can't use the included allowance at all.
+const rows = [
+  { label: 'ubuntu-slim', spec: 'Linux, 1 vCPU', rate: 0.002 },
+  { label: 'ubuntu-24.04-arm', spec: 'Linux arm64, 2 vCPU', rate: 0.005 },
+  { label: 'ubuntu-latest', spec: 'Linux x64, 2 vCPU', rate: 0.006 },
+  { label: 'windows-latest', spec: 'Windows, 2 vCPU', rate: 0.01 },
+  { label: 'macos-latest', spec: 'macOS, 3 or 4 vCPU', rate: 0.062 },
+];
+const free = 12;
+const paid = 18;
+const mins = (budget: number, rate: number) => Math.floor(budget / rate + 1e-9);
+const max = mins(free, rows[0].rate);
+const fmt = (n: number) => n.toLocaleString('en-US');
+const aria =
+  'Minutes of GitHub Actions per month included with a private repository, by runner. The Free plan includes 12 dollars of compute, Pro and Team 18 dollars. ' +
+  rows.map((r) => `${r.label}, ${r.spec}, ${r.rate} dollars a minute: ${fmt(mins(free, r.rate))} minutes on Free, ${fmt(mins(paid, r.rate))} on Pro or Team.`).join(' ');
+---
+<div class="dfig quota" role="img" aria-label={aria}>
+  <p class="df-title">The same free allowance is 6,000 minutes or 193, depending on the runner.</p>
+  <div class="head"><span>Runner</span><span>Minutes a month on Free ($12)</span><span>Pro, Team ($18)</span></div>
+  {rows.map((r, i) => (
+    <div class="row">
+      <span class="nm"><code>{r.label}</code><small>{r.spec} · ${r.rate.toFixed(3)}/min</small></span>
+      <span class="bar">
+        <span class="df-track"><span class:list={['df-bar', { hi: r.rate > 0.05 }]} style={`width:${Math.max((mins(free, r.rate) / max) * 100, 1.5)}%;--i:${i}`}></span></span>
+        <b class="df-num">{fmt(mins(free, r.rate))}</b>
+      </span>
+      <span class="pro">{fmt(mins(paid, r.rate))}</span>
+    </div>
+  ))}
+  <p class="df-note">Included compute is a dollar amount, so minutes depend on the runner's rate. Each job is rounded up to a whole minute. Public repositories on standard runners are free and don't use the allowance; larger runners can't use it at all. Rates from GitHub's billing docs, checked 4 November 2026.</p>
+</div>
+
+<style>
+  .head, .row { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) 4.6rem; gap: 0.7rem; align-items: center; }
+  .head { font: 400 0.72rem var(--font-mono); color: var(--df-muted); padding-bottom: 0.35rem; }
+  .head span:last-child, .pro { text-align: right; }
+  .row { padding: 0.55rem 0; border-top: 1px solid var(--df-rule); }
+  .nm { display: grid; gap: 0.1rem; min-width: 0; }
+  .nm code { font: 500 0.8rem var(--font-mono); overflow-wrap: anywhere; background: none; padding: 0; }
+  .nm small { font-size: 0.7rem; color: var(--df-muted); }
+  .bar { display: grid; grid-template-columns: 1fr 3rem; gap: 0.5rem; align-items: center; }
+  .bar .df-track { height: 10px; }
+  .bar b { font-size: 0.8rem; text-align: right; }
+  .df-bar.hi { background: var(--df-hi); }
+  .pro { font: 400 0.76rem var(--font-mono); color: var(--df-muted); }
+  @media (max-width: 480px) {
+    .head, .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.8rem; gap: 0.5rem; }
+    .head span:nth-child(2) { font-size: 0.66rem; }
+  }
+</style>

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/github-actions-free-minutes'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -421,4 +421,15 @@ test('agent-ready audit post shows both repos scored and a working scorer', asyn
   await expect(scorer.locator('[data-total]')).toHaveText('15');
   await expect(scorer.locator('[data-band]')).toHaveText('Ready for background agents');
   expect(await scorer.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+});
+
+test('GitHub Actions post shows the quota figure with the right minutes and cites GitHub docs', async ({ page }) => {
+  await page.goto('/blog/github-actions-free-minutes', { waitUntil: 'networkidle' });
+  const fig = page.locator('main .dfig.quota[role="img"]');
+  await expect(fig).toHaveCount(1);
+  await expect(fig).toHaveAttribute('aria-label', /ubuntu-latest, Linux x64, 2 vCPU, 0\.006 dollars a minute: 2,000 minutes on Free, 3,000 on Pro or Team\./);
+  await expect(fig).toHaveAttribute('aria-label', /macos-latest, macOS, 3 or 4 vCPU, 0\.062 dollars a minute: 193 minutes on Free, 290 on Pro or Team\./);
+  await expect(fig.locator('.row')).toHaveCount(5);
+  await expect(page.locator('main a[href="https://docs.github.com/en/billing/reference/actions-runner-pricing"]')).toHaveCount(1);
+  expect(await fig.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
 });
