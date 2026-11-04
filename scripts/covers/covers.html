@@ -392,6 +392,19 @@ const COVERS = {
     src: 'Claude Code v2.1.311, headless, 3 to 5 runs per cell, 27 Oct 2026.',
   },
 
+  'ubers-adr-securing-coding-agents': {
+    kick: 'Uber\'s ADR, open-sourced',
+    title: 'Your security tools see what the agent did. <em>ADR records why.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '10,000+', k: 'agent sessions a day, on 7,200+ machines' })}${tile({ big: '28 / 0', k: 'attacks caught of 42, false alarms on its benchmark', hi: true })}${tile({ big: '97.2%', k: 'precision of a plain secret-scanning hook' })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'In production at Uber', big: '10,000+', ba: 'agent sessions a day, 7,200+ machines' })}
+        ${tile({ k: 'ADR-Bench, 42 attacks', big: '28 caught', ba: 'zero false alarms; baselines 30 to 40', hi: true })}
+        ${tile({ k: 'Pre-prompt secret hook', big: '97.2%', ba: 'precision, no model involved' })}
+      </div><div class="strip"><b>Cheap triage for everything, a reasoning agent for the rest, and simple checks before the prompt leaves the machine.</b></div>`,
+    src: 'Uber, "ADR: An Agentic Detection System for Enterprise Agentic AI Security", MLSys 2026, and github.com/uber/ADR. Read 4 Nov 2026.',
+  },
+
   'is-your-codebase-agent-ready': {
     kick: 'Is your codebase agent-ready? A 10-point audit',
     title: 'Agents copy what they find. <em>Make it worth copying.</em>',

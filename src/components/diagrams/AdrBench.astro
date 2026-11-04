@@ -1,0 +1,47 @@
+---
+// ADR against three baseline detectors on ADR-Bench (302 tasks: 42 malicious, 260 benign).
+// Source: Table 2 of "ADR: An Agentic Detection System for Enterprise Agentic AI Security"
+// (MLSys 2026, docs/adr-paper.pdf in github.com/uber/ADR), read 4 Nov 2026. Not re-run by me.
+const attacks = 42;
+const benign = 260;
+const rows = [
+  { name: 'ADR', tp: 28, fp: 0, cost: 0.024, hi: true },
+  { name: 'ALRPHFS', tp: 17, fp: 34, cost: 0.001 },
+  { name: 'GuardAgent', tp: 9, fp: 30, cost: 0.012 },
+  { name: 'LlamaFirewall', tp: 8, fp: 40, cost: 0.459 },
+];
+const aria =
+  `Uber's reported results on ADR-Bench, ${attacks} attacks and ${benign} benign tasks. ` +
+  rows.map((r) => `${r.name}: caught ${r.tp} of ${attacks} attacks, ${r.fp} false alarms on ${benign} benign tasks, ${r.cost} dollars per task.`).join(' ');
+---
+<div class="dfig adrb" role="img" aria-label={aria}>
+  <p class="df-title">ADR caught the most attacks and raised no false alarms. The baselines raised 30 to 40.</p>
+  <div class="legend"><span class="k tp">attacks caught, of {attacks}</span><span class="k fp">false alarms, on {benign} benign tasks</span></div>
+  {rows.map((r, i) => (
+    <div class="row">
+      <span class:list={['nm', { hi: r.hi }]}>{r.name}<small>${r.cost.toFixed(3)} a task</small></span>
+      <span class="pair">
+        <span class="ln"><span class="df-track"><span class="df-bar" style={`width:${(r.tp / attacks) * 100}%;--i:${i * 2}`}></span></span><b>{r.tp}</b></span>
+        <span class="ln"><span class="df-track"><span class="df-bar fp" style={`width:${Math.max((r.fp / attacks) * 100, r.fp ? 2 : 0)}%;--i:${i * 2 + 1}`}></span></span><b class="f">{r.fp}</b></span>
+      </span>
+    </div>
+  ))}
+  <p class="df-note">Both bars use the same scale. ADR-Bench, 302 tasks. Table 2 of Uber's MLSys 2026 paper; I haven't re-run it. On AgentDojo, a public prompt-injection benchmark, ADR caught all 38 attacks with 3 false alarms.</p>
+</div>
+
+<style>
+  .legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font: 400 0.74rem var(--font-mono); color: var(--df-muted); margin-bottom: 0.6rem; }
+  .k::before { content: ''; display: inline-block; width: 0.8rem; height: 0.55rem; border-radius: 3px; margin-right: 0.35rem; vertical-align: 0.05rem; }
+  .k.tp::before { background: var(--df-accent); }
+  .k.fp::before { background: var(--df-hi); }
+  .row { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 2fr); gap: 0.8rem; align-items: center; padding: 0.55rem 0; border-top: 1px solid var(--df-rule); }
+  .nm { display: grid; gap: 0.1rem; font-size: 0.86rem; font-weight: 550; min-width: 0; overflow-wrap: anywhere; }
+  .nm.hi { color: var(--df-accent); }
+  .nm small { font: 400 0.7rem var(--font-mono); color: var(--df-muted); }
+  .pair { display: grid; gap: 0.3rem; }
+  .ln { display: grid; grid-template-columns: 1fr 1.8rem; gap: 0.5rem; align-items: center; }
+  .ln .df-track { height: 9px; }
+  .ln b { font: 500 0.76rem var(--font-mono); text-align: right; color: var(--df-accent); }
+  .ln b.f { color: var(--df-hi); }
+  .df-bar.fp { background: var(--df-hi); }
+</style>
