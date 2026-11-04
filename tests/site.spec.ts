@@ -465,3 +465,20 @@ test('Uber ADR post shows the benchmark figure with Uber\'s numbers and links th
   await expect(page.locator('main a[href="https://arxiv.org/abs/2605.17380"]')).toHaveCount(1);
   expect(await fig.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
 });
+
+test('failover post shows its labelled ladder, triage and tiers figures without overflow', async ({ page }) => {
+  await page.goto('/blog/frontier-model-failover-for-agents', { waitUntil: 'networkidle' });
+  const figs = page.locator('main .dfig[role="img"]');
+  await expect(figs).toHaveCount(3);
+  for (const fig of await figs.all()) {
+    expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+    expect(await fig.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  }
+  await expect(page.locator('main .dfig.ladder li')).toHaveCount(5);
+  await expect(page.locator('main .dfig.triage li')).toHaveCount(7);
+  await expect(page.locator('main .dfig.tiers .t')).toHaveCount(4);
+  await expect(page.locator('main a[href="https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues"]')).toHaveCount(1);
+  const last = figs.last();
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveClass(/in-view/);
+});

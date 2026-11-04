@@ -1,0 +1,36 @@
+---
+// What to do with each kind of model failure. Status codes are from the Claude API; other providers use similar ones.
+const rows: { sig: string; act: string; note: string; tone: 'go' | 'stop' | 'warn' }[] = [
+  { sig: '429 with retry-after', act: 'Wait, then retry', note: 'Your rate limit. Wait as long as the header says', tone: 'go' },
+  { sig: '429 without retry-after', act: 'Stop and alert', note: 'A spend cap. Retrying keeps failing until the cap resets', tone: 'stop' },
+  { sig: '529, 500, 503', act: 'Retry, then fail over', note: 'Provider-side. A few backed-off attempts, then the next rung', tone: 'go' },
+  { sig: 'Timeout or dropped stream', act: 'Resume from a checkpoint', note: 'Errors can arrive after a 200. Do not replay side effects', tone: 'warn' },
+  { sig: 'Context too long', act: 'Route to a long-context model', note: 'A capability gap, not an outage', tone: 'warn' },
+  { sig: 'Refusal or policy block', act: 'Do not fail over', note: 'Shopping for a model that says yes is a security hole', tone: 'stop' },
+  { sig: 'No error, worse answers', act: 'Trip on quality checks', note: 'Status codes never see it. Live evals do', tone: 'stop' },
+];
+---
+<div class="dfig triage" role="img" aria-label="What to do with each kind of failure. 429 with retry-after: your rate limit, wait as long as the header says, then retry. 429 without retry-after: a spend cap, stop and alert, because retrying keeps failing. 529, 500 or 503: provider-side, retry a few times with backoff, then fail over. Timeout or dropped stream: resume from a checkpoint, and do not replay side effects. Context too long: route to a long-context model; it is a capability gap, not an outage. Refusal or policy block: do not fail over; shopping for a model that says yes is a security hole. No error but worse answers: status codes never see it, so trip on live quality checks.">
+  <p class="df-title">Classify the failure before you react to it.</p>
+  <ul>
+    {rows.map((r) => (
+      <li class={r.tone}>
+        <p class="s">{r.sig}</p>
+        <p class="a">{r.act}</p>
+        <p class="n">{r.note}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="df-note">Status codes from the Claude API errors reference. OpenAI, Bedrock, Vertex AI and Azure use close equivalents.</p>
+</div>
+
+<style>
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  li { display: grid; grid-template-columns: 1fr auto; column-gap: 0.8rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  p { margin: 0; line-height: 1.35; }
+  .s { font: 500 0.84rem var(--font-mono); }
+  .a { font-weight: 650; font-size: 0.86rem; color: var(--df-accent); text-align: right; }
+  .stop .a { color: var(--df-hi); }
+  .n { grid-column: 1 / 3; font-size: 0.82rem; color: var(--df-muted); margin-top: 0.2rem; }
+  @media (max-width: 520px) { li { grid-template-columns: 1fr; } .a { text-align: left; margin-top: 0.2rem; } }
+</style>

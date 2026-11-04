@@ -1,0 +1,42 @@
+---
+// Five rungs of failover for a hosted model, from cheapest and safest to most disruptive.
+const rungs: { n: string; name: string; what: string; changes: string; hi?: boolean }[] = [
+  { n: '01', name: 'Retry', what: 'Same model, same endpoint, with backoff, jitter and a retry budget', changes: 'Nothing. Absorbs blips of seconds' },
+  { n: '02', name: 'Reroute', what: 'Same model in another region: cross-region or global endpoints', changes: 'Where data is processed. Check residency first' },
+  { n: '03', name: 'Switch platform', what: 'Same model through another provider: first-party API, Bedrock, Vertex AI, Foundry', changes: 'Quotas, feature support, prompt caches, credentials' },
+  { n: '04', name: 'Fall back', what: 'A different model, kept ready and tested on your evals', changes: 'Behaviour. Only safe if it passed the same suite', hi: true },
+  { n: '05', name: 'Degrade', what: 'Queue the work, narrow the task, or hand it to a person', changes: 'The product. Users see it, so say so plainly' },
+];
+---
+<div class="dfig ladder" role="img" aria-label="Five rungs of failover, cheapest first. 1 Retry: same model and endpoint with backoff, jitter and a retry budget; nothing changes, it absorbs blips. 2 Reroute: the same model in another region through cross-region or global endpoints; where data is processed changes, so check residency first. 3 Switch platform: the same model through another provider such as the first-party API, Bedrock, Vertex AI or Foundry; quotas, feature support, prompt caches and credentials change. 4 Fall back: a different model, kept ready and tested on your evals; behaviour changes, so it is only safe if it passed the same suite. 5 Degrade: queue the work, narrow the task or hand it to a person; the product changes and users see it.">
+  <p class="df-title">Climb only as far as the failure needs.</p>
+  <ol>
+    {rungs.map((r, i) => (
+      <li class:list={{ hi: r.hi }}>
+        <span class="n">{r.n}</span>
+        <div>
+          <p class="nm">{r.name}</p>
+          <p class="what">{r.what}</p>
+          <p class="ch"><span>What changes:</span> {r.changes}</p>
+        </div>
+        <div class="df-track"><div class="df-bar" style={`width:${20 + i * 20}%;--i:${i}`}></div></div>
+      </li>
+    ))}
+  </ol>
+  <p class="df-note">The bar shows how much changes for the user and the business at each rung.</p>
+</div>
+
+<style>
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  li { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: 0.7rem; padding: 0.6rem 0.75rem; border: 1px solid var(--df-rule); border-radius: 10px; }
+  li.hi { border: 1.5px solid var(--df-hi); }
+  li .df-track { grid-column: 2; height: 3px; margin-top: 0.45rem; }
+  li.hi .df-bar { background: var(--df-hi); }
+  .n { font: 500 0.8rem var(--font-mono); color: var(--df-accent); padding-top: 0.12rem; }
+  li.hi .n, li.hi .nm { color: var(--df-hi); }
+  p { margin: 0; line-height: 1.35; }
+  .nm { font-weight: 650; font-size: 0.95rem; }
+  .what { font-size: 0.84rem; color: var(--df-muted); margin-top: 0.15rem; }
+  .ch { font: 400 0.76rem var(--font-mono); color: var(--df-ink); margin-top: 0.4rem; }
+  .ch span { color: var(--df-accent); }
+</style>
