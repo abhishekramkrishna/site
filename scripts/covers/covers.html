@@ -290,6 +290,19 @@ const COVERS = {
     src: 'Chen &amp; Stratton, "Artificial Intelligence in the Firm", Harvard, Aug 2026. 718 firms, Jan 2021 to Mar 2026.',
   },
 
+  'when-to-spin-up-a-subagent': {
+    kick: 'When to spin up a subagent',
+    title: 'Default to one loop. <em>Split by context, not by team.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '~15×', k: 'tokens of a chat, for Anthropic\'s multi-agent research' })}${tile({ big: '~2×', k: 'faster: one team\'s single loop vs its multi-agent harness' })}${tile({ big: '1 writer', k: 'parallel readers return compact results', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Anthropic multi-agent research', big: '~15×', d: 'the tokens of a chat; one agent uses ~4×' })}
+        ${tile({ k: 'One team, single loop vs multi-agent', big: '~2×', d: 'faster with the single loop' })}
+        ${tile({ k: 'What every source agrees on', big: '1 writer', d: 'parallel readers, compact results', hi: true })}
+      </div><div class="strip"><b>Worth a subagent:</b> reads a lot and returns a little, runs in parallel, needs fresh eyes, needs its own access.</div>`,
+    src: 'Anthropic (Oct 2026, June 2025), Cognition (Apr 2026), LangChain (June 2025), Claude Code team (Apr 2026).',
+  },
+
   'agent-loops-and-graphs-do-different-jobs': {
     kick: 'Agent loops and agent graphs do different jobs',
     title: 'The loop makes each attempt good. <em>The graph makes the process safe.</em>',

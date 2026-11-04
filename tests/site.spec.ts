@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -421,4 +421,35 @@ test('agent-ready audit post shows both repos scored and a working scorer', asyn
   await expect(scorer.locator('[data-total]')).toHaveText('15');
   await expect(scorer.locator('[data-band]')).toHaveText('Ready for background agents');
   expect(await scorer.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+});
+
+test('subagent post shows its ledger, cites its sources and gives the right verdicts', async ({ page }) => {
+  await page.goto('/blog/when-to-spin-up-a-subagent', { waitUntil: 'networkidle' });
+  const ledger = page.locator('main .dfig.ledger[role="img"]');
+  await expect(ledger).toHaveCount(1);
+  expect((await ledger.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  for (const href of [
+    'https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop',
+    'https://www.anthropic.com/engineering/multi-agent-research-system',
+    'https://cognition.com/blog/multi-agents-working',
+    'https://www.langchain.com/blog/how-and-when-to-build-multi-agent-systems',
+    'https://claude.com/blog/how-and-when-to-use-subagents-in-claude-code',
+  ]) await expect(page.locator(`main a[href="${href}"]`).first()).toBeAttached();
+
+  const checker = page.locator('main .dfig.checker');
+  await checker.scrollIntoViewIfNeeded();
+  await expect(checker.locator('button[data-q]')).toHaveCount(9);
+  const verdict = checker.locator('[data-verdict]');
+  const tick = (id: string) => checker.locator(`button[data-q="${id}"]`).click();
+  await expect(verdict).toHaveText('Keep it in the main loop');
+  await tick('parallel');
+  await expect(checker.locator('button[data-q="parallel"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(verdict).toHaveText('Spin up a subagent');
+  await tick('writes-shared');
+  await expect(verdict).toHaveText('Split the reading, keep one writer');
+  await tick('needs-history');
+  await expect(verdict).toHaveText('Keep it in the loop for now, and measure');
+  await tick('parallel');
+  await expect(checker.locator('button[data-q="parallel"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(verdict).toHaveText('Keep it in the main loop');
 });

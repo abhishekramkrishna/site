@@ -1,0 +1,98 @@
+---
+title: "When to spin up a subagent, and when to keep the work in the main loop"
+description: Subagents are the default move when an agent gets complicated, and usually the wrong one. Five teams that build agents for a living published what they found. Here is what a subagent costs, what it buys, the four jobs it is worth it for, and a check you can run on your own design.
+pubDate: 2026-11-05
+tags: [agents, leadership]
+draft: false
+cover:
+  image: ../../assets/covers/when-to-spin-up-a-subagent.png
+  thumb: ../../assets/covers/when-to-spin-up-a-subagent-thumb.png
+  alt: "When to spin up a subagent. Default to one loop that loads skills and tools as it needs them. Split by context, not by problem type: hand off work that reads a lot and returns a little, runs in parallel, needs fresh eyes or needs its own access. Anthropic's multi-agent research used about 15 times the tokens of a chat; one team saw a single loop run about twice as fast."
+---
+
+import Figure from '../../components/Figure.astro';
+import SubagentLedger from '../../components/diagrams/SubagentLedger.astro';
+import SubagentChecker from '../../components/diagrams/SubagentChecker.astro';
+
+A team shows me their customer support agent. There is an intent classifier at the front, an orchestrator on top, and a dozen specialists underneath: billing, shipping, returns, accounts, one per team that owns a part of the product. It is slow, the tone changes depending on which specialist answered, and when a customer asks about a refund for a late delivery, nobody quite owns the answer.
+
+Nothing in that design is unusual. Splitting an agent into subagents feels like good engineering, the same way splitting a monolith into services once did. It has the same failure too: the architecture ends up as a copy of the org chart, and the hard problems move into the gaps between the pieces.
+
+That example is not mine. It comes from an article Anthropic published two weeks ago on [when to fold subagents back into your main agent loop](https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop), written from what they saw across enterprise deployments. It is the clearest statement yet of something several teams that build agents for a living have been saying for a year. I read it next to four other published accounts and turned them into one decision you can apply.
+
+**The short version**
+
+- Default to one agent loop that loads skills and tools as it needs them. Across several enterprise deployments, Anthropic found a single agent with skills often beat both one big prompt and a set of subagents, usually at lower cost and latency.
+- A subagent is a trade. It costs a lossy handoff, more tokens and a nested loop's latency. It buys a clean context, parallel work, fresh eyes and its own permissions.
+- It is worth it for four jobs: reading a lot and returning a little, independent work that can run at once, review by something that did not do the work, and work that needs different access or a different model.
+- Split by context, not by problem type. Keep one writer. If your evals don't show the single loop getting worse, you don't have a reason to split yet.
+
+## Why this changed
+
+Two years ago there were good reasons to split. Models lost the thread in long contexts, and a single prompt that described every tool and every procedure was too long to follow. A subagent with a short prompt and five tools was the way to keep each piece small enough to work.
+
+Two things have moved since. Models handle far more inside one loop; Anthropic's article dates the shift to Claude Opus 4.5. And the long prompt has a better fix than splitting: **progressive disclosure**. The agent sees a one-line description of each skill and tool, and loads the full procedure or definition only when it needs it. Anthropic says it cut Claude Code's system prompt by more than 80% for its more capable models, partly this way.
+
+That changes the question. You no longer split to keep a prompt short. You split only when a second context window buys something the first one can't.
+
+## What a subagent costs, and what it buys
+
+<Figure caption="The costs and benefits of handing work to a subagent, with the figures each source published for its own systems." tone="navy" wide>
+  <SubagentLedger />
+</Figure>
+
+**The handoff loses information.** The subagent sees only the brief you wrote. You see only the summary it wrote. The main agent, which saw every step, is the one that could have connected the delivery date to the refund; now it reads a paragraph about each. Cognition's founding rule for Devin, published in mid-2025 under the title "Don't build multi-agents", was to share full context between agents, because every action carries decisions the next agent can't see.
+
+**It costs tokens.** In Anthropic's own [multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system), an agent used about 4× the tokens of a chat, and the multi-agent system about 15×. In the same write-up, token usage alone explained 80% of the variance in results on their browsing eval. More tokens bought better research, at a price only worth paying when the task is worth it.
+
+**It adds latency.** Each subagent call is a whole loop nested inside a turn of the main one, and the main agent waits for the slowest. One customer who compared a multi-agent harness with a single loop saw the single loop run about twice as fast.
+
+**It sprawls.** Every subagent arrives with its own prompt, its own owner and its own evals. Each team tunes its piece against its own tests, and nobody owns the end-to-end result. Anthropic's article calls the shared prompt that every team adds a sentence to the "Frankenprompt".
+
+Against that, a subagent buys four things a single loop can't easily get:
+
+- **A clean context.** It can read forty files and return a page, and the main context never sees the forty files. The Claude Code team calls subagents "the browser tabs" of a session, and their [rule of thumb](https://claude.com/blog/how-and-when-to-use-subagents-in-claude-code) is to delegate when a task means exploring ten or more files.
+- **Parallel work.** Anthropic's research system runs three to five subagents at once and says parallelism cut research time by up to 90% for complex queries.
+- **Fresh eyes.** A reviewer that didn't write the code doesn't share its author's assumptions. Cognition's [code-review loop](https://cognition.com/blog/multi-agents-working) between Devin and a separate reviewer finds about two bugs per pull request, and they say the reviewer works best with a clean context.
+- **Its own access.** A research subagent can be read-only while the main agent edits. Cognition also has a cheaper model call a stronger one for a hard step.
+
+## The rule underneath: keep one writer
+
+The sources disagree on a lot. They agree on this. Harrison Chase put it plainly in LangChain's [review of the debate](https://www.langchain.com/blog/how-and-when-to-build-multi-agent-systems): read actions are far easier to run in parallel than write actions, and conflicting writes do far more damage than conflicting reads. Anthropic's research system reads in parallel and has one agent write the report. Cognition, a year after "Don't build multi-agents", now says multi-agent systems work, in a narrow shape: several agents contribute intelligence, and only one of them writes.
+
+The same idea shows up in my own [agent graph](/blog/agent-loops-and-graphs-do-different-jobs/). The fix is one agent loop that edits the code. The three reviewers that run in parallel after it are read-only, start from a clean slate and return a one-line verdict each. That is exactly the shape every source describes as working: a single writer, with parallel readers that hand back compact results.
+
+## Split by context, not by problem type
+
+When a split is justified, the cut matters as much as the decision. The tempting cut is by problem type: a billing agent, a shipping agent, a returns agent. Anthropic calls the result a telephone game. Each handoff loses a little fidelity, and a question that spans two specialists loses it twice.
+
+The better cut is **by context**. Give a subagent a piece of work that needs little from the rest of the conversation and returns something small and well shaped: "find every caller of this function and list them", "read these twelve contracts and return the renewal dates". If writing the brief means retelling the whole session, the work belongs in the main loop.
+
+## Should this be a subagent?
+
+The check below turns the sources into nine questions. Tick what is true of the work you're thinking of handing off.
+
+<Figure caption="Questions distilled from Anthropic, Cognition, LangChain and the Claude Code team, linked in this post. The verdict rule is my judgement." tone="navy" wide>
+  <SubagentChecker />
+</Figure>
+
+The verdicts follow three rules. With no reason to split, keep it in the loop. With a reason and nothing against it, split, and call the subagent like a tool: a clear objective, the tools it may use, a fixed shape for what comes back. When the only thing against splitting is that the work writes shared state, split the reading and keep one writer. Anything more mixed is a question for your evals, not for a diagram.
+
+## If you already have too many
+
+Most teams reading this don't have a blank page. They have the dozen specialists. Anthropic's article has a migration path I would follow almost as written:
+
+1. **Evals first.** One shared end-to-end set, owned centrally, plus a small set per skill. Ten golden examples is enough to start. Grade final answers against a rubric.
+2. **Merge the tightly coupled ones.** Specialists that chain on each other's output, touch the same data, or are usually called together.
+3. **Turn the rest into tools.** The main agent calls each subagent as a tool with a shared response schema, so its results can be checked against real data.
+4. **Fold in one at a time.** Turn its prompt into a skill and its API calls into tools, then compare evals with and without it. Keep it as a subagent only if the folded version scores worse.
+
+The step I'd underline is in their warning. In a sample support agent, folding one subagent lowered latency and quietly broke a process that had been passing: the main agent answered without asking for the delivery date. It happened in one of two runs. So compare which tasks flipped, not only the total score, and run each task more than once. Agents vary from run to run, which is why [a good agent eval](/blog/what-a-good-agent-eval-looks-like/) runs every task several times.
+
+## What to do this week
+
+Take one agent you own and list its subagents. For each, write one sentence on what it buys: a clean context, parallel work, fresh eyes or its own access. Any subagent that only exists because a team owns that part of the problem is a candidate to fold into a skill.
+
+Then pick the one with the weakest sentence, build ten end-to-end examples, and fold it in. If the scores hold, you have one less prompt, one less owner and one less handoff. If they don't, you have the first subagent in your system with a measured reason to exist.
+
+*Sources: Anthropic, [Building agents: when to fold subagents into your main agent loop](https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop) (October 2026) and [How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system) (June 2025); Cognition, [Multi-agents: what's actually working](https://cognition.com/blog/multi-agents-working) (April 2026); LangChain, [How and when to build multi-agent systems](https://www.langchain.com/blog/how-and-when-to-build-multi-agent-systems) (June 2025); Claude, [How and when to use subagents in Claude Code](https://claude.com/blog/how-and-when-to-use-subagents-in-claude-code) (April 2026). The figures are each team's own, for their own systems; I haven't reproduced them. The agent graph I refer to is in [agent-harness-lab on GitHub](https://github.com/abhishekramkrishna/agent-harness-lab).*
