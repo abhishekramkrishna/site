@@ -1,0 +1,46 @@
+---
+// Ten mods worth building, grouped by the job they do. Only the first is built (show-your-work).
+const groups: { name: string; items: { name: string; moment: string; built?: boolean }[] }[] = [
+  { name: 'See more', items: [
+    { name: 'Show your work', moment: '"It ran forty commands. What changed?"', built: true },
+    { name: 'Budget meter', moment: '"How did one session cost that much?"' },
+    { name: 'Context gauge', moment: '"Why did it forget what we agreed?"' },
+    { name: 'Untested-changes flag', moment: '"It said done, but never ran the tests."' },
+  ] },
+  { name: 'Stay safe', items: [
+    { name: 'Guardrails with reasons', moment: '"Who force-pushed to main?"' },
+    { name: 'Secrets tripwire', moment: '"There\'s an API key in that commit."' },
+    { name: 'Prod fence', moment: '"Was that the production database?"' },
+  ] },
+  { name: 'Work as a team', items: [
+    { name: 'Handoff note', moment: '"Where did you leave it yesterday?"' },
+    { name: 'Folder rules', moment: '"We don\'t do it that way in this service."' },
+    { name: 'Workshop mode', moment: '"Wait, what did it just do?"' },
+  ] },
+];
+---
+<div class="dfig usecases" role="img" aria-label="Ten Claude Code mods worth building, in three groups. See more: show your work, which is built, a budget meter, a context gauge and an untested-changes flag. Stay safe: guardrails with reasons, a secrets tripwire and a prod fence. Work as a team: a handoff note, folder rules and workshop mode.">
+  <p class="df-title">Ten mods, each for a moment you have lived through.</p>
+  <div class="groups">
+    {groups.map((g) => (
+      <section>
+        <p class="g">{g.name}</p>
+        <ul>
+          {g.items.map((it) => <li class:list={{ built: it.built }}><b>{it.name}{it.built && <em>built</em>}</b><span>{it.moment}</span></li>)}
+        </ul>
+      </section>
+    ))}
+  </div>
+</div>
+
+<style>
+  .groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; }
+  .g { font: 500 0.72rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--df-accent); margin: 0 0 0.45rem; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+  li { padding: 0.5rem 0.65rem; border: 1px solid var(--df-rule); border-radius: 9px; display: grid; gap: 0.1rem; }
+  li.built { border-color: var(--df-hi); background: var(--df-track); }
+  b { font-size: 0.86rem; font-weight: 620; line-height: 1.25; }
+  em { font: normal 500 0.66rem var(--font-mono); color: var(--df-hi); margin-left: 0.4rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  span { font-size: 0.76rem; color: var(--df-muted); line-height: 1.3; }
+  @media (max-width: 640px) { .groups { grid-template-columns: 1fr; } }
+</style>

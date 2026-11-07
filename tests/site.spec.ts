@@ -498,3 +498,27 @@ test('mods explainer post shows its labelled figures without overflow and links 
   await expect(page.locator('main pre').first()).toBeVisible();
 });
 
+test('ten mods post shows its labelled use-case figure, real screenshot and video, and links part 1 and the code', async ({ page, request }) => {
+  await page.goto('/blog/ten-claude-code-mods-worth-building', { waitUntil: 'networkidle' });
+  const fig = page.locator('main .dfig.usecases[role="img"]');
+  await expect(fig).toHaveCount(1);
+  expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+  expect(await fig.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  await expect(fig.locator('li')).toHaveCount(10);
+  await expect(page.locator('main h3')).toHaveCount(4);
+  const shot = page.locator('main img[src$="real-session.png"]');
+  await expect(shot).toHaveCount(1);
+  expect((await shot.getAttribute('alt'))?.length).toBeGreaterThan(80);
+  expect((await request.head((await shot.getAttribute('src'))!)).status()).toBe(200);
+  const video = page.locator('main video');
+  await expect(video).toHaveCount(1);
+  for (const attr of ['src', 'poster']) {
+    const url = await video.getAttribute(attr);
+    expect(url, `video ${attr}`).toBeTruthy();
+    expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
+  }
+  await expect(page.locator('main')).toContainText('AI-generated');
+  await expect(page.locator('main a[href$="/blog/claude-code-mods/"]')).toHaveCount(2);
+  await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/mods"]')).toHaveCount(1);
+});
+

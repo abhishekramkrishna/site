@@ -1,0 +1,88 @@
+---
+title: "Ten Claude Code mods worth building"
+description: Ten mods for teams that run agents on real code, each starting from a moment you have lived through. Plus one built end to end, and four things real sessions taught me that my first version got wrong.
+pubDate: 2026-11-07
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/ten-claude-code-mods-worth-building.png
+  thumb: ../../assets/covers/ten-claude-code-mods-worth-building-thumb.png
+  alt: "Ten Claude Code mods worth building, in three groups: see more, stay safe and work as a team. Show your work is built: in a real session its band read 2 files changed, tests passing, 1 blocked, $0.08."
+---
+
+import Figure from '../../components/Figure.astro';
+import ModUseCases from '../../components/diagrams/ModUseCases.astro';
+
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/ten-claude-code-mods-worth-building`;
+
+[Yesterday's post](/blog/claude-code-mods/) covered what a Claude Code mod is: a small TypeScript module that listens to Claude Code's events and can draw on its screen, with a band above the prompt, a pane beside the chat, slash commands, toasts and a gate on every tool call.
+
+This one is about what to build with them. The best test for a mod idea is a sentence you have said out loud while working with an agent. Each of the ten below starts with one.
+
+## The short version, in video
+
+<video controls preload="none" playsinline poster={`${media}/explainer-poster.jpg`} src={`${media}/explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="74-second narrated explainer with captions: what a Claude Code mod is, where it fits next to skills, hooks and MCP, the parts of the screen it can change, and the show-your-work mod catching a failing test and a blocked command in a session"></video>
+
+The voice is AI-generated. The session scenes are animated recreations of the real mod, which you can see in a real session further down.
+
+## Ten mods, for ten familiar moments
+
+<Figure caption="Ten mods, grouped by the job they do. Only the first is built so far." tone="navy" wide>
+  <ModUseCases />
+</Figure>
+
+### See more
+
+**1. Show your work.** *"It ran forty commands. What changed?"* A band that keeps a running receipt: files changed, whether the last test run passed, actions blocked and cost. A `/receipt` command copies it as Markdown for the pull request. This is the one I built, and it is covered in detail below.
+
+**2. Budget meter.** *"How did one session cost that much?"* The session's cost in the band, turning amber and then red at limits you set, with a toast as you cross each one. It needs only the session's usage and a band.
+
+**3. Context gauge.** *"Why did it forget what we agreed an hour ago?"* How full the context window is, so you can wrap up a task or start fresh before older instructions fall out.
+
+**4. Untested-changes flag.** *"It said done, but never ran the tests."* Count the edits since the last test run. When a turn ends with untested edits, say so. It is a small idea that catches one of the most common ways an agent overclaims.
+
+### Stay safe
+
+**5. Guardrails with reasons.** *"Who force-pushed to main?"* Stop `rm -rf`, force-pushes and writes to `main`, and give the agent the reason in plain words so it can pick a safer route. A hook can block, too. A mod can also keep state, like allowing a delete inside `build/` but not outside it, and show you every block in a pane.
+
+**6. Secrets tripwire.** *"There's an API key in that commit."* Check what a Write or Edit is about to put on disk, and stop it if it looks like a key or token. It is far cheaper than rotating a key after a push.
+
+**7. Prod fence.** *"Wait, was that the production database?"* Hold any command that names a production host or database until you approve it. The point is not to slow the agent down everywhere, just at the one place a mistake is expensive.
+
+### Work as a team
+
+**8. Handoff note.** *"Where did you leave it yesterday?"* A `/handoff` command that writes what was done, what's left and what failed, ready to paste into the ticket or the team channel.
+
+**9. Folder rules.** *"We don't do it that way in this service."* A pane that shows the team's conventions for the folder the agent is working in, so you see the same rules it should be following.
+
+**10. Workshop mode.** *"Wait, what did it just do?"* For live demos and teaching: explain each tool call in one plain sentence as it happens.
+
+If you build only one, start with the untested-changes flag or guardrails with reasons. Both fix something you have probably argued about this month.
+
+## One built end to end: show-your-work
+
+show-your-work keeps the receipt from mod 1. It is about 280 lines of TypeScript and seven tests. It only observes: it never blocks, changes or approves a call, and if its own code fails, the call carries on as normal. Here it is in a real session, an early build that still went by its first name.
+
+<figure class="post-figure">
+  <img src={`${media}/real-session.png`} width="1600" height="766" loading="lazy" style={{ width: '100%', height: 'auto', borderRadius: '8px' }} alt="A real Claude Code session. The agent fixed a discount bug and all 4 tests passed. Its cleanup command, rm -rf build, was denied by a permission rule. The pane on the right lists 2 files changed, a failing then a passing pytest run, and the blocked command with its reason. The band above the prompt reads: Receipt, 2 files changed, tests passing, 1 blocked, $0.08." />
+  <figcaption>A real session. The receipt pane is on the right and the band is above the prompt.</figcaption>
+</figure>
+
+I asked Claude to fix a failing test, add two tests and clean up with `rm -rf build`. My settings deny `rm -rf`. Claude chained the cleanup onto the test run, the whole command was denied, and it re-ran the tests on their own. The pane shows all of it: the failed run, the passing run, and the blocked command with the reason it was blocked.
+
+### What real sessions taught me
+
+My first version passed its tests and was still wrong four ways. Each one came from how Claude actually works, not how I assumed it worked.
+
+1. **It said "0 files changed" after Claude changed two.** I counted Edit and Write calls, but Claude often edits through the shell with `sed` or a heredoc. The fix was to ask git what changed since the session started, and leave out files that were already uncommitted.
+2. **It said "0 blocked" when a command had been denied.** A permission denial doesn't come back as a block. It comes back as an error, with the reason in the text. The mod now reads that text.
+3. **It called a failing test run a pass.** Claude often runs `pytest | tail`. The pipe exits 0 even when tests fail, so the mod now reads the runner's own summary line, like `1 failed, 3 passed`, as well as the exit code.
+4. **It counted writing a test file as running the tests.** A heredoc that writes a test file contains the word `pytest`. Now a command only counts as a test run if a part of it starts with a test runner.
+
+The lesson carries over to any mod: watch a few real sessions before you trust your mental model. The agent will use its tools in ways you didn't plan for.
+
+## Build your own
+
+The source of show-your-work is on GitHub at [abhishekramkrishna/mods](https://github.com/abhishekramkrishna/mods), as reference code to read and learn from. To try it for one session, clone the repo and run `claude --plugin-dir ./plugins/show-your-work`. Read its hooks first, using the five checks from [yesterday's post](/blog/claude-code-mods/).
+
+Which of the ten would you build first? Or is there a moment from your own sessions that isn't on this list?
