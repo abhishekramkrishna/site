@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side', '/blog/assume-agents-can-read-your-shipped-code'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side', '/blog/assume-agents-can-read-your-shipped-code', '/blog/what-is-a-small-language-model', '/blog/small-models-for-support-ticket-routing', '/blog/invoice-extraction-needs-evidence', '/blog/when-a-small-model-first-pass-saves-money', '/blog/small-models-for-app-commands', '/blog/rewrites-without-losing-facts', '/blog/evaluate-small-models-by-what-they-send-to-review', '/blog/founders-case-for-an-slm-pilot'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -556,4 +556,27 @@ test('shipped-code post cites its sources, links the ADR post and does not overf
   }
   await expect(page.locator('main a[href$="/blog/ubers-adr-securing-coding-agents/"]')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test('small language models series: every part links the series, cites its sources and does not overflow', async ({ page }) => {
+  const series: [string, string[]][] = [
+    ['what-is-a-small-language-model', ['arxiv.org/abs/2506.02153', 'ciodive.com', 'arxiv.org/abs/2405.00732']],
+    ['small-models-for-support-ticket-routing', ['arxiv.org/abs/2405.00732', 'docs.ollama.com']],
+    ['invoice-extraction-needs-evidence', ['apexanalytix.com']],
+    ['when-a-small-model-first-pass-saves-money', ['arxiv.org/abs/2305.05176', 'lmsys.org']],
+    ['small-models-for-app-commands', ['blog.google', 'ai.google.dev']],
+    ['rewrites-without-losing-facts', ['github.com/vectara/hallucination-leaderboard']],
+    ['evaluate-small-models-by-what-they-send-to-review', ['arxiv.org/abs/2406.18665']],
+    ['founders-case-for-an-slm-pilot', ['fortune.com']],
+  ];
+  for (const [i, [slug, hosts]] of series.entries()) {
+    await page.goto(`/blog/${slug}`, { waitUntil: 'networkidle' });
+    await expect(page.locator('main h1')).toHaveCount(1);
+    for (const host of hosts) await expect(page.locator(`main a[href*="${host}"]`).first()).toBeVisible();
+    // Every part links back to the explainer, and to its neighbours
+    if (i > 0) await expect(page.locator(`main a[href$="/blog/${series[0][0]}/"]`).first()).toBeVisible();
+    if (i > 0) await expect(page.locator(`main a[href$="/blog/${series[i - 1][0]}/"]`).first()).toBeVisible();
+    if (i < series.length - 1) await expect(page.locator(`main a[href$="/blog/${series[i + 1][0]}/"]`).first()).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  }
 });

@@ -431,6 +431,111 @@ const COVERS = {
     src: 'Cybernews iOS study via Malwarebytes, Mar 2025. GitGuardian, State of Secrets Sprawl 2026.',
   },
 
+  // Small language models series (8 parts)
+  'what-is-a-small-language-model': {
+    kick: 'Small language models · part 1 of 8',
+    title: 'Small is a model choice. <em>Hosting is a deployment choice.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '3×', k: 'more use of small task-specific models than general LLMs by 2027 (Gartner)' })}${tile({ big: '10–30×', k: 'cheaper to serve a 7B model than a 70–175B one (NVIDIA)' })}${tile({ big: '1 job', k: 'frequent, bounded, cheap to verify', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Gartner, by 2027', big: '3×', d: 'more use of small, task-specific models than general-purpose LLMs' })}
+        ${tile({ k: 'NVIDIA Research', big: '10–30×', d: 'cheaper to serve a 7B model than a 70–175B model' })}
+        ${tile({ k: 'Start with', big: '1 job', d: 'frequent inputs, a constrained decision, cheap verification', hi: true })}
+      </div><div class="strip"><b>Sizes:</b> SmolLM2 135M · 360M · 1.7B, Gemma 3 270M. <b>Deploy anywhere:</b> hosted API, private service or device.</div>`,
+    src: 'Gartner (Apr 2025); NVIDIA, "Small Language Models are the Future of Agentic AI" (2025); Hugging Face; Google.',
+  },
+
+  'small-models-for-support-ticket-routing': {
+    kick: 'Small language models · part 2 of 8',
+    title: 'A router can look perfect <em>by routing less.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '4 / 10', k: 'tickets routed automatically by keyword rules' })}${tile({ big: '100%', k: 'of those 4 correct' })}${tile({ big: '6 / 10', k: 'sent to a person, including a Spanish billing ticket', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Keyword rules routed', big: '4 / 10', d: 'tickets on their own' })}
+        ${tile({ k: 'Accuracy on those', big: '100%', d: 'every accepted ticket right' })}
+        ${tile({ k: 'Sent to review', big: '6 / 10', d: 'incl. "Nos cobraron dos veces"', hi: true })}
+      </div><div class="strip"><b>Report coverage next to accuracy.</b> Test a small model on the gap, with guards for cancellations and mixed requests. Measure time to the right owner.</div>`,
+    src: 'Synthetic 10-ticket fixture, illustrative. Fine-tuned small models: Predibase, LoRA Land (2024).',
+  },
+
+  'invoice-extraction-needs-evidence': {
+    kick: 'Small language models · part 3 of 8',
+    title: 'A verified total needs the value <em>and the evidence.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '$9.40', k: 'average cost to process an invoice' })}${tile({ big: '$2.78', k: 'best-in-class, with automation' })}${tile({ big: 'amount + line', k: 'what the extractor should return', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Average cost per invoice', big: '$9.40', d: '9.2 days to process' })}
+        ${tile({ k: 'Best-in-class', big: '$2.78', d: 'still 14% exceptions overall' })}
+        ${tile({ k: 'Return', big: '+ line', d: '"Total: $118.00", not just 118.00', hi: true })}
+      </div><div class="strip"><b>Verify in code:</b> the quoted line exists, a money parser agrees, only one plausible total. Anything else goes to review.</div>`,
+    src: 'Ardent Partners, AP Metrics That Matter in 2025.',
+  },
+
+  'when-a-small-model-first-pass-saves-money': {
+    kick: 'Small language models · part 4 of 8',
+    title: 'A cheaper model bill <em>can cost the workflow more.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '$1,000', k: 'strong model only, 100k requests' })}${tile({ big: '$300', k: 'small first pass, 20% escalate' })}${tile({ big: '$1,100', k: 'once 4¢ of review per escalation is added', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Strong model only', big: '$1,000', d: '100k requests × $0.01' })}
+        ${tile({ k: 'Cascade, inference only', big: '$300', d: '$0.001 first pass, 20% escalate' })}
+        ${tile({ k: 'Cascade + 4¢ review', big: '$1,100', d: 'breaks even at 18% escalation', hi: true })}
+      </div><div class="strip"><b>Measure cost per verified completion</b> and latency by route. The escalation rate is a business metric.</div>`,
+    src: 'Illustrative inputs. FrugalGPT (2023) and RouteLLM (2024) on what routing can save.',
+  },
+
+  'small-models-for-app-commands': {
+    kick: 'Small language models · part 5 of 8',
+    title: 'The model proposes. <em>Your app decides.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '270M', k: 'parameters in FunctionGemma' })}${tile({ big: '58% → 85%', k: 'mobile actions accuracy after fine-tuning' })}${tile({ big: '3 actions', k: 'reversible, to start', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'FunctionGemma', big: '270M', d: 'parameters, built for function calling' })}
+        ${tile({ k: 'Google mobile actions eval', big: '58→85%', d: 'accuracy, base vs fine-tuned' })}
+        ${tile({ k: 'Start with', big: '3 actions', d: 'open, filter, draft: all reversible', hi: true })}
+      </div><div class="strip"><b>Model:</b> propose action + arguments. <b>App:</b> resolve the ID, check access, confirm. Benchmark against the command palette.</div>`,
+    src: 'Google, FunctionGemma (Dec 2025).',
+  },
+
+  'rewrites-without-losing-facts': {
+    kick: 'Small language models · part 6 of 8',
+    title: 'A rewrite can sound better <em>and change the promise.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '5.7%', k: 'hallucination rate, Qwen3 4B' })}${tile({ big: '6.4%', k: 'Gemma 3 4B' })}${tile({ big: '23.5%', k: 'Phi-4-mini: same size class, 4× the rate', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Qwen3 4B', big: '5.7%', d: 'hallucination rate on summaries' })}
+        ${tile({ k: 'Gemma 3 4B', big: '6.4%', d: 'same task, same 7,700+ articles' })}
+        ${tile({ k: 'Phi-4-mini', big: '23.5%', d: 'size tells you little about faithfulness', hi: true })}
+      </div><div class="strip"><b>Protect the facts:</b> version, plan and audience come from fields. The model rewrites only the prose. Grade facts and style separately.</div>`,
+    src: 'Vectara hallucination leaderboard, updated Oct 2026.',
+  },
+
+  'evaluate-small-models-by-what-they-send-to-review': {
+    kick: 'Small language models · part 7 of 8',
+    title: 'Accuracy needs a denominator <em>and a review budget.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '39 / 40', k: 'Policy A: 2.5% error, 60 to review' })}${tile({ big: '80 / 85', k: 'Policy B: 5.9% error, 15 to review' })}${tile({ big: '≈11×', k: 'B wins unless a mistake costs more than ~11 reviews', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'Policy A, 100 cases', big: '39 / 40', d: '2.5% accepted error · 60 to review' })}
+        ${tile({ k: 'Policy B, 100 cases', big: '80 / 85', d: '5.9% accepted error · 15 to review' })}
+        ${tile({ k: 'Break-even', big: '≈11×', d: 'B wins unless a mistake costs more than ~11 reviews', hi: true })}
+      </div><div class="strip"><b>Report coverage next to accepted error.</b> Label high-risk cases separately. Choose the policy your review team can operate.</div>`,
+    src: 'Illustrative decisions on 100 cases each.',
+  },
+
+  'founders-case-for-an-slm-pilot': {
+    kick: 'Small language models · part 8 of 8',
+    title: 'Start with a job <em>someone already pays for.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '95%', k: 'of enterprise GenAI pilots: little measurable P&amp;L impact' })}${tile({ big: '2 weeks', k: 'observe, build, run beside the current workflow' })}${tile({ big: '1 job', k: 'with a buyer and a definition of done', hi: true })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'MIT NANDA, 2025', big: '95%', d: 'of GenAI pilots: little measurable P&amp;L impact' })}
+        ${tile({ k: 'Where returns were', big: 'back office', d: 'not sales and marketing tools' })}
+        ${tile({ k: 'Pilot', big: '2 weeks', d: 'one paid workflow, measured before and after', hi: true })}
+      </div><div class="strip"><b>Days 1–3</b> time the work · <b>4–7</b> template vs small-model draft · <b>8–14</b> run beside it, ask for paid terms.</div>`,
+    src: 'MIT NANDA, "The GenAI Divide" (Aug 2025), via Fortune.',
+  },
+
   'claude-code-mods': {
     kick: 'Claude Code mods, explained',
     title: 'Skills change what it knows. <em>A mod changes what you see.</em>',
