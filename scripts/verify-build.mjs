@@ -36,7 +36,7 @@ const required = [
   'og-default.png',
   ...['agents', 'strategy', 'business', 'leadership'].map((t) => `tags/${t}/index.html`),
   // Posts that scheduled social posts link to: a missing one means a live 404
-  ...['what-a-good-agent-eval-looks-like', 'skills-are-the-new-team-wiki', 'stop-counting-tokens', 'model-retirement-is-the-new-dependency-upgrade', 'fail-stop-containment-for-agents', 'claude-code-hooks', 'prompt-caching-measured', 'what-each-part-of-an-agent-harness-is-worth', 'agent-loops-and-graphs-do-different-jobs', 'test-your-agent-skills-like-code', 'is-your-codebase-agent-ready', 'when-to-spin-up-a-subagent', 'ubers-adr-securing-coding-agents'].map((s) => `blog/${s}/index.html`),
+  ...['what-a-good-agent-eval-looks-like', 'skills-are-the-new-team-wiki', 'stop-counting-tokens', 'model-retirement-is-the-new-dependency-upgrade', 'fail-stop-containment-for-agents', 'claude-code-hooks', 'prompt-caching-measured', 'what-each-part-of-an-agent-harness-is-worth', 'agent-loops-and-graphs-do-different-jobs', 'test-your-agent-skills-like-code', 'is-your-codebase-agent-ready', 'when-to-spin-up-a-subagent', 'ubers-adr-securing-coding-agents', 'what-is-a-small-language-model', 'small-models-for-support-ticket-routing', 'invoice-extraction-needs-evidence', 'when-a-small-model-first-pass-saves-money', 'small-models-for-app-commands', 'rewrites-without-losing-facts', 'evaluate-small-models-by-what-they-send-to-review', 'founders-case-for-an-slm-pilot'].map((s) => `blog/${s}/index.html`),
 ];
 for (const r of required) if (!existsSync(join(DIST, r))) fail(`missing required file: ${r}`);
 
