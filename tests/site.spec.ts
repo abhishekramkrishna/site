@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side', '/blog/assume-agents-can-read-your-shipped-code'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -545,4 +545,15 @@ test('refreshed posts show their new figures, sources and corrected numbers', as
   for (const slug of ['passing-evals-is-not-permission-to-ship', 'what-to-spend-on-ai-per-engineer', 'ubers-adr-securing-coding-agents']) {
     await expect(page.locator(`main a[href$="/blog/${slug}/"]`).first()).toBeVisible();
   }
+});
+
+test('shipped-code post cites its sources, links the ADR post and does not overflow', async ({ page }) => {
+  await page.goto('/blog/assume-agents-can-read-your-shipped-code', { waitUntil: 'networkidle' });
+  await expect(page.locator('main h1')).toHaveText('Assume agents can read your shipped code');
+  await expect(page.locator('main h3')).toHaveCount(5);
+  for (const host of ['theregister.com', 'blog.gitguardian.com', 'malwarebytes.com', 'github.com/qybaihe/bla']) {
+    await expect(page.locator(`main a[href*="${host}"]`).first()).toBeVisible();
+  }
+  await expect(page.locator('main a[href$="/blog/ubers-adr-securing-coding-agents/"]')).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });

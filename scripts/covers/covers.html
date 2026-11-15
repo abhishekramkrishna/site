@@ -418,6 +418,19 @@ const COVERS = {
     src: 'Uber, "ADR: An Agentic Detection System for Enterprise Agentic AI Security", MLSys 2026, and github.com/uber/ADR. Read 4 Nov 2026.',
   },
 
+  'assume-agents-can-read-your-shipped-code': {
+    kick: 'Assume agents can read your shipped code',
+    title: 'Anything you ship <em>is now cheap to read.</em>',
+    body: () => T
+      ? `<div class="tiles rows">${tile({ big: '71%', k: 'of 156,000 iOS apps leaked a hardcoded secret', hi: true })}${tile({ big: '28.65M', k: 'new secrets pushed to public GitHub in 2025' })}${tile({ big: '+81%', k: 'leaked AI-service keys, year over year' })}</div>`
+      : `<div class="tiles" style="--n:3">
+        ${tile({ k: 'iOS apps leaking a hardcoded secret', big: '71%', ba: 'of 156,000 scanned', hi: true })}
+        ${tile({ k: 'New secrets on public GitHub, 2025', big: '28.65M', ba: 'up 34% in a year' })}
+        ${tile({ k: 'Leaked AI-service keys', big: '+81%', ba: '1.27M in 2025' })}
+      </div><div class="strip"><b>Move secrets and enforcement to the server.</b> Obfuscation is a speed bump. Red-team your own release build with an agent.</div>`,
+    src: 'Cybernews iOS study via Malwarebytes, Mar 2025. GitGuardian, State of Secrets Sprawl 2026.',
+  },
+
   'claude-code-mods': {
     kick: 'Claude Code mods, explained',
     title: 'Skills change what it knows. <em>A mod changes what you see.</em>',
