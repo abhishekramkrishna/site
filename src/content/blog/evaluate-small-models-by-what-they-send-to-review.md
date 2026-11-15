@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/evaluate-small-models-by-what-they-send-to-review.png
   thumb: ../../assets/covers/evaluate-small-models-by-what-they-send-to-review-thumb.png
-  alt: "Accuracy needs a denominator and a review budget. Two illustrative policies see 100 cases each. Policy A accepts 40 and gets 39 right, a 2.5% accepted error, and sends 60 to review. Policy B accepts 85 and gets 80 right, about 5.9% accepted error, and sends 15 to review. B is cheaper unless one wrong decision costs more than about 11 reviews."
+  alt: "Accuracy needs a denominator and a review budget. Two grids of 100 illustrative cases. Policy A gets 39 right and 1 wrong automatically and sends 60 to review. Policy B gets 80 right and 5 wrong and sends 15 to review. B is cheaper unless one mistake costs more than about 11 reviews."
 ---
 
 Two classifiers each see the same 100 requests.

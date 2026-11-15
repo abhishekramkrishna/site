@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/when-a-small-model-first-pass-saves-money.png
   thumb: ../../assets/covers/when-a-small-model-first-pass-saves-money-thumb.png
-  alt: "A cheaper model bill can mean a more expensive workflow. Illustrative month of 100,000 requests: strong model only costs $1,000. A small first pass with 20% escalation costs $300 in inference, but $1,100 once four cents of human review per escalation is added. With those inputs the cascade only wins below an 18% escalation rate."
+  alt: "A cheaper model bill can cost the workflow more. Illustrative month of 100,000 requests: strong model only costs $1,000. A small first pass with 20% escalating costs $300 in model fees, but $1,100 once four cents of human review per escalation is added. It breaks even at 18% escalation."
 ---
 
 A support assistant handles two kinds of request. Most are routine: where's my order, reset my password, what's your refund policy. A few need the customer's full history and some judgement.

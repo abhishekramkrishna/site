@@ -257,6 +257,104 @@ h1 em{font-style:normal;font-family:Serif,serif;font-weight:440;letter-spacing:-
 .thumb .flow .col li{font-size:36px;padding:16px 0}
 .thumb .flow .col h3{font-size:26px}
 .thumb .flow .col.why{display:none}
+
+/* Small language models series: warm paper and one concrete diagram per post */
+.f.slm{--bg:#F7F4EE;--ink:#1F2328;--soft:#3B4048;--muted:#6E7177;--line:#DCD5C8;--rust:#C2553A;--ok:#4F8A6B;
+  --peach:#F5E0D5;--peachb:#D9A790;--sage:#DDE9E2;--sageb:#9CBBA8;--lav:#E4E3F2;--lavb:#AEACD4;--sand:#F2E7CD;--sandb:#CDB47A;--sky:#E0E9F2;--skyb:#9FB6CD;
+  background:var(--bg);background-image:radial-gradient(#E3DCCF 1.3px,transparent 1.5px);background-size:24px 24px;color:var(--ink)}
+.f.slm::before{display:none}
+.slm .kick{font:500 15px Mono,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--rust)}
+.slm .kick span{border:0;background:none;padding:0;border-radius:0}
+.slm .kick span::before{display:none}
+.slm h1{font-family:Serif,serif;font-weight:520;letter-spacing:-.018em;font-size:56px;line-height:1.1;margin-top:20px;color:var(--ink)}
+.slm h1 em{font-family:Serif,serif;font-style:italic;font-weight:440;color:var(--rust);letter-spacing:-.01em}
+.slm .sub{font:400 21px/1.5 Inter,sans-serif;color:var(--muted);margin-top:20px;max-width:500px}
+.slm .cols{flex:1;min-height:0;display:grid;grid-template-columns:520px 1fr;gap:60px;align-items:center;padding-bottom:22px}
+.slm .foot{border-top:1px solid var(--line);color:var(--muted)}
+.slm .sig b{color:var(--ink)}
+.slm .sig small{color:var(--muted)}
+.slm .sig svg{color:var(--ink)}
+.slm .dg{display:flex;justify-content:center;align-items:center}
+.slm.thumb{padding:60px 64px 56px}
+.slm.thumb h1{font-size:62px;margin-top:0;line-height:1.08}
+.slm.thumb h1 em{display:inline}
+.slm.thumb .dg{flex:1;min-height:0;margin-top:26px}
+
+/* Diagram parts */
+.dgm{display:flex;flex-direction:column;gap:18px;font-family:Inter,sans-serif;color:var(--ink)}
+.bx{border:1.5px solid var(--b,#CFC8BA);background:var(--c,#FFFDF9);border-radius:12px;padding:12px 18px;font:600 19px/1.25 Inter,sans-serif;color:var(--ink)}
+.bx small{display:block;font:400 14px/1.3 Mono,monospace;color:var(--muted);margin-top:4px}
+.bx.peach{--c:var(--peach);--b:var(--peachb)}.bx.sage{--c:var(--sage);--b:var(--sageb)}.bx.lav{--c:var(--lav);--b:var(--lavb)}
+.bx.sand{--c:var(--sand);--b:var(--sandb)}.bx.sky{--c:var(--sky);--b:var(--skyb)}
+.bx.dash{border-style:dashed;background:transparent}
+.row{display:flex;align-items:center;gap:14px}
+.ar{font:400 22px Mono,monospace;color:var(--muted)}
+.lbl{font:500 13px Mono,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.cap{font:400 16px/1.4 Mono,monospace;color:var(--muted)}
+.cap b{color:var(--ink);font-weight:500}
+.paper{background:#FFFDF9;border:1.5px solid var(--line);border-radius:10px;box-shadow:0 14px 30px rgba(60,48,30,.08)}
+.ok{color:var(--ok)}.bad{color:var(--rust)}
+.mono{font-family:Mono,monospace}
+
+/* 1: size vs where it runs */
+.sizes{display:flex;align-items:flex-end;gap:16px}
+.sizes span{display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--sage);border:1.5px solid var(--sageb);font:500 14px Mono,monospace;color:var(--soft)}
+.fan{display:flex;flex-direction:column;gap:10px}
+
+/* 2: tickets */
+.tk{display:grid;grid-template-columns:1fr auto;align-items:center;gap:18px;padding:12px 16px;font:400 18px/1.3 Inter,sans-serif}
+.tk+.tk{border-top:1px solid var(--line)}
+.pill{font:500 14px Mono,monospace;padding:5px 12px;border-radius:999px;border:1.5px solid var(--b);background:var(--c);white-space:nowrap}
+.pill.q{--c:var(--sage);--b:var(--sageb)}
+.pill.rv{--c:transparent;--b:var(--rust);color:var(--rust);border-style:dashed}
+
+/* 3: invoice */
+.inv{padding:18px 22px;width:330px;font:400 17px Inter,sans-serif}
+.inv .hd{font:600 16px Inter,sans-serif;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.inv .ln{display:flex;justify-content:space-between;padding:7px 8px;font-family:Mono,monospace;font-size:16px;color:var(--soft)}
+.inv .ln.hit{background:var(--sand);outline:2px solid var(--rust);border-radius:6px;color:var(--ink);font-weight:500}
+.inv .ln.dim{color:#A4A29C}
+.json{padding:16px 20px;font:400 16px/1.55 Mono,monospace;color:var(--soft);white-space:pre}
+.json b{color:var(--rust);font-weight:500}
+.checks{display:flex;flex-direction:column;gap:7px;font:400 16px Mono,monospace;color:var(--soft)}
+
+/* 4: cost bars */
+.cb{display:flex;flex-direction:column;gap:6px}
+.cb .t{display:flex;justify-content:space-between;font:600 18px Inter,sans-serif}
+.cb .t b{font:500 20px Mono,monospace}
+.track2{display:flex;height:40px;border-radius:8px;overflow:hidden;border:1.5px solid var(--line);background:#FFFDF9}
+.track2 i{display:block;height:100%}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font:400 14px Mono,monospace;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:7px;vertical-align:-1px;background:var(--k)}
+
+/* 5: command */
+.say{position:relative;background:#FFFDF9;border:1.5px solid var(--line);border-radius:16px;padding:14px 20px;font:italic 400 21px/1.35 Serif,serif;color:var(--ink);max-width:470px}
+.call{font:400 16px/1.5 Mono,monospace;color:var(--soft);padding:10px 16px}
+.call b{color:var(--rust);font-weight:500}
+
+/* 6: rewrite */
+.note2{padding:16px 20px;font:400 18px/1.45 Inter,sans-serif;width:520px}
+.note2 .lbl{display:block;margin-bottom:4px}
+.note2 del{color:var(--rust);text-decoration-thickness:2px}
+.note2 ins{text-decoration:none;background:#F6D3C7;padding:0 4px;border-radius:4px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chips span{font:500 14px Mono,monospace;padding:6px 12px;border-radius:8px;background:var(--sand);border:1.5px solid var(--sandb)}
+.hb{display:grid;grid-template-columns:120px 1fr 64px;align-items:center;gap:12px;font:400 15px Mono,monospace;color:var(--soft)}
+.hb i{display:block;height:14px;border-radius:4px;background:var(--skyb)}
+.hb i.hi{background:var(--rust)}
+
+/* 7: dot grids */
+.dots{display:grid;grid-template-columns:repeat(10,16px);gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;background:var(--k)}
+.pol{display:flex;flex-direction:column;gap:12px}
+.pol h4{font:600 19px Inter,sans-serif}
+.pol p{font:400 15px/1.35 Mono,monospace;color:var(--muted)}
+
+/* 8: pilot timeline */
+.days{display:grid;grid-template-columns:repeat(14,1fr);gap:5px;width:100%}
+.days i{height:40px;border-radius:6px;background:var(--k);border:1.5px solid var(--kb);font:500 13px Mono,monospace;font-style:normal;display:flex;align-items:center;justify-content:center;color:var(--soft)}
+.phases{display:grid;grid-template-columns:3fr 4fr 7fr;gap:5px;font:400 15px/1.35 Inter,sans-serif;color:var(--soft)}
+.phases b{display:block;font:600 17px Inter,sans-serif;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -431,108 +529,146 @@ const COVERS = {
     src: 'Cybernews iOS study via Malwarebytes, Mar 2025. GitGuardian, State of Secrets Sprawl 2026.',
   },
 
-  // Small language models series (8 parts)
+  // Small language models series (8 parts): its own warm "paper and diagram" theme, see .slm styles
   'what-is-a-small-language-model': {
-    kick: 'Small language models · part 1 of 8',
+    theme: 'slm',
+    zoom: [1.3, 1.3],
+    kick: 'Small language models · 1 of 8',
     title: 'Small is a model choice. <em>Hosting is a deployment choice.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '3×', k: 'more use of small task-specific models than general LLMs by 2027 (Gartner)' })}${tile({ big: '10–30×', k: 'cheaper to serve a 7B model than a 70–175B one (NVIDIA)' })}${tile({ big: '1 job', k: 'frequent, bounded, cheap to verify', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'Gartner, by 2027', big: '3×', d: 'more use of small, task-specific models than general-purpose LLMs' })}
-        ${tile({ k: 'NVIDIA Research', big: '10–30×', d: 'cheaper to serve a 7B model than a 70–175B model' })}
-        ${tile({ k: 'Start with', big: '1 job', d: 'frequent inputs, a constrained decision, cheap verification', hi: true })}
-      </div><div class="strip"><b>Sizes:</b> SmolLM2 135M · 360M · 1.7B, Gemma 3 270M. <b>Deploy anywhere:</b> hosted API, private service or device.</div>`,
-    src: 'Gartner (Apr 2025); NVIDIA, "Small Language Models are the Future of Agentic AI" (2025); Hugging Face; Google.',
+    sub: 'Pick one bounded job first. Then decide where the model runs.',
+    diagram: () => `<div class="dgm" style="width:640px">
+      <div class="lbl">Model size</div>
+      <div class="sizes">${[['135M', 54], ['270M', 64], ['360M', 72], ['1.7B', 96], ['4B', 118]].map(([n, s]) => `<span style="width:${s}px;height:${s}px">${n}</span>`).join('')}</div>
+      <div class="lbl" style="margin-top:10px">Where it runs</div>
+      <div class="row"><div class="bx peach">One bounded job<small>label · extract · pick an action</small></div><span class="ar">→</span>
+        <div class="fan"><div class="bx sky">Hosted API</div><div class="bx sage">Private service</div><div class="bx lav">Phone or edge device</div></div></div>
+      <div class="cap" style="margin-top:6px"><b>10–30× cheaper</b> to serve a 7B model than a 70–175B one (NVIDIA Research)</div>
+    </div>`,
+    src: 'NVIDIA Research (2025); Gartner via CIO Dive (Apr 2025); Hugging Face SmolLM2; Google Gemma 3.',
   },
 
   'small-models-for-support-ticket-routing': {
-    kick: 'Small language models · part 2 of 8',
+    theme: 'slm',
+    zoom: [1.2, 1.5],
+    kick: 'Small language models · 2 of 8',
     title: 'A router can look perfect <em>by routing less.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '4 / 10', k: 'tickets routed automatically by keyword rules' })}${tile({ big: '100%', k: 'of those 4 correct' })}${tile({ big: '6 / 10', k: 'sent to a person, including a Spanish billing ticket', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'Keyword rules routed', big: '4 / 10', d: 'tickets on their own' })}
-        ${tile({ k: 'Accuracy on those', big: '100%', d: 'every accepted ticket right' })}
-        ${tile({ k: 'Sent to review', big: '6 / 10', d: 'incl. "Nos cobraron dos veces"', hi: true })}
-      </div><div class="strip"><b>Report coverage next to accuracy.</b> Test a small model on the gap, with guards for cancellations and mixed requests. Measure time to the right owner.</div>`,
-    src: 'Synthetic 10-ticket fixture, illustrative. Fine-tuned small models: Predibase, LoRA Land (2024).',
+    sub: 'Report coverage next to accuracy, then test a small model on the gap.',
+    diagram: () => `<div class="dgm" style="width:700px">
+      <div class="paper">
+        ${[['I was charged twice for the same month.', 'billing', 'q'], ['Export hangs forever on the last step.', 'technical', 'q'], ['Nos cobraron dos veces esta semana.', 'review', 'rv'], ['Please cancel my plan immediately.', 'review', 'rv'], ['I cannot sign in and I want a refund.', 'review', 'rv']]
+          .map(([t, q, k]) => `<div class="tk"><span>“${t}”</span><span class="pill ${k}">→ ${q}</span></div>`).join('')}
+      </div>
+      <div class="cap">Keyword rules, 10 synthetic tickets: <b>4 routed, all 4 right, 6 sent to a person</b></div>
+    </div>`,
+    src: 'Synthetic 10-ticket fixture, illustrative. Predibase, LoRA Land (2024).',
   },
 
   'invoice-extraction-needs-evidence': {
-    kick: 'Small language models · part 3 of 8',
+    theme: 'slm',
+    zoom: [1.3, 1.6],
+    kick: 'Small language models · 3 of 8',
     title: 'A verified total needs the value <em>and the evidence.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '$9.40', k: 'average cost to process an invoice' })}${tile({ big: '$2.78', k: 'best-in-class, with automation' })}${tile({ big: 'amount + line', k: 'what the extractor should return', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'Average cost per invoice', big: '$9.40', d: '9.2 days to process' })}
-        ${tile({ k: 'Best-in-class', big: '$2.78', d: 'still 14% exceptions overall' })}
-        ${tile({ k: 'Return', big: '+ line', d: '"Total: $118.00", not just 118.00', hi: true })}
-      </div><div class="strip"><b>Verify in code:</b> the quoted line exists, a money parser agrees, only one plausible total. Anything else goes to review.</div>`,
-    src: 'Ardent Partners, AP Metrics That Matter in 2025.',
+    sub: 'Ask for the amount and the line it came from. Check both in code.',
+    diagram: () => `<div class="row" style="gap:26px;align-items:flex-start">
+      <div class="paper inv"><div class="hd">Invoice #1042</div>
+        <div class="ln"><span>Subtotal</span><span>$100.00</span></div>
+        <div class="ln"><span>Tax</span><span>$18.00</span></div>
+        <div class="ln hit"><span>Total</span><span>$118.00</span></div>
+        <div class="ln dim"><span>Prior balance</span><span>$50.00</span></div>
+      </div>
+      <div class="dgm" style="gap:14px">
+        <div class="paper json">{
+  <b>"amount"</b>: "118.00",
+  <b>"line"</b>: "Total: $118.00"
+}</div>
+        <div class="checks"><span class="ok">✓ the quoted line exists</span><span class="ok">✓ a money parser agrees</span><span class="ok">✓ only one plausible total</span><span>otherwise → a person</span></div>
+      </div>
+    </div>`,
+    src: 'Ardent Partners, AP Metrics That Matter in 2025: $9.40 average cost per invoice, $2.78 best-in-class.',
   },
 
   'when-a-small-model-first-pass-saves-money': {
-    kick: 'Small language models · part 4 of 8',
+    theme: 'slm',
+    zoom: [1.25, 1.6],
+    kick: 'Small language models · 4 of 8',
     title: 'A cheaper model bill <em>can cost the workflow more.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '$1,000', k: 'strong model only, 100k requests' })}${tile({ big: '$300', k: 'small first pass, 20% escalate' })}${tile({ big: '$1,100', k: 'once 4¢ of review per escalation is added', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'Strong model only', big: '$1,000', d: '100k requests × $0.01' })}
-        ${tile({ k: 'Cascade, inference only', big: '$300', d: '$0.001 first pass, 20% escalate' })}
-        ${tile({ k: 'Cascade + 4¢ review', big: '$1,100', d: 'breaks even at 18% escalation', hi: true })}
-      </div><div class="strip"><b>Measure cost per verified completion</b> and latency by route. The escalation rate is a business metric.</div>`,
+    sub: '100,000 requests, a small first pass and 20% escalating. Illustrative inputs.',
+    diagram: () => `<div class="dgm" style="width:660px;gap:22px">
+      <div class="cb"><div class="t"><span>Strong model only</span><b>$1,000</b></div><div class="track2"><i style="width:${1000 / 11}%;background:var(--skyb)"></i></div></div>
+      <div class="cb"><div class="t"><span>Cascade, model bill</span><b>$300</b></div><div class="track2"><i style="width:${100 / 11}%;background:var(--sageb)"></i><i style="width:${200 / 11}%;background:var(--skyb)"></i></div></div>
+      <div class="cb"><div class="t"><span>Cascade + 4¢ review per escalation</span><b class="bad">$1,100</b></div><div class="track2"><i style="width:${100 / 11}%;background:var(--sageb)"></i><i style="width:${200 / 11}%;background:var(--skyb)"></i><i style="width:${800 / 11}%;background:var(--peachb)"></i></div></div>
+      <div class="legend"><span style="--k:var(--sageb)">small model</span><span style="--k:var(--skyb)">strong model</span><span style="--k:var(--peachb)">human review</span></div>
+      <div class="cap">Breaks even at <b>18% escalation</b>. Measure cost per verified completion.</div>
+    </div>`,
     src: 'Illustrative inputs. FrugalGPT (2023) and RouteLLM (2024) on what routing can save.',
   },
 
   'small-models-for-app-commands': {
-    kick: 'Small language models · part 5 of 8',
+    theme: 'slm',
+    zoom: [1.25, 1.25],
+    kick: 'Small language models · 5 of 8',
     title: 'The model proposes. <em>Your app decides.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '270M', k: 'parameters in FunctionGemma' })}${tile({ big: '58% → 85%', k: 'mobile actions accuracy after fine-tuning' })}${tile({ big: '3 actions', k: 'reversible, to start', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'FunctionGemma', big: '270M', d: 'parameters, built for function calling' })}
-        ${tile({ k: 'Google mobile actions eval', big: '58→85%', d: 'accuracy, base vs fine-tuned' })}
-        ${tile({ k: 'Start with', big: '3 actions', d: 'open, filter, draft: all reversible', hi: true })}
-      </div><div class="strip"><b>Model:</b> propose action + arguments. <b>App:</b> resolve the ID, check access, confirm. Benchmark against the command palette.</div>`,
+    sub: 'A 270M model turns a sentence into a typed call. Your code runs it.',
+    diagram: () => `<div class="dgm" style="width:600px;gap:12px">
+      <div class="say">“Show incomplete items in the morning checklist.”</div>
+      <span class="ar" style="padding-left:30px">↓</span>
+      <div class="bx lav">FunctionGemma · 270M<small>proposes an action and arguments</small></div>
+      <div class="paper call"><b>filter_checklist</b>(checklist="morning", incomplete_only=true)</div>
+      <span class="ar" style="padding-left:30px">↓</span>
+      <div class="bx sage">Your app<small>“morning” → checklist-21 · user can see it · reversible</small></div>
+      <div class="cap">Fine-tuning lifted Google's mobile actions eval from <b>58% to 85%</b></div>
+    </div>`,
     src: 'Google, FunctionGemma (Dec 2025).',
   },
 
   'rewrites-without-losing-facts': {
-    kick: 'Small language models · part 6 of 8',
+    theme: 'slm',
+    zoom: [1.35, 1.35],
+    kick: 'Small language models · 6 of 8',
     title: 'A rewrite can sound better <em>and change the promise.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '5.7%', k: 'hallucination rate, Qwen3 4B' })}${tile({ big: '6.4%', k: 'Gemma 3 4B' })}${tile({ big: '23.5%', k: 'Phi-4-mini: same size class, 4× the rate', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'Qwen3 4B', big: '5.7%', d: 'hallucination rate on summaries' })}
-        ${tile({ k: 'Gemma 3 4B', big: '6.4%', d: 'same task, same 7,700+ articles' })}
-        ${tile({ k: 'Phi-4-mini', big: '23.5%', d: 'size tells you little about faithfulness', hi: true })}
-      </div><div class="strip"><b>Protect the facts:</b> version, plan and audience come from fields. The model rewrites only the prose. Grade facts and style separately.</div>`,
+    sub: 'Keep the facts in fields. Let the model write only the prose around them.',
+    diagram: () => `<div class="dgm" style="width:560px;gap:16px">
+      <div class="paper note2"><span class="lbl">Source</span>Version 4.2 adds CSV export for admins on Pro.</div>
+      <div class="paper note2"><span class="lbl">Small-model rewrite</span>CSV export is now available to <del>admins on Pro</del> <ins>everyone</ins>.<div class="cap bad" style="margin-top:6px">✗ scope changed</div></div>
+      <div class="chips"><span>Version 4.2</span><span>Plan: Pro</span><span>Audience: admins</span></div>
+      <div class="lbl" style="margin-top:6px">Hallucination on the same summaries</div>
+      ${[['Qwen3 4B', 5.7], ['Gemma 3 4B', 6.4], ['Phi-4-mini', 23.5]].map(([m, v]) => `<div class="hb"><span>${m}</span><i class="${v > 20 ? 'hi' : ''}" style="width:${(v / 23.5) * 100}%"></i><span>${v}%</span></div>`).join('')}
+    </div>`,
     src: 'Vectara hallucination leaderboard, updated Oct 2026.',
   },
 
   'evaluate-small-models-by-what-they-send-to-review': {
-    kick: 'Small language models · part 7 of 8',
+    theme: 'slm',
+    zoom: [1.4, 1.55],
+    kick: 'Small language models · 7 of 8',
     title: 'Accuracy needs a denominator <em>and a review budget.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '39 / 40', k: 'Policy A: 2.5% error, 60 to review' })}${tile({ big: '80 / 85', k: 'Policy B: 5.9% error, 15 to review' })}${tile({ big: '≈11×', k: 'B wins unless a mistake costs more than ~11 reviews', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'Policy A, 100 cases', big: '39 / 40', d: '2.5% accepted error · 60 to review' })}
-        ${tile({ k: 'Policy B, 100 cases', big: '80 / 85', d: '5.9% accepted error · 15 to review' })}
-        ${tile({ k: 'Break-even', big: '≈11×', d: 'B wins unless a mistake costs more than ~11 reviews', hi: true })}
-      </div><div class="strip"><b>Report coverage next to accepted error.</b> Label high-risk cases separately. Choose the policy your review team can operate.</div>`,
+    sub: 'Two policies, the same 100 cases. Neither number alone can choose.',
+    diagram: () => {
+      const grid = (right, wrong) => `<div class="dots">${Array.from({ length: 100 }, (_, i) => `<i style="--k:${i < right ? 'var(--sageb)' : i < right + wrong ? 'var(--rust)' : '#DAD4C8'}"></i>`).join('')}</div>`;
+      return `<div class="dgm" style="gap:22px">
+        <div class="row" style="gap:56px;align-items:flex-start">
+          <div class="pol"><h4>Policy A</h4>${grid(39, 1)}<p>39 right · 1 wrong<br>60 to review</p></div>
+          <div class="pol"><h4>Policy B</h4>${grid(80, 5)}<p>80 right · 5 wrong<br>15 to review</p></div>
+        </div>
+        <div class="legend"><span style="--k:var(--sageb)">right, automatic</span><span style="--k:var(--rust)">wrong, automatic</span><span style="--k:#DAD4C8">sent to review</span></div>
+        <div class="cap">B is cheaper unless one mistake costs more than <b>~11 reviews</b></div>
+      </div>`;
+    },
     src: 'Illustrative decisions on 100 cases each.',
   },
 
   'founders-case-for-an-slm-pilot': {
-    kick: 'Small language models · part 8 of 8',
+    theme: 'slm',
+    zoom: [1.2, 1.55],
+    kick: 'Small language models · 8 of 8',
     title: 'Start with a job <em>someone already pays for.</em>',
-    body: () => T
-      ? `<div class="tiles rows">${tile({ big: '95%', k: 'of enterprise GenAI pilots: little measurable P&amp;L impact' })}${tile({ big: '2 weeks', k: 'observe, build, run beside the current workflow' })}${tile({ big: '1 job', k: 'with a buyer and a definition of done', hi: true })}</div>`
-      : `<div class="tiles" style="--n:3">
-        ${tile({ k: 'MIT NANDA, 2025', big: '95%', d: 'of GenAI pilots: little measurable P&amp;L impact' })}
-        ${tile({ k: 'Where returns were', big: 'back office', d: 'not sales and marketing tools' })}
-        ${tile({ k: 'Pilot', big: '2 weeks', d: 'one paid workflow, measured before and after', hi: true })}
-      </div><div class="strip"><b>Days 1–3</b> time the work · <b>4–7</b> template vs small-model draft · <b>8–14</b> run beside it, ask for paid terms.</div>`,
+    sub: 'One workflow, two weeks, measured before and after.',
+    diagram: () => `<div class="dgm" style="width:680px;gap:16px">
+      <div class="bx peach" style="align-self:flex-start">One paid workflow<small>e.g. 300 approved product listings a week</small></div>
+      <div class="days">${Array.from({ length: 14 }, (_, i) => { const k = i < 3 ? ['var(--sky)', 'var(--skyb)'] : i < 7 ? ['var(--lav)', 'var(--lavb)'] : ['var(--sage)', 'var(--sageb)']; return `<i style="--k:${k[0]};--kb:${k[1]}">${i + 1}</i>`; }).join('')}</div>
+      <div class="phases"><span><b>Observe</b>time the work</span><span><b>Build</b>template vs small-model draft</span><span><b>Run beside it</b>then ask for paid terms</span></div>
+      <div class="cap" style="margin-top:8px">MIT NANDA: about <b>95% of GenAI pilots</b> showed little measurable P&amp;L impact</div>
+    </div>`,
     src: 'MIT NANDA, "The GenAI Divide" (Aug 2025), via Fortune.',
   },
 
@@ -715,6 +851,11 @@ const COVERS = {
 
 function render(c) {
   const foot = `<div class="foot"><div>${c.src ?? SITE}</div>${sig}</div>`;
+  if (c.theme === 'slm') {
+    return `<div class="f ${f} slm">
+      ${T ? `<h1>${c.title}</h1><div class="dg"><div style="zoom:${c.zoom[T ? 1 : 0]}">${c.diagram()}</div></div>` : `<div class="kick"><span>${c.kick}</span></div><div class="cols"><div class="txt"><h1>${c.title}</h1><p class="sub">${c.sub}</p></div><div class="dg"><div style="zoom:${c.zoom[T ? 1 : 0]}">${c.diagram()}</div></div></div>${foot}`}
+    </div>`;
+  }
   if (c.layout === 'split') {
     return `<div class="f ${f}">
       ${T ? `<h1>${c.title}</h1>${c.body()}` : `<div class="split"><div class="txt"><div class="kick"><span>${c.kick}</span></div><h1>${c.title}</h1><p class="sub">${c.sub}</p></div>${c.body()}</div>${foot}`}

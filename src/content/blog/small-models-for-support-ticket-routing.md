@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/small-models-for-support-ticket-routing.png
   thumb: ../../assets/covers/small-models-for-support-ticket-routing-thumb.png
-  alt: "A router can look perfect by routing less. On a 10-ticket synthetic fixture, keyword rules routed 4 tickets automatically, got all 4 right and sent 6 to review, including a Spanish billing complaint. Report coverage next to accuracy and measure time to the right owner."
+  alt: "A router can look perfect by routing less. Five synthetic tickets with where keyword rules sent them: a double charge to billing, a hanging export to technical, and a Spanish billing complaint, a cancellation and a mixed sign-in and refund request to review. Across 10 tickets the rules routed 4, got all 4 right and sent 6 to a person."
 ---
 
 A customer writes: "Nos cobraron dos veces esta semana." We were charged twice this week. An English keyword rule looking for "charged" or "refund" doesn't see a billing problem.

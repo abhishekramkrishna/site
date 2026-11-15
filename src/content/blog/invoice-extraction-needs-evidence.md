@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/invoice-extraction-needs-evidence.png
   thumb: ../../assets/covers/invoice-extraction-needs-evidence-thumb.png
-  alt: "A verified total needs the value and the evidence. Ardent Partners puts the average cost to process an invoice at $9.40, against $2.78 for best-in-class teams, with a 14% exception rate. Ask the model for the amount and the source line, check the line exists, parse it independently, and send ambiguous totals to review."
+  alt: "A verified total needs the value and the evidence. An invoice with subtotal $100.00, tax $18.00, total $118.00 highlighted, and a prior balance of $50.00, next to the extractor's answer: amount 118.00 and the line \"Total: $118.00\". Checks: the quoted line exists, a money parser agrees, there is only one plausible total, otherwise a person reviews it."
 ---
 
 An invoice says "Total: $118.00". Two lines down it says "Prior balance: $50.00". Your extraction service returns perfectly valid JSON:
