@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PostGrid from '../../components/PostGrid.astro';
-import { PILLARS } from '../../consts';
+import { PILLARS, TOPICS } from '../../consts';
 import { getPosts, url } from '../../lib';
 
 const posts = await getPosts();
@@ -11,7 +11,7 @@ const posts = await getPosts();
     <h1 class="statement wide"><strong>Writing.</strong> Notes from the build side of AI: agents in production, AI strategy, and leading teams through it.</h1>
     <div class="filters">
       <a class="pill" href={url('/blog')} aria-current="page">All</a>
-      {PILLARS.map((p) => <a class="pill" href={url(`/tags/${p.tag}`)}>{p.title}</a>)}
+      {[...PILLARS, ...TOPICS].map((p) => <a class="pill" href={url(`/tags/${p.tag}`)}>{p.title}</a>)}
       <a class="pill" href={url('/rss.xml')}>RSS</a>
     </div>
   </section>

@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import PostGrid from '../../components/PostGrid.astro';
 import TagDiagram from '../../components/diagrams/TagDiagram.astro';
-import { PILLARS } from '../../consts';
+import { PILLARS, TOPICS } from '../../consts';
 import { getPosts, url, type Post } from '../../lib';
 
 export async function getStaticPaths() {
@@ -17,7 +17,7 @@ export async function getStaticPaths() {
 const { tag } = Astro.params;
 const { posts } = Astro.props as { posts: Post[] };
 const index = PILLARS.findIndex((p) => p.tag === tag);
-const pillar = PILLARS[index];
+const pillar = PILLARS[index] ?? TOPICS.find((t) => t.tag === tag);
 const tone = ['', 'navy', 'teal', 'gold'][index] ?? '';
 ---
 <Base title={pillar ? pillar.title : `#${tag}`} description={pillar?.blurb ?? `Posts tagged ${tag}.`}>
