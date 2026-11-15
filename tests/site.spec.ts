@@ -560,7 +560,7 @@ test('shipped-code post cites its sources, links the ADR post and does not overf
 
 test('small language models series: every part links the series, cites its sources and does not overflow', async ({ page }) => {
   const series: [string, string[]][] = [
-    ['what-is-a-small-language-model', ['arxiv.org/abs/2506.02153', 'gartner.com', 'arxiv.org/abs/2405.00732']],
+    ['what-is-a-small-language-model', ['arxiv.org/abs/2506.02153', 'ciodive.com', 'arxiv.org/abs/2405.00732']],
     ['small-models-for-support-ticket-routing', ['arxiv.org/abs/2405.00732', 'docs.ollama.com']],
     ['invoice-extraction-needs-evidence', ['apexanalytix.com']],
     ['when-a-small-model-first-pass-saves-money', ['arxiv.org/abs/2305.05176', 'lmsys.org']],

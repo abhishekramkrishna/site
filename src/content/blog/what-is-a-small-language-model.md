@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/what-is-a-small-language-model.png
   thumb: ../../assets/covers/what-is-a-small-language-model-thumb.png
-  alt: "Small is a model choice, hosting is a deployment choice. Gartner expects organisations to use small, task-specific models at least three times more than general-purpose LLMs by 2027. NVIDIA researchers put serving a 7B model at 10 to 30 times cheaper than a 70 to 175B one. Start with a frequent, bounded decision that is cheap to verify."
+  alt: "Small is a model choice, hosting is a deployment choice. Gartner expects organisations to use small, task-specific models three times more than general-purpose LLMs by 2027. NVIDIA researchers put serving a 7B model at 10 to 30 times cheaper than a 70 to 175B one. Start with a frequent, bounded decision that is cheap to verify."
 ---
 
 A support team wants to label 20,000 incoming tickets a month. Every ticket gets one of six labels, or goes to a person for review. Nobody needs the model to write poetry, reason about tax law or remember the conversation. It needs to make one bounded decision, quickly and cheaply, thousands of times a day.
@@ -17,7 +17,7 @@ That is the kind of job where I would start evaluating a small language model (S
 **The short version**
 
 - "Small" describes the model: a comparatively low parameter count, typically from a few hundred million to a few billion. It says nothing about where the model runs.
-- The economics are why it matters. NVIDIA researchers estimate that serving a 7B model is 10 to 30 times cheaper than serving a 70 to 175B one, and Gartner expects task-specific models to be used at least three times more than general LLMs by 2027.
+- The economics are why it matters. NVIDIA researchers estimate that serving a 7B model is 10 to 30 times cheaper than serving a 70 to 175B one, and Gartner expects task-specific models to be used three times more than general LLMs by 2027.
 - Pick the job first: frequent inputs, a constrained decision, cheap verification. Pick where it runs second.
 
 ## What "small" actually describes
@@ -40,7 +40,7 @@ The case for small models is mostly about cost and control, and the numbers are 
 
 In [Small Language Models are the Future of Agentic AI](https://arxiv.org/abs/2506.02153), NVIDIA researchers argue that serving a 7B model is 10 to 30 times cheaper in latency, energy and FLOPs than serving a 70 to 175B model. They then looked at three open-source agent systems and estimated that specialised small models could reliably handle about 60% of MetaGPT's LLM calls, 40% of Open Operator's and 70% of Cradle's. Those are the authors' estimates, not measured deployments, but they point at the same thing I see in production agents: most calls are narrow, repetitive and well specified.
 
-Gartner [predicts](https://www.gartner.com/en/newsroom/press-releases/2025-04-09-gartner-predicts-by-2027-organizations-will-use-small-task-specific-ai-models-three-times-more-than-general-purpose-large-language-models) that by 2027 organisations will use small, task-specific AI models at least three times more than general-purpose LLMs. As Sumit Agarwal, VP Analyst at Gartner, puts it: "These smaller, task-specific models provide quicker responses and use less computational power."
+Gartner [predicts](https://www.ciodive.com/news/small-AI-model-use-growth-Gartner-prediction/745435/) that by 2027 organisations will use small, task-specific AI models three times more than general-purpose LLMs. As Sumit Agarwal, VP Analyst at Gartner, puts it: "These smaller, task-specific models provide quicker responses and use less computational power."
 
 And specialisation works. In Predibase's [LoRA Land](https://arxiv.org/abs/2405.00732) study, 310 fine-tuned models built on 10 small and mid-sized base models beat their base models by 34 points on average across 31 tasks, and beat GPT-4 by 10 points on average. Narrow tasks reward a narrow model.
 
@@ -86,7 +86,7 @@ Choose the decision before you choose the model, and choose the model before you
 **Sources**
 
 - [NVIDIA Research: Small Language Models are the Future of Agentic AI](https://arxiv.org/abs/2506.02153) (2025)
-- [Gartner: by 2027, organisations will use small, task-specific AI models three times more than general-purpose LLMs](https://www.gartner.com/en/newsroom/press-releases/2025-04-09-gartner-predicts-by-2027-organizations-will-use-small-task-specific-ai-models-three-times-more-than-general-purpose-large-language-models) (April 2025)
+- [CIO Dive: Gartner predicts small, task-specific model use will triple that of general-purpose LLMs by 2027](https://www.ciodive.com/news/small-AI-model-use-growth-Gartner-prediction/745435/) (April 2025)
 - [Predibase: LoRA Land, 310 fine-tuned LLMs that rival GPT-4](https://arxiv.org/abs/2405.00732) (2024)
 - [SmolLM2 model card](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B)
 - [Google: Introducing Gemma 3 270M](https://developers.googleblog.com/en/introducing-gemma-3-270m/) (August 2025)
