@@ -4,7 +4,7 @@
 <rect x="40" y="76" width="560" height="78" rx="10" fill="#FBEFE9" stroke="#D97757" stroke-width="1.8"/>
 <g fill="#F0EEE6" stroke="#C9C4B8" stroke-width="1.2"><rect x="40" y="168" width="560" height="78" rx="10"/><rect x="40" y="260" width="560" height="78" rx="10"/></g>
 <text x="64" y="106" class="n a">OUTCOMES</text><text x="64" y="128" class="t" style="font-size:13.5px">cost per resolved issue + escaped defects</text><text x="64" y="145" class="s">what the business recognises as finished work</text>
-<text x="64" y="198" class="n">OUTPUTS</text><text x="64" y="220" class="t" style="font-size:13.5px">PRs, commits, lines of code</text><text x="64" y="237" class="s">AI inflates these: PRs +23% vs issues +12%</text>
+<text x="64" y="198" class="n">OUTPUTS</text><text x="64" y="220" class="t" style="font-size:13.5px">PRs, commits, lines of code</text><text x="64" y="237" class="s">AI inflates these: PRs +23%, issues no clear gain</text>
 <text x="64" y="290" class="n">INPUTS</text><text x="64" y="312" class="t" style="font-size:13.5px">seats, tokens, spend</text><text x="64" y="329" class="s">what you paid, not what you got</text>
 <g stroke="#8A877F" stroke-width="1.2" fill="none"><path d="M650 320V100"/><path d="M644 108L650 96L656 108"/></g>
 <text x="668" y="104" class="s">tells you</text><text x="668" y="120" class="s">value</text>

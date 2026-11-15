@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -522,3 +522,27 @@ test('ten mods post shows its labelled use-case figure, real screenshot and vide
   await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/mods"]')).toHaveCount(1);
 });
 
+
+test('refreshed posts show their new figures, sources and corrected numbers', async ({ page, request }) => {
+  await page.goto('/blog/passing-evals-is-not-permission-to-ship', { waitUntil: 'networkidle' });
+  const risk = page.locator('main img[src$="approval-by-risk.webp"]');
+  await expect(risk).toHaveCount(1);
+  expect((await risk.getAttribute('alt'))?.length).toBeGreaterThan(80);
+  expect((await request.head((await risk.getAttribute('src'))!)).status()).toBe(200);
+  await expect(page.locator('main a[href*="cbsnews.com"]')).toHaveCount(1);
+
+  await page.goto('/blog/what-to-spend-on-ai-per-engineer', { waitUntil: 'networkidle' });
+  const worked = page.locator('main img[src$="worked-example.webp"]');
+  await expect(worked).toHaveCount(1);
+  expect((await worked.getAttribute('alt'))?.length).toBeGreaterThan(80);
+  expect((await request.head((await worked.getAttribute('src'))!)).status()).toBe(200);
+  await expect(page.locator('main')).toContainText('no statistically significant gain');
+  await expect(page.locator('main')).not.toContainText('issues resolved rose only 12%');
+  await expect(page.locator('main h2', { hasText: 'Five questions before the budget review' })).toHaveCount(1);
+  await expect(page.locator('main a[href="https://code.claude.com/docs/en/costs"]')).toHaveCount(1);
+
+  await page.goto('/blog/why-i-write-from-the-build-side', { waitUntil: 'networkidle' });
+  for (const slug of ['passing-evals-is-not-permission-to-ship', 'what-to-spend-on-ai-per-engineer', 'ubers-adr-securing-coding-agents']) {
+    await expect(page.locator(`main a[href$="/blog/${slug}/"]`).first()).toBeVisible();
+  }
+});

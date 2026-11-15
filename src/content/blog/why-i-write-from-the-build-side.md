@@ -14,6 +14,14 @@ Most of what I read about AI comes from two places. Researchers explain what mod
 
 That is where I spend my time. As an Engineering Leader, the question in front of me is rarely "is this model impressive?" It is "will this hold up in production, what will it cost to run, and who owns it when it breaks?"
 
+That gap shows up in the data. In Google's 2025 DORA research, a survey of nearly 5,000 technology professionals, around 90% now use AI in their work. Yet in Stack Overflow's 2025 developer survey, 46% of developers said they distrust the accuracy of AI tools, and only 3% said they highly trust the output. Adoption is nearly universal. Confidence isn't. DORA also found that delivery instability keeps rising alongside AI adoption, even as throughput improves.
+
+The space between those numbers is where engineering leaders work every day. In practice it looks like questions such as these, each of which became a post:
+
+- An agent passes every eval. Who signs off before it ships, and for which kinds of change? ([Passing evals is not permission to ship](/blog/passing-evals-is-not-permission-to-ship/))
+- Finance asks what the AI budget buys. Which metric survives that conversation, when pull requests inflate and resolved work doesn't? ([What should you spend on AI per engineer?](/blog/what-to-spend-on-ai-per-engineer/))
+- Engineers already run coding agents on their laptops. What should security actually watch? ([What Uber's ADR shows about securing the coding agents your engineers already use](/blog/ubers-adr-securing-coding-agents/))
+
 This blog is for engineering leaders and technology executives asking the same questions.
 
 ## What I'll write about
@@ -36,3 +44,11 @@ I'll also avoid two things that dominate AI writing today: predictions without e
 New posts appear here first, and I share each one on LinkedIn and X. If you use a feed reader, the RSS link is at the bottom of every page.
 
 If there's a question you'd like me to take on, message me on LinkedIn. The most useful posts usually start as someone else's question.
+
+---
+
+**Sources**
+
+- [InfoQ: DORA 2025 State of AI-assisted Software Development, with Stack Overflow 2025 trust data](https://www.infoq.com/news/2025/09/dora-state-of-ai-in-dev-2025) (September 2025)
+
+*Updated 15 November 2026: added the adoption and trust data, and three example questions linking to posts that answer them.*
