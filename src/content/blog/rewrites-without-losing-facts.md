@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/rewrites-without-losing-facts.png
   thumb: ../../assets/covers/rewrites-without-losing-facts-thumb.png
-  alt: "A rewrite can sound better and change the promise. On Vectara's hallucination leaderboard, small models summarising the same 7,700 articles range from 5.7% for Qwen3 4B and 6.4% for Gemma 3 4B to 23.5% for Phi-4-mini. Keep version, plan and audience in protected fields, rewrite only the prose, and grade factual changes separately from style."
+  alt: "A rewrite can sound better and change the promise. Source: Version 4.2 adds CSV export for admins on Pro. A small-model rewrite says it is available to everyone, which changes the scope. Version, plan and audience are kept as fixed fields. On Vectara's leaderboard, hallucination on the same summaries is 5.7% for Qwen3 4B, 6.4% for Gemma 3 4B and 23.5% for Phi-4-mini."
 ---
 
 A team ships dozens of release notes a month. Engineers write them, accurately but unevenly: some are three words, some are a paragraph of internal jargon. A compact instruction model could turn each one into clean, consistent, customer-facing copy.

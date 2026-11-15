@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/founders-case-for-an-slm-pilot.png
   thumb: ../../assets/covers/founders-case-for-an-slm-pilot-thumb.png
-  alt: "Start with a job someone already pays for. MIT NANDA found about 95% of enterprise generative AI pilots deliver little measurable P&L impact, and the biggest returns came from back-office work. A two-week pilot: days 1 to 3 observe and time the work, days 4 to 7 build a template and a small-model draft, days 8 to 14 run beside the existing workflow and ask for paid terms."
+  alt: "Start with a job someone already pays for. One paid workflow, such as 300 approved product listings a week, and a 14-day pilot: days 1 to 3 observe and time the work, days 4 to 7 build a template and a small-model draft, days 8 to 14 run beside the current workflow and ask for paid terms. MIT NANDA found about 95% of GenAI pilots showed little measurable P&L impact."
 ---
 
 If I had two weeks to test a small-model business, I wouldn't start with the model. I'd start with an invoice, a ticket or a product listing that someone already pays a person to produce, and a buyer willing to show me how long it takes today.

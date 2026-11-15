@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/small-models-for-app-commands.png
   thumb: ../../assets/covers/small-models-for-app-commands-thumb.png
-  alt: "The model proposes, the app decides. FunctionGemma is a 270M model for function calling. Google reports fine-tuning lifted its mobile actions accuracy from a 58% baseline to 85%. Start with three reversible actions, then resolve IDs, check access and confirm in your own code."
+  alt: "The model proposes, your app decides. A spoken request, show incomplete items in the morning checklist, goes to FunctionGemma 270M, which proposes filter_checklist with checklist morning and incomplete_only true. The app resolves morning to checklist-21, checks the user can see it and that the action is reversible. Fine-tuning lifted Google's mobile actions eval from 58% to 85%."
 ---
 
 A warehouse worker, gloves on, says: "Show incomplete items in the morning checklist."

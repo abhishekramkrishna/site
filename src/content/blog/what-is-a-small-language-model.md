@@ -7,7 +7,7 @@ draft: false
 cover:
   image: ../../assets/covers/what-is-a-small-language-model.png
   thumb: ../../assets/covers/what-is-a-small-language-model-thumb.png
-  alt: "Small is a model choice, hosting is a deployment choice. Gartner expects organisations to use small, task-specific models three times more than general-purpose LLMs by 2027. NVIDIA researchers put serving a 7B model at 10 to 30 times cheaper than a 70 to 175B one. Start with a frequent, bounded decision that is cheap to verify."
+  alt: "Small is a model choice. Hosting is a deployment choice. Model sizes from 135M to 4B parameters, and one bounded job (label, extract or pick an action) that can run behind a hosted API, in a private service or on a phone or edge device. Serving a 7B model is 10 to 30 times cheaper than a 70 to 175B one, per NVIDIA Research."
 ---
 
 A support team wants to label 20,000 incoming tickets a month. Every ticket gets one of six labels, or goes to a person for review. Nobody needs the model to write poetry, reason about tax law or remember the conversation. It needs to make one bounded decision, quickly and cheaply, thousands of times a day.
