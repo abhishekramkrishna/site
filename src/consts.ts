@@ -40,3 +40,13 @@ export const PILLARS = [
     blurb: 'Code review, hiring and team design when AI writes a lot of the code.',
   },
 ];
+
+// Series and topics that get a filter on the blog page, beyond the four pillars.
+// They don't appear as pillars on the home page.
+export const TOPICS = [
+  {
+    tag: 'small-models',
+    title: 'Small language models',
+    blurb: 'Where small models earn their place: routing, extraction, cascades, app commands, rewrites, evals and pilots.',
+  },
+];

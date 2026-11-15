@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side', '/blog/assume-agents-can-read-your-shipped-code', '/blog/what-is-a-small-language-model', '/blog/small-models-for-support-ticket-routing', '/blog/invoice-extraction-needs-evidence', '/blog/when-a-small-model-first-pass-saves-money', '/blog/small-models-for-app-commands', '/blog/rewrites-without-losing-facts', '/blog/evaluate-small-models-by-what-they-send-to-review', '/blog/founders-case-for-an-slm-pilot'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/tags/small-models', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side', '/blog/assume-agents-can-read-your-shipped-code', '/blog/what-is-a-small-language-model', '/blog/small-models-for-support-ticket-routing', '/blog/invoice-extraction-needs-evidence', '/blog/when-a-small-model-first-pass-saves-money', '/blog/small-models-for-app-commands', '/blog/rewrites-without-losing-facts', '/blog/evaluate-small-models-by-what-they-send-to-review', '/blog/founders-case-for-an-slm-pilot'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -579,4 +579,21 @@ test('small language models series: every part links the series, cites its sourc
     if (i < series.length - 1) await expect(page.locator(`main a[href$="/blog/${series[i + 1][0]}/"]`).first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   }
+});
+
+test('blog page filters include the small language models series', async ({ page }) => {
+  await page.goto('/blog');
+  const filter = page.locator('.filters a', { hasText: 'Small language models' });
+  await expect(filter).toHaveCount(1);
+  await filter.click();
+  await expect(page).toHaveURL(/\/tags\/small-models\/?$/);
+  await expect(page.locator('h1')).toContainText('Small language models');
+  const listed = await page.locator('main .card').evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
+  const series = ['what-is-a-small-language-model', 'small-models-for-support-ticket-routing', 'invoice-extraction-needs-evidence', 'when-a-small-model-first-pass-saves-money', 'small-models-for-app-commands', 'rewrites-without-losing-facts', 'evaluate-small-models-by-what-they-send-to-review', 'founders-case-for-an-slm-pilot'];
+  for (const slug of series) expect(listed.some((h) => h.includes(`/blog/${slug}`)), slug).toBe(true);
+  expect(listed).toHaveLength(series.length);
+
+  // The series is a blog filter, not a fifth home-page pillar
+  await page.goto('/');
+  await expect(page.locator('.pillars > li')).toHaveCount(4);
 });
