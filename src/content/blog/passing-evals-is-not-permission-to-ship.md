@@ -38,6 +38,8 @@ An evaluation suite is a set of known cases, written by people who already under
 
 There is a subtler problem too. The survey notes that "a fast, confidently wrong response can produce a clean trace and a 200 status code." In other words, every technical signal says the agent worked, even when the answer was wrong. Most monitoring was built to catch systems that fail loudly. Agents tend to fail quietly and plausibly.
 
+This isn't hypothetical. In February 2024, a Canadian tribunal held Air Canada liable for a bereavement refund policy that its website chatbot had made up. The airline argued the chatbot was responsible for its own words; the tribunal disagreed. Every technical signal would have shown that conversation as a success: the bot answered quickly, confidently and without an error. The failure only surfaced when the customer asked for the refund.
+
 ## Two decisions, not one
 
 The most useful line in the report is this: "automating evaluation and automating deployment approval are different decisions."
@@ -46,6 +48,15 @@ Many teams have treated them as one. Once evaluation is automated, approval foll
 
 - **Automate evaluation as far as you can.** Run it on every change, track it over time, and treat a falling score as a blocking signal.
 - **Decide approval by risk, not by score.** Low-risk, easily reversible changes can ship on evaluations. Anything irreversible, financial or customer-visible needs a named person to sign off, regardless of how well the agent scored.
+
+One question sorts most changes: **if this is wrong, can we undo it in minutes, and would a customer notice?**
+
+- **Ships on evaluations:** test fixes and flaky-test repairs, documentation, internal tooling, refactors behind a feature flag, prompt changes to an internal assistant. If any of these is wrong, you roll it back and nobody outside the team notices.
+- **Needs a named person:** database migrations and deletes, anything touching payments, refunds or pricing, authentication and permission changes, and answers that state customer-facing policy. These are the changes where a wrong answer costs money, data or trust before anyone can roll it back.
+
+The same agent can sit on both sides of the line. An agent that ships a flaky-test fix on a green suite should still wait for an approver when it changes a refund rule, however well it scored.
+
+![Decide approval by risk, not by score. Ask whether a wrong change can be undone in minutes and whether a customer would notice. Ships on evals: test fixes, docs and internal tooling, refactors behind a feature flag, prompt changes to an internal assistant. Needs a named person: database migrations and deletes, payments, refunds and pricing, auth and permission changes, answers that state customer-facing policy.](/images/blog/passing-evals-is-not-permission-to-ship/approval-by-risk.webp)
 
 ## What to put in place
 
@@ -64,3 +75,6 @@ For the right category of change, human approval is the control that lets you mo
 **Sources**
 
 - [VentureBeat: the share of enterprises trusting AI agents to make production changes on their own has fallen from 75% to 56%](https://venturebeat.com/orchestration/the-share-of-enterprises-trusting-ai-agents-to-make-production-changes-on-their-own-has-fallen-from-75-to-56-vb-intelligence-finds) (October 2026)
+- [CBS News: Air Canada chatbot gave a customer wrong information, and the airline had to pay](https://www.cbsnews.com/news/aircanada-chatbot-discount-customer) (February 2024)
+
+*Updated 15 November 2026: added the Air Canada ruling, a question for sorting changes by risk, concrete examples on each side of the line and a figure.*
