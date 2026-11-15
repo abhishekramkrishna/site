@@ -257,6 +257,20 @@ h1 em{font-style:normal;font-family:Serif,serif;font-weight:440;letter-spacing:-
 .thumb .flow .col li{font-size:36px;padding:16px 0}
 .thumb .flow .col h3{font-size:26px}
 .thumb .flow .col.why{display:none}
+
+/* Agent memory series: four numbered steps, the last one highlighted */
+.mem{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.mem li{background:var(--card);border:1.5px solid var(--line);border-top:5px solid var(--teal);border-radius:16px;padding:28px 26px 30px;display:flex;flex-direction:column;gap:12px;min-height:250px;box-shadow:0 20px 40px rgba(4,14,26,.3)}
+.mem li:last-child{border-color:var(--gold);background:#1f3a4f}
+.mem .n{font:500 21px Mono,monospace;color:var(--teal);letter-spacing:.04em}
+.mem li:last-child .n{color:var(--gold)}
+.mem b{font-size:30px;font-weight:620;line-height:1.22;text-wrap:balance}
+.mem span{font-size:22px;line-height:1.35;color:var(--soft)}
+.thumb .mem{grid-template-columns:1fr 1fr;gap:18px}
+.thumb .mem li{padding:22px 24px;gap:10px;min-height:0}
+.thumb .mem .n{font-size:22px}
+.thumb .mem b{font-size:33px}
+.thumb .mem span{font-size:25px}
 </style>
 </head>
 <body>
@@ -274,6 +288,8 @@ const bar = (label, value, max, cls = '') => `<div class="bar"><div class="lab">
 const verdict = (big, d = '') => `<div class="tile verdict"><div class="k">Decision</div><div class="big">${big}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
 const mp = (from, to) => `<span class="a">${from}</span><span class="ar">→</span><span class="b">${to}</span>`;
 const tile = ({ k, big, ba = '', d = '', hi = false }) => `<div class="tile${hi ? ' hi' : ''}"><div class="k">${k}</div><div class="big">${big}</div>${ba ? `<div class="ba">${ba}</div>` : ''}${d ? `<div class="d">${d}</div>` : ''}</div>`;
+
+const memSteps = (steps) => `<ol class="mem">${steps.map(([k, v], i) => `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><b>${k}</b><span>${v}</span></li>`).join('')}</ol>`;
 
 // Each post: kick (topic chip), title (with an <em> highlight), optional sub, body() and src (source line).
 // Keep every number identical to the post it summarises.
@@ -416,6 +432,90 @@ const COVERS = {
         ${tile({ k: 'Pre-prompt secret hook', big: '97.2%', ba: 'precision, no model involved' })}
       </div><div class="strip"><b>Cheap triage for everything, a reasoning agent for the rest, and simple checks before the prompt leaves the machine.</b></div>`,
     src: 'Uber, "ADR: An Agentic Detection System for Enterprise Agentic AI Security", MLSys 2026, and github.com/uber/ADR. Read 4 Nov 2026.',
+  },
+
+  'four-types-of-agent-memory': {
+    kick: "Agent memory · The four kinds of memory an AI agent needs",
+    title: "What should an agent remember <em>on Monday morning?</em>",
+    body: () => `${memSteps([["What am I doing now?", "Working context: the next safe task"], ["What is true today?", "Semantic memory: the account’s default"], ["What happened last time?", "Episodic memory: the failed walkthrough"], ["How should I do this?", "Procedural memory: the approved playbook"]])}${T ? '' : '<div class="strip"><b>Start with one handoff.</b> Close the session, restart the worker, and check the agent resumes at the right step with current facts.</div>'}`,
+    src: 'Agent memory series, 1 of 12. Demo: agent-harness-lab, examples/memory_demos.py 01.',
+  },
+
+  'compaction-continuation-test': {
+    kick: "Agent memory · How context compaction works in AI agents",
+    title: "“Rollout ready.” <em>The approval is still pending.</em>",
+    body: () => `${memSteps([["Before compaction", "Long chat, tool results, approval pending"], ["Risky reduction", "“Rollout ready” loses the approval condition"], ["State-aware compaction", "Keep goal, evidence, and pending approval"], ["Continuation test", "Draft the checklist. Block production."]])}${T ? '' : '<div class="strip"><b>Make continuation the release gate.</b> Replay the next step before and after compaction: draft the sandbox checklist, hold the production change.</div>'}`,
+    src: 'Agent memory series, 2 of 12. Demo: agent-harness-lab, examples/memory_demos.py 02.',
+  },
+
+  'refreshing-stale-summaries': {
+    kick: "Agent memory · How to keep an agent’s summaries up to date",
+    title: "The project says Monday. <em>The summary still says Friday.</em>",
+    body: () => `${memSteps([["Source correction", "Friday becomes Monday"], ["Refresh the dependency", "Rebuild the schedule digest and its parent"], ["Fence stale results", "Reject a write from the older revision"], ["Replay the decision", "The agent uses Monday after two compactions"]])}${T ? '' : '<div class="strip"><b>Version the inputs, replay the correction.</b> A schedule change rebuilds two keys and reuses the training digest.</div>'}`,
+    src: 'Agent memory series, 3 of 12. Demo: agent-harness-lab, examples/memory_demos.py 03.',
+  },
+
+  'who-can-write-agent-memory': {
+    kick: "Agent memory · What should an AI agent remember permanently?",
+    title: "A one-off instruction <em>is not a preference.</em>",
+    body: () => `${memSteps([["Run instruction", "“Use sandbox for this demo” stays in the run"], ["Durable preference", "Verified owner sets the account default"], ["Source check", "Verify identity, field, scope, and evidence"], ["Commit the update", "Deduplicate the event and check revision"]])}${T ? '' : '<div class="strip"><b>Treat a memory write as a product action.</b> Only the account owner, for an allowed field and scope, can set a durable default.</div>'}`,
+    src: 'Agent memory series, 4 of 12. Demo: agent-harness-lab, examples/memory_demos.py 04.',
+  },
+
+  'time-aware-semantic-memory': {
+    kick: "Agent memory · How AI agents should handle facts that change over time",
+    title: "Who owned the account on March 14? <em>It depends when you ask.</em>",
+    body: () => `${memSteps([["March 12", "Noor becomes the account owner"], ["March 14", "CRM still shows Riya"], ["March 16", "CRM records the correction"], ["Two correct answers", "Riya as known then. Noor in corrected history."]])}${T ? '' : '<div class="strip"><b>Use two clocks when knowledge and reality can diverge.</b> Known on March 14: Riya. Corrected history: Noor.</div>'}`,
+    src: 'Agent memory series, 5 of 12. Demo: agent-harness-lab, examples/memory_demos.py 05.',
+  },
+
+  'retrieving-decisive-memory': {
+    kick: "Agent memory · How to retrieve the fact that changes an agent’s decision",
+    title: "The right guide, <em>the wrong answer.</em>",
+    body: () => `${memSteps([["Resolve the target", "Identify the account, environment, and feature"], ["Fetch current policy", "ACME-EU is sandbox-only"], ["Add supporting context", "Find relevant guides within the evidence budget"], ["Check execution", "Authorize the exact action and resource"]])}${T ? '' : '<div class="strip"><b>Measure recall at the budget you ship.</b> A record at rank 20 helps only if it reaches the model before the tool call.</div>'}`,
+    src: 'Agent memory series, 6 of 12. Demo: agent-harness-lab, examples/memory_demos.py 06.',
+  },
+
+  'when-memory-needs-a-graph': {
+    kick: "Agent memory · When does an AI agent need a memory graph?",
+    title: "Write the impact question <em>before you buy the graph.</em>",
+    body: () => `${memSteps([["Start with the question", "Which pilots lose an approved dependency?"], ["Follow the evidence path", "Pilot → tenant → integration → approval"], ["Compare the alternatives", "Joins, hybrid retrieval, and graph traversal"], ["Test difficult cases", "Renamed services, retired edges, restricted pilots"]])}${T ? '' : '<div class="strip"><b>Choose the simplest representation</b> that returns correct, permissioned evidence paths at the freshness users need.</div>'}`,
+    src: 'Agent memory series, 7 of 12. Demo: agent-harness-lab, examples/memory_demos.py 07.',
+  },
+
+  'from-episodes-to-procedures': {
+    kick: "Agent memory · How AI agents can learn from past failures",
+    title: "“Always skip the permissions screen” <em>is an expensive lesson.</em>",
+    body: () => `${memSteps([["Record episodes", "Two walkthroughs stopped on permissions"], ["Propose a narrow lesson", "Verify the required sandbox permission first"], ["Replay counterexamples", "Check admins who already have access"], ["Release a version", "Approve, observe, and keep a rollback path"]])}${T ? '' : '<div class="strip"><b>Release a lesson when it survives counterexamples.</b> Keep the episodes, the procedure version and the rollback path together.</div>'}`,
+    src: 'Agent memory series, 8 of 12. Demo: agent-harness-lab, examples/memory_demos.py 08.',
+  },
+
+  'crash-recovery-and-receipts': {
+    kick: "Agent memory · How an AI agent can resume after a crash without duplicating work",
+    title: "Did the write happen? <em>Ask the receipt, not the transcript.</em>",
+    body: () => `${memSteps([["Persist intent", "Save the operation ID before dispatch"], ["Provider commits", "The checklist is created, then the worker crashes"], ["Reconcile", "Look up the effect or retry with the same key"], ["Resume from receipt", "One checklist and a completed workflow step"]])}${T ? '' : '<div class="strip"><b>Test the crash window.</b> Crash after the provider commits and before the receipt is saved. Restart. Expect exactly one checklist.</div>'}`,
+    src: 'Agent memory series, 9 of 12. Demo: agent-harness-lab, examples/memory_demos.py 09.',
+  },
+
+  'live-authorization-for-agent-memory': {
+    kick: "Agent memory · What should an AI agent do when access changes mid-run?",
+    title: "Approved yesterday. <em>Revoked five minutes ago.</em>",
+    body: () => `${memSteps([["Context loaded", "Agent sees a prior export approval"], ["Role revoked", "Current authorization changes"], ["Tool invoked", "Gateway checks the principal, action, and resource"], ["Outcome", "Deny the export and recheck evidence access"]])}${T ? '' : '<div class="strip"><b>Make mid-run revocation a release test.</b> Load context, revoke the role, retry: the export is denied and the evidence is no longer readable.</div>'}`,
+    src: 'Agent memory series, 10 of 12. Demo: agent-harness-lab, examples/memory_demos.py 10.',
+  },
+
+  'deleting-derived-memory': {
+    kick: "Agent memory · What happens when a user asks an AI agent to forget?",
+    title: "Deleted from the UI. <em>Still in the summary.</em>",
+    body: () => `${memSteps([["Source removed", "Record the deletion and hide the fact"], ["Derived copies", "Block summaries, indexes, and caches"], ["Stale rebuild", "Refuse writes from the deleted generation"], ["Fresh-session test", "Verify the fact stays out of recall"]])}${T ? '' : '<div class="strip"><b>Track lineage through every copy that feeds recall.</b> Once a user removes a preference, a replay should not teach it back.</div>'}`,
+    src: 'Agent memory series, 11 of 12. Demo: agent-harness-lab, examples/memory_demos.py 11.',
+  },
+
+  'evaluating-agent-memory': {
+    kick: "Agent memory · How to evaluate whether agent memory improves the product",
+    title: "More successes <em>can still fail the release.</em>",
+    body: () => `${memSteps([["Set a baseline", "Recent history, full context, digest, retrieval"], ["Grade each stage", "Saved fact, retrieved evidence, chosen action"], ["Enforce release gates", "Inspect critical violations individually"], ["Measure business value", "Cost per success and repeated customer input"]])}${T ? '' : '<div class="strip"><b>Gate high-severity failures separately.</b> Pair offline scores with how often customers repeat information after rollout.</div>'}`,
+    src: 'Agent memory series, 12 of 12. Demo: agent-harness-lab, examples/memory_demos.py 12.',
   },
 
   'assume-agents-can-read-your-shipped-code': {

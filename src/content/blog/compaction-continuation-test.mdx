@@ -1,0 +1,124 @@
+---
+title: "How context compaction works in AI agents"
+description: "Context compaction shrinks what the model carries forward, and a well-written summary can still drop a pending approval. Five ways to free context, a state contract to carry through it, and the continuation test I would make the release gate."
+pubDate: 2026-11-18
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/compaction-continuation-test.png
+  thumb: ../../assets/covers/compaction-continuation-test-thumb.png
+  alt: "“Rollout ready.” The approval is still pending. Before compaction: Long chat, tool results, approval pending. Risky reduction: “Rollout ready” loses the approval condition. State-aware compaction: Keep goal, evidence, and pending approval. Continuation test: Draft the checklist. Block production."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/compaction-continuation-test`;
+
+
+An onboarding agent completes a long account walkthrough. It compacts the transcript and resumes with this summary: “The rollout plan is ready.”
+
+That sounds accurate. The original conversation also said that production changes require approval, and the approval is still pending.
+
+I’d test compaction by asking whether the agent can safely take its next step after the transition. For this workflow I’d carry forward five fields: the goal, hard constraints, decisions with evidence, pending approvals, and the next safe action.
+
+There are two layers I’d design explicitly. The model gets a smaller working context. The application still owns the approval state and checks it when a tool is called. A beautifully worded summary can still omit a precondition.
+
+My first eval would replay the same walkthrough before and after compaction. Could the agent prepare the sandbox checklist in both runs? Did both runs hold the production change? Did the evidence links survive? Then I’d measure the input tokens and latency saved.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Compaction is safe when the next action is."}
+    steps={[
+    ["Before compaction", "Long chat, tool results, approval pending"],
+    ["Risky reduction", "“Rollout ready” loses the approval condition"],
+    ["State-aware compaction", "Keep goal, evidence, and pending approval"],
+    ["Continuation test", "Draft the checklist. Block production."],
+    ]}
+    note={"The model gets a smaller working context. The application still owns the approval state and checks it when a tool is called."}
+  />
+</Figure>
+
+<video controls preload="none" playsinline muted poster={`${media}/explainer-poster.jpg`} src={`${media}/explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="20-second silent explainer with on-screen text. 00:00 Before compaction: long chat, tool results, approval pending. 00:04 Risky reduction: “Rollout ready” loses the approval condition. 00:08 State-aware compaction: keep goal, evidence, and pending approval. 00:12 Continuation test: draft the checklist, block production."></video>
+
+The 20-second explainer above is silent. Its four scenes are the same four steps as the figure.
+
+## What context compaction changes
+
+Context compaction reduces the information carried into a future model call, usually by replacing or dropping some earlier input. A conversation transcript is a record. A compacted representation is a working input for continuing the task. A separate memory-consolidation pipeline may extract enduring facts or episodes from the transcript. That pipeline has its own write policy and retention lifecycle.
+
+A context window can fill with successful tool results long before the discussion gets complicated. Start by identifying what consumes the budget and what a later step will need.
+
+| Approach | Use it when | Preserve or verify |
+|---|---|---|
+| Trim or clear earlier tool payloads | Results are large, repetitive and retrievable | Keep tool status, evidence IDs and a usable route back to the source |
+| Summarize older discussion | Decisions and rationale span many turns | Retain explicit constraints, unresolved questions and links to original evidence |
+| Carry a typed checkpoint and recent turns | The workflow has measurable state and irreversible actions | Keep exact operation IDs, goals, pending approvals and next actions |
+| Use provider-managed compaction | The model needs continuity across a long, tool-heavy run | Follow its continuation protocol and keep app-owned state independently verifiable |
+| Rehydrate older evidence on demand | A next step sometimes needs details outside the recent window | Recheck freshness and access before using results |
+
+These approaches can be combined. For an onboarding agent I’d first replace verbose tool returns with receipts and references. I’d then compact older discussion while retaining recent user turns and a typed checkpoint. OpenAI documents a provider-managed Responses API compaction option, and Anthropic describes compaction alongside structured note-taking and other context-management techniques. [OpenAI](https://developers.openai.com/api/docs/guides/compaction) · [Anthropic](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents)
+
+## Validate three things before rollout
+
+**Structural fidelity.** Require the goal, constraints, outstanding approvals, and evidence pointers. Verify that pointers resolve, and reject a candidate built against an outdated source revision. Keep the last usable checkpoint if compacting fails. A schema check can catch omitted fields, while the next two tests cover behavior.
+
+**Decision fidelity.** At the same workflow boundary, fork the run and replay the next decision using the original context where it fits and the compacted context. Grade both against expected behavior rather than assuming the full-context run is correct. Include constraints early and late in the transcript, a correction before the compaction boundary, two successive compactions, and an approval change between context assembly and execution.
+
+**Operational cost.** Count compaction calls and their latency along with the next generation. Track a failed or timed-out compaction, any repeated token costs, and time to the first useful action. Choose a trigger from measured token usage with headroom for the next tool result and model output. During rollout, log what was compacted and which checkpoint revision was used, subject to the application’s retention rules.
+
+| Fixture | Expected action | Expected gateway outcome |
+|---|---|---|
+| Pending approval was mentioned early | Draft the sandbox checklist | Hold the production change |
+| Launch date corrected from Friday to Monday | Use Monday after two compactions | Scope any request to the corrected plan |
+| Approval revoked after context assembly | Reconcile with current approval state | Reject the production action |
+| Compaction candidate fails validation | Rebuild from a usable checkpoint or pause | Prevent actions with unresolved preconditions |
+
+### Give compaction a state contract
+
+Suppose the last hour produced a walkthrough, two tool results, a revised checklist and a deferred production change. I’d carry this envelope alongside the compacted narrative:
+
+```yaml
+goal: prepare rollout
+verified_decision:
+  environment: sandbox
+  evidence_id: rollout-record-42
+approval:
+  change_id: rollout-prod-17
+  status_at_checkpoint: pending
+next_safe_action: draft sandbox checklist
+```
+
+The approval field helps the model plan. Just before execution, the tool fetches the live approval status for the exact change. If the approval service is unavailable, the agent can keep drafting and hold the production change. The compacted narrative can carry exploratory history and trade-offs that would be cumbersome to model as fields.
+
+### Compare the same decision across compaction modes
+
+I’d replay identical runs with the full prefix when it fits, a rolling summary, and a compacted context with app-owned state. Keep the model, tools and underlying records fixed. Put critical information early, late and in the middle of the original conversation. Add a case where approval changes between compaction and execution. Record four outcomes:
+
+- Whether the agent chose the expected next action.
+- Whether the gateway accepted only allowed actions.
+- Whether the agent cited evidence that still resolves.
+- How input tokens, compression work and continuation latency changed.
+
+Compaction needs room to run. Set its threshold from a budget that reserves space for tool responses and the next output, then test a workload that produces a burst of both. If a rewritten prefix takes longer to process, count that overhead in the latency comparison.
+
+**Try it.** Remove the hard constraint from the compacted fixture. Confirm that validation rejects the candidate, then test the same blocked action with a correctly formed checkpoint and a pending live approval.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 02
+```
+
+## Conclusion
+
+Choose the smallest change that frees the needed context, and carry authoritative business state through the transition. Make continuation behavior the release gate, then optimize the cost of passing it.
+
+<MemorySeries current="compaction-continuation-test" />
+
+## Further reading
+
+Anthropic describes compaction and structured note-taking as context-management techniques. OpenAI’s Responses API offers compaction items to carry model state across a reduced context, including a documented server-side option. Keep business-critical state as app-owned data even when the provider supplies a compaction item. Long-context position effects were observed on specific tasks and models in *Lost in the Middle*. Benchmark your own model and workload. [Anthropic](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents) · [OpenAI](https://developers.openai.com/api/docs/guides/compaction) · [Lost in the Middle](https://arxiv.org/abs/2307.03172)

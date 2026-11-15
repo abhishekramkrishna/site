@@ -1,0 +1,78 @@
+---
+title: "How AI agents can learn from past failures"
+description: "Two failed walkthroughs can teach an agent the wrong lesson. How to keep failures as episodes, turn a reflection into a narrow hypothesis, replay it against counterexamples, and release it as a versioned procedure with a rollback path."
+pubDate: 2026-11-21
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/from-episodes-to-procedures.png
+  thumb: ../../assets/covers/from-episodes-to-procedures-thumb.png
+  alt: "“Always skip the permissions screen” is an expensive lesson. Record episodes: Two walkthroughs stopped on permissions. Propose a narrow lesson: Verify the required sandbox permission first. Replay counterexamples: Check admins who already have access. Release a version: Approve, observe, and keep a rollback path."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+The onboarding agent sees two failed walkthroughs. Both fail at the permissions screen. Its reflection says, “Always skip the permissions screen.”
+
+That’s an expensive lesson to learn from two incidents.
+
+I’d let the agent keep both failures as episodes. It can then propose a narrower lesson: “When a new admin is setting up a sandbox, verify the required permission before starting the walkthrough.” I’d attach the incidents, replay the proposal against similar cases, and include a case where the permission screen is required.
+
+A lesson that passes can enter a versioned playbook through a release process. The next onboarding run should be able to say which version it used. If the new procedure causes regressions, the team should be able to roll back the version.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"From two incidents to a versioned playbook."}
+    steps={[
+    ["Record episodes", "Two walkthroughs stopped on permissions"],
+    ["Propose a narrow lesson", "Verify the required sandbox permission first"],
+    ["Replay counterexamples", "Check admins who already have access"],
+    ["Release a version", "Approve, observe, and keep a rollback path"],
+    ]}
+    note={"One failing counterexample holds promotion, even with an approver present."}
+  />
+</Figure>
+
+For a founder, this is a practical way to compound knowledge from customer work. For the engineering team, it creates a clear boundary between an observation, a hypothesis, and an approved change in behavior.
+
+### Require a lesson to survive counterexamples
+
+I’d put the hypothesis in a reviewable record: “For a newly provisioned sandbox admin, verify permission X before starting the walkthrough.” Include the triggering episodes, the environment and product versions, the expected outcome, and the scope where the rule applies.
+
+Then run it against cases that challenge the hypothesis:
+
+| Replay | Expected behavior |
+|---|---|
+| New admin lacks the required permission | Stop before the walkthrough and identify the missing prerequisite |
+| Admin already has the permission | Continue without adding an unnecessary handoff |
+| A production approval is pending | Preserve the approval gate |
+| A different permissions error occurred | Diagnose from that case’s evidence |
+
+Separate the cases used to discover the lesson from the cases used to release it. Closely related copies of the same incident make a proposed procedure look more general than it is. For hard requirements, grade action and tool receipts. For clarity or user experience, calibrate any model-based grader against examples a human reviewer has labeled.
+
+### Publish the behavior change like a release
+
+Version the procedure and record who approved it. Run it on a limited set of eligible accounts first. Compare successful walkthroughs, extra prompts, time spent and blocked or prohibited actions with the existing version. Keep the previous version available and record which version each run actually used. That makes a rollback and a post-release investigation possible.
+
+**Try it.** Give the promotion demo two episodes and a passing replay, then add a single counterexample. Promotion should hold even with an approver present.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 08
+```
+
+## Conclusion
+
+Release a lesson when it can survive counterexamples and its effects can be measured. Keep the episodes, procedure version, and rollback path together.
+
+<MemorySeries current="from-episodes-to-procedures" />
+
+## Further reading
+
+*Generative Agents* synthesizes events into reflections and reports ablations for believability in a simulated environment. That evidence motivates an observation-to-reflection loop. The approval and evaluation requirements here are product controls for procedural changes. [Generative Agents](https://arxiv.org/abs/2304.03442) · [CoALA](https://arxiv.org/abs/2309.02427)

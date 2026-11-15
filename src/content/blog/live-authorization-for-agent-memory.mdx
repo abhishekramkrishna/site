@@ -1,0 +1,75 @@
+---
+title: "What should an AI agent do when access changes mid-run?"
+description: "An agent remembers that export was approved yesterday. Its access was revoked five minutes ago. Why remembered statements are evidence, not permission, and how to check authorization at ingestion, retrieval and execution."
+pubDate: 2026-11-22
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/live-authorization-for-agent-memory.png
+  thumb: ../../assets/covers/live-authorization-for-agent-memory-thumb.png
+  alt: "Approved yesterday. Revoked five minutes ago. Context loaded: Agent sees a prior export approval. Role revoked: Current authorization changes. Tool invoked: Gateway checks the principal, action, and resource. Outcome: Deny the export and recheck evidence access."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+A support agent reads a customer-uploaded meeting note and later remembers: “Export access has been approved.”
+
+Would you let it initiate an export on the next run?
+
+I’d allow the note to remain evidence that someone said it. When the agent attempts an export, the tool gateway should ask the current authorization service. If the tool permission was revoked five minutes ago, that decision takes precedence over anything still in the context window.
+
+The memory pipeline needs two checks. On write, verify which sources can assert which facts. On read, verify that the principal can still access the memory and its evidence. A tool that changes state or sends data needs its own execution-time authorization check.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Remembered approval is evidence, not permission."}
+    steps={[
+    ["Context loaded", "Agent sees a prior export approval"],
+    ["Role revoked", "Current authorization changes"],
+    ["Tool invoked", "Gateway checks the principal, action, and resource"],
+    ["Outcome", "Deny the export and recheck evidence access"],
+    ]}
+    note={"The live authorization decision takes precedence over anything still in the context window."}
+  />
+</Figure>
+
+A good release test starts with a normal customer handoff. Revoke a role after the agent loads context, then retry the action. Measure the tool outcome and whether the agent surfaces any evidence it can no longer access.
+
+### Give each boundary a current authorization decision
+
+In this example there are three distinct questions. Who can record an approval? Who can read the note and its evidence? Who can actually export the data? A customer note may answer who said something in a meeting. The application determines whether that person can commit an approval for that operation and account.
+
+I’d implement three checks in the product:
+
+1. On ingestion, associate source data with a verified account and grant authority to specific sources and fields.
+2. On retrieval, apply current access to the memory item and its evidence before either is assembled into context.
+3. At execution, authorize the authenticated principal for the exact action and resource using live policy.
+
+A fourth boundary matters when the agent already loaded evidence and access changes while generating a response. Design the assistant to revalidate evidence before rendering or handing off sensitive claims. Use appropriate cache invalidation and generation controls for your streaming behavior. Data already shown to someone cannot be recalled by a later permission check.
+
+### Verify revocation as a state transition
+
+Run the same request before and after revocation. Revoke access after retrieval but before tool execution, then repeat from a fresh session. Check the tool receipt, the response’s evidence references and what the trace displays to the operator. Keep account and action identities explicit in the audit record so failures can be traced to the right boundary.
+
+**Try it.** Remove the grant while the remembered phrase is still in the fixture. Confirm both the evidence read and the tool check now fail. The demo uses a scoped in-memory grant to make the behavior easy to inspect.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 10
+```
+
+## Conclusion
+
+Use remembered statements as evidence and check access where data is read or an action is taken. Make mid-run revocation an explicit release test.
+
+<MemorySeries current="live-authorization-for-agent-memory" />
+
+## Further reading
+
+OWASP identifies agent memory manipulation and cross-session leakage risks. The product control here is a deterministic authorization check at use time, alongside scoped ingestion and retrieval. [OWASP agentic risk guidance](https://aivss.owasp.org/assets/publications/AIVSS%20Scoring%20System%20For%20OWASP%20Agentic%20AI%20Core%20Security%20Risks%20v0.8.pdf)

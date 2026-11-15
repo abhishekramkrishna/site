@@ -1,0 +1,91 @@
+---
+title: "The four kinds of memory an AI agent needs"
+description: "Working context, semantic, episodic and procedural memory answer different product questions. How I would map each one for an onboarding agent, and the handoff test that shows whether the first memory feature works."
+pubDate: 2026-11-18
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/four-types-of-agent-memory.png
+  thumb: ../../assets/covers/four-types-of-agent-memory-thumb.png
+  alt: "What should an agent remember on Monday morning? What am I doing now?: Working context: the next safe task. What is true today?: Semantic memory: the account’s default. What happened last time?: Episodic memory: the failed walkthrough. How should I do this?: Procedural memory: the approved playbook."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+Imagine a SaaS onboarding agent handing an account to a new implementation lead. It needs four different things to pick up the work:
+
+- The open task and the approval it’s waiting for.
+- The account’s preferred rollout environment and who confirmed it.
+- The fact that last Tuesday’s walkthrough failed on the permissions screen.
+- The approved playbook for moving from sandbox to production.
+
+The first belongs in working state. The second is semantic memory, a fact about the account. The third is episodic memory, a record of an event. The fourth is procedural knowledge, a versioned way to do the work.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Four questions, four kinds of memory."}
+    steps={[
+    ["What am I doing now?", "Working context: the next safe task"],
+    ["What is true today?", "Semantic memory: the account’s default"],
+    ["What happened last time?", "Episodic memory: the failed walkthrough"],
+    ["How should I do this?", "Procedural memory: the approved playbook"],
+    ]}
+    note={"Each kind changes differently: a preference can be superseded, a playbook retired, an episode corrected. The open task has to survive a restart."}
+  />
+</Figure>
+
+The distinction matters when something changes. A past walkthrough stays part of the history. A rollout preference can be superseded. A playbook can be retired. The open task has to survive a worker restart.
+
+If I were scoping memory for an agent MVP, I’d ask which recurring decision gets better when the agent remembers something. For onboarding, “resume the rollout from the last verified step” gives the team a narrower, more measurable target than “remember the customer.”
+
+## Three places this shows up
+
+| Product | Working context | Semantic memory | Episodic memory | Procedural memory |
+|---|---|---|---|---|
+| Onboarding agent | Pending rollout approval | Preferred demo environment | Previous walkthrough failed | Approved release steps |
+| Support agent | Current ticket and next diagnostic | Account entitlement | Similar incident and resolution | Escalation playbook |
+| Sales assistant | Draft and recipient under review | Customer’s preferred contact channel | Last call and commitments | Follow-up and consent rules |
+
+An agent can serve a single task with only working context. Durable memory earns its place when the product needs to reuse facts, events or procedures across runs.
+
+### Start with one handoff
+
+Imagine the implementation lead opens the account on Monday and asks, “What can I do before the customer approves production?” Here is what I would want the system to load.
+
+| Information | Where I’d put it | What changes it |
+|---|---|---|
+| The run is waiting for production approval | Durable workflow checkpoint | An authorized workflow event |
+| This account defaults to sandbox demos | Versioned account preference | An explicit account-level update |
+| The last walkthrough stopped on the permissions screen | Episode with an environment and outcome | A correction recorded against the episode |
+| Production rollout requires an approval check | Versioned procedure and a tool-side gate | A reviewed procedure or policy release |
+
+The distinction between durable workflow state and working memory matters. The checkpoint survives a restart. A small projection of it enters the next model call. The agent can use that projection to draft a sandbox checklist while the execution gateway independently checks any proposed production change.
+
+### Scope the first release around a decision
+
+I’d start with onboarding handoffs that recur often enough to measure. Give the agent a single cross-session job: resume from the last verified step. Record the run ID, last verified step, open dependency, applicable playbook version, and evidence for each decision the agent carries forward. Pull the current account preference when the run resumes, since it may have changed since the previous session.
+
+Run the same handoff after closing the session, restarting the worker, and transferring the account to another implementation lead. Ask a reviewer to verify the first action and count how often the customer has to restate information. Measure each change separately: the agent might resume successfully yet still get the account preference wrong.
+
+**Try it.** Give two accounts different default environments and similar names. Resume both from distinct checkpoints. The demo should surface each account’s own episode and preference, and retain the correct pending approval.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 01
+```
+
+## Conclusion
+
+Start with one handoff and map each question the agent must answer to its source. The first release succeeds when the agent can resume correctly, use the current customer fact, and explain the next step with evidence.
+
+<MemorySeries current="four-types-of-agent-memory" />
+
+## Further reading
+
+CoALA separates working memory from semantic, episodic, and procedural memory. In product code, a ticket and a run checkpoint can support the same task while having different retention and update rules. The mapping above is a design choice. [CoALA](https://arxiv.org/abs/2309.02427) · [MemGPT](https://arxiv.org/abs/2310.08560)

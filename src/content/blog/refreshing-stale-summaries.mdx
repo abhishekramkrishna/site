@@ -1,0 +1,73 @@
+---
+title: "How to keep an agent’s summaries up to date"
+description: "A summary built from old state can survive every compaction and keep the agent on the wrong date. How to make summaries rebuildable from versioned sources, fence stale rebuilds, and replay a correction to prove it reached the decision."
+pubDate: 2026-11-19
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/refreshing-stale-summaries.png
+  thumb: ../../assets/covers/refreshing-stale-summaries-thumb.png
+  alt: "The project says Monday. The summary still says Friday. Source correction: Friday becomes Monday. Refresh the dependency: Rebuild the schedule digest and its parent. Fence stale results: Reject a write from the older revision. Replay the decision: The agent uses Monday after two compactions."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+A customer moves a rollout from Friday to Monday. The project record says Monday. The agent still schedules around Friday.
+
+I’d look for a summary that was generated from the old state and carried forward through several compactions. Each round can faithfully preserve a stale answer.
+
+One way to reduce that drift is to make summaries rebuildable. Keep source references and versions for each segment. A rollout digest can depend on separate schedule, access, and training records. If the schedule changes, rebuild that segment from its source and refresh the parent digest that depends on it.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"A correction is done when the decision changes."}
+    steps={[
+    ["Source correction", "Friday becomes Monday"],
+    ["Refresh the dependency", "Rebuild the schedule digest and its parent"],
+    ["Fence stale results", "Reject a write from the older revision"],
+    ["Replay the decision", "The agent uses Monday after two compactions"],
+    ]}
+    note={"A checksum tells you the inputs changed. Only a replay tells you the refreshed summary carried the correction."}
+  />
+</Figure>
+
+Where do checksums help? They can tell the harness that the inputs to a cached summary changed. They can’t tell you whether the summary captured the customer’s intent. That takes an eval: correct the source date, trigger two more compactions, then check which date the agent uses and which record it cites.
+
+I’d start with explicit revisions and a single derived summary. A dependency tree earns its place when updates are frequent and rebuilding the full digest materially costs time or money.
+
+### Build a correction you can replay
+
+Take three records contributing to the same handoff digest: schedule revision 7, access revision 3, and training revision 4. When the project lead changes the launch date, the schedule moves to revision 8. The digest generated from revision 7 is now stale even if it is internally consistent.
+
+I’d store each digest with the ordered revisions of its inputs and the versions of the extraction schema, prompt, and model configuration. For a three-part handoff, the root records the three child revisions. A schedule change rebuilds the schedule digest from the authoritative record and then rebuilds the root. Access and training can be reused.
+
+A race can still undo the fix. Say a worker starts a revision-7 rebuild, then pauses while the revision-8 build finishes. On commit, compare the worker’s expected revision with the current source revision. Reject the old result if they differ. For an action that depends on the launch date, resolve the current date from the scheduling system before acting.
+
+### Measure the cost of invalidation and the quality of the result
+
+First measure how often sources change and how much a full regeneration costs. A single digest plus a version check is easier to operate for a small account record. A dependency tree helps when independent sections update frequently and materializing the whole summary is expensive. Track the number of derived nodes rebuilt per update and how long users can receive a stale answer.
+
+For fidelity, run Friday → Monday → Tuesday through two compaction cycles. Ask for the current date and what was previously agreed. Score both answers against the relevant source IDs. A matching hash is evidence that the declared inputs match. The replay tells you whether the summary used them correctly.
+
+**Try it.** Advance one source revision and verify exactly which keys change. Then test a stale worker result arriving after the new summary.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 03
+```
+
+## Conclusion
+
+Version inputs so you can reject stale builds, and replay a correction so you can prove it changes the agent’s decision. That combination covers freshness and fidelity.
+
+<MemorySeries current="refreshing-stale-summaries" />
+
+## Further reading
+
+MemGPT motivates managing what moves between memory tiers. Anthropic describes preserving useful context over long-running tasks. Source-version dependencies and hierarchical invalidation are our proposed implementation, independent of any provider prompt-cache behavior. [MemGPT](https://arxiv.org/abs/2310.08560) · [Anthropic](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents)

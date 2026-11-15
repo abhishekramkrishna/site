@@ -1,0 +1,78 @@
+---
+title: "What should an AI agent remember permanently?"
+description: "“Use sandbox for this demo” is an instruction, not an account-wide preference. Why I would treat a durable memory write as a product action: the model proposes, and the harness checks source, scope, authority and evidence before committing."
+pubDate: 2026-11-19
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/who-can-write-agent-memory.png
+  thumb: ../../assets/covers/who-can-write-agent-memory-thumb.png
+  alt: "A one-off instruction is not a preference. Run instruction: “Use sandbox for this demo” stays in the run. Durable preference: Verified owner sets the account default. Source check: Verify identity, field, scope, and evidence. Commit the update: Deduplicate the event and check revision."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+An implementation lead says, “Use the sandbox for this demo.” Should the agent remember that this customer always wants sandbox?
+
+I’d keep the instruction scoped to the demo. If an authorized account owner later says, “Use sandbox by default for all our onboarding demos,” that’s a candidate for durable semantic memory.
+
+The difference is what the product will do next month. A write policy should decide whose statement is authoritative, how broadly it applies, and which evidence supports it. I’d give the model room to propose a candidate. The harness should validate and commit it.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"The model proposes. The harness commits."}
+    steps={[
+    ["Run instruction", "“Use sandbox for this demo” stays in the run"],
+    ["Durable preference", "Verified owner sets the account default"],
+    ["Source check", "Verify identity, field, scope, and evidence"],
+    ["Commit the update", "Deduplicate the event and check revision"],
+    ]}
+    note={"Measure write precision and recall together: an agent that writes rarely looks precise while customers keep repeating themselves."}
+  />
+</Figure>
+
+For each durable fact, I’d store the account, scope, subject, field, value, source reference, and validity information. If the evidence is a meeting note with uncertain attribution, I’d keep it as an observation until the right person confirms it.
+
+This is where support for many content types gets interesting. A CRM field, a PDF attachment, and a comment in a ticket can all contain the same sentence. They may have very different authority to update account memory.
+
+### Treat a memory write as a product action
+
+I’d start with a short allowlist of fields and a contract for each. A default demo environment may permit an explicit update from the account owner through a verified channel. Billing terms, permissions, and compliance approvals belong to their own systems.
+
+| Evidence | What the harness does |
+|---|---|
+| “Use sandbox for today’s demo” | Apply the instruction to this run |
+| The account owner explicitly sets a sandbox demo default | Propose an account preference update |
+| A PDF says everyone prefers production | Save it as evidence where appropriate and route a durable change for confirmation |
+| Two equally authoritative sources disagree | Mark the preference disputed and clarify before relying on it |
+
+At the write boundary, resolve the principal and account from server-side identity. Check which fields that source can assert, require a source reference, and validate the value. Store the prior and new revision with event provenance. Use the event ID to deduplicate retries and an expected version to avoid one editor silently overwriting another’s update.
+
+### Put false writes in your release review
+
+Have reviewers label which events establish durable facts and which are temporary instructions or unresolved observations. Track write precision among committed candidates and recall among the facts that should have been saved. Break them down by source type and scope. A model that writes rarely can look great on precision while customers keep repeating themselves.
+
+For the first release, I’d ask one customer-facing team to review disputed candidates. If no one can explain who is allowed to update a field, resolve the ownership before making that field durable.
+
+**Try it.** Apply the same proposed preference with an owner record, an imported note and a run-scoped instruction. Then retry a valid update using the same event ID and verify that the account advances only once.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 04
+```
+
+## Conclusion
+
+Pick a field whose reuse helps customers. Define who may write it, what scope it covers, and how it can be corrected. Use those rules to measure both false writes and missed writes.
+
+<MemorySeries current="who-can-write-agent-memory" />
+
+## Further reading
+
+Mem0 describes extraction, consolidation, and retrieval of salient information. Treat its published comparisons as author-reported results under the paper’s experimental setup. The example adds app-specific authority and scope rules, which extraction accuracy alone cannot supply. [Mem0](https://arxiv.org/abs/2504.19413) · [CoALA](https://arxiv.org/abs/2309.02427)

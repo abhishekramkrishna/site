@@ -1,0 +1,35 @@
+---
+// The agent-memory series: twelve standalone posts, listed in publishing order, with the current one marked.
+interface Props { current: string }
+const { current } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const posts: [string, string][] = [
+  ['four-types-of-agent-memory', 'The four kinds of memory an AI agent needs'],
+  ['compaction-continuation-test', 'How context compaction works in AI agents'],
+  ['refreshing-stale-summaries', 'How to keep an agent’s summaries up to date'],
+  ['who-can-write-agent-memory', 'What should an AI agent remember permanently?'],
+  ['time-aware-semantic-memory', 'How AI agents should handle facts that change over time'],
+  ['retrieving-decisive-memory', 'How to retrieve the fact that changes an agent’s decision'],
+  ['when-memory-needs-a-graph', 'When does an AI agent need a memory graph?'],
+  ['from-episodes-to-procedures', 'How AI agents can learn from past failures'],
+  ['crash-recovery-and-receipts', 'How an AI agent can resume after a crash without duplicating work'],
+  ['live-authorization-for-agent-memory', 'What should an AI agent do when access changes mid-run?'],
+  ['deleting-derived-memory', 'What happens when a user asks an AI agent to forget?'],
+  ['evaluating-agent-memory', 'How to evaluate whether agent memory improves the product'],
+];
+---
+<nav class="memseries" aria-label="The agent memory series">
+  <p class="h">The agent memory series</p>
+  <ol>
+    {posts.map(([slug, title]) => (
+      <li>{slug === current ? <span aria-current="page">{title}</span> : <a href={`${base}/blog/${slug}/`}>{title}</a>}</li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  .memseries { margin: 2.4em 0 1.6em; padding: 1.1rem 1.3rem; border: 1px solid var(--rule, rgb(95 179 179 / 0.3)); border-radius: 12px; }
+  .h { font: 500 0.78rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.6rem; opacity: 0.8; }
+  ol { margin: 0; padding-left: 1.4rem; display: grid; gap: 0.25rem; font-size: 0.92rem; line-height: 1.4; }
+  [aria-current] { font-weight: 650; }
+</style>
