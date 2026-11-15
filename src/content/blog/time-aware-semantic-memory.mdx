@@ -1,0 +1,81 @@
+---
+title: "How AI agents should handle facts that change over time"
+description: "“Who owned this account on March 14?” can have two correct answers once a late correction arrives. Why semantic memory needs effective time and recorded time, and the eval case that asks both questions about the same day."
+pubDate: 2026-11-20
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/time-aware-semantic-memory.png
+  thumb: ../../assets/covers/time-aware-semantic-memory-thumb.png
+  alt: "Who owned the account on March 14? It depends when you ask. March 12: Noor becomes the account owner. March 14: CRM still shows Riya. March 16: CRM records the correction. Two correct answers: Riya as known then. Noor in corrected history."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+“Who owned this account on March 10?” and “Who is our contact today?” can both be easy questions. Put an ownership change between them and an agent can answer one of them very confidently with the wrong name.
+
+There are two dates I’d keep explicit in semantic memory:
+
+- When the ownership change took effect.
+- When the system learned about it.
+
+Suppose Noor took over on March 12 and the CRM correction arrived on March 16. In an audit of what the agent knew on March 14, I’d replay the earlier CRM view. In a retrospective of who actually owned the account on March 14, I’d use the corrected timeline.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Same day, two correct answers."}
+    steps={[
+    ["March 12", "Noor becomes the account owner"],
+    ["March 14", "CRM still shows Riya"],
+    ["March 16", "CRM records the correction"],
+    ["Two correct answers", "Riya as known then. Noor in corrected history."],
+    ]}
+    note={"Effective time says when a fact applied. Recorded time says when the system accepted it."}
+  />
+</Figure>
+
+That distinction matters in renewals, customer handoffs, and escalations. A late correction can change the historical answer without changing what the system could have known at the time.
+
+Before buying or building temporal memory, I’d put one late correction in the eval set. Ask both questions and require the agent to show its source.
+
+### Model the correction as two histories
+
+Here’s the same effective date viewed from two different knowledge cutoffs.
+
+| Question | Effective date | Information cutoff | Answer |
+|---|---|---|---|
+| Who did the system believe owned the account on March 14? | March 14 | March 14 | Riya |
+| Who did the latest corrected history say owned it on March 14? | March 14 | March 17 | Noor |
+
+I’d represent one interval for when a claim is effective and another for when that row was accepted as the system’s view. On March 16, close the earlier system-time interval. Add the two rows that express the corrected history: Riya up to March 12 and Noor starting March 12. Retain the CRM reference that justified the update. Half-open intervals make boundary behavior explicit when one owner’s term starts exactly when another ends.
+
+The query filters on both intervals. Asking for the current contact sets both dates to the present. An audit of a past run uses the recorded cutoff of that run. A corrected historical answer uses the target effective date with a later cutoff.
+
+### Spend on time semantics where they change an outcome
+
+Many products can start with a current record plus a change log. Add explicit effective time when retroactive corrections, future-dated changes, or historical decisions matter to customers. Test scheduled handoffs, late-arriving events, overlapping records and an account with missing ownership. An overlap between equally authoritative sources should surface a conflict for a human to resolve.
+
+For an audit, also capture the evidence or version that actually reached the agent. The CRM may have known about the correction before the agent retrieved it. These two facts answer different questions about the rollout.
+
+**Try it.** Change only the information cutoff in the demo. Both answers should cite the version that was visible at the requested cutoff.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 05
+```
+
+## Conclusion
+
+Use two clocks when knowledge and reality can diverge. Test the same effective day at different knowledge cutoffs and require the evidence that was visible at each cutoff.
+
+<MemorySeries current="time-aware-semantic-memory" />
+
+## Further reading
+
+Zep describes temporally aware knowledge integration. LongMemEval includes temporal reasoning and knowledge updates. These motivate the test case. A relational history table can support the lookup without a graph for this narrow workflow. [Zep](https://arxiv.org/abs/2501.13956) · [LongMemEval](https://arxiv.org/abs/2410.10813)

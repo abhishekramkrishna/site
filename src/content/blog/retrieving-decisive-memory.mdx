@@ -1,0 +1,82 @@
+---
+title: "How to retrieve the fact that changes an agent’s decision"
+description: "An agent finds a helpful rollout guide and misses the one record that says the EU pilot is sandbox-only. Give decisive facts their own exact, permissioned lookup, use hybrid search for supporting context, and grade the retrieval trace."
+pubDate: 2026-11-20
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/retrieving-decisive-memory.png
+  thumb: ../../assets/covers/retrieving-decisive-memory-thumb.png
+  alt: "The right guide, the wrong answer. Resolve the target: Identify the account, environment, and feature. Fetch current policy: ACME-EU is sandbox-only. Add supporting context: Find relevant guides within the evidence budget. Check execution: Authorize the exact action and resource."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+A SaaS agent gets this request: “Can we enable the new widget for ACME-EU?”
+
+Its search finds a good conversational match about rolling out widgets. It misses the one account record that says the EU pilot is sandbox-only.
+
+I’d split that retrieval problem into three decisions:
+
+1. Can this agent read the account record, and is it current?
+2. Which record matches the exact account, environment, and feature?
+3. What supporting context helps interpret the decision?
+
+Use exact keys for the first lookup when the inputs are known. Use lexical and semantic retrieval for supporting evidence when terminology varies. Put a budget on what reaches the model and preserve the source IDs.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Fetch the decisive fact first, then the context."}
+    steps={[
+    ["Resolve the target", "Identify the account, environment, and feature"],
+    ["Fetch current policy", "ACME-EU is sandbox-only"],
+    ["Add supporting context", "Find relevant guides within the evidence budget"],
+    ["Check execution", "Authorize the exact action and resource"],
+    ]}
+    note={"Rank fusion combines result lists. It does not establish authority or freshness, so the exact policy lookup comes first."}
+  />
+</Figure>
+
+The detail I’d care about in the eval: did the right record reach the model before the tool call? If retrieval never supplied the authoritative restriction, a final-answer judge can tell you the result was wrong. The retrieval trace can tell you where to fix it.
+
+### Make the retrieval contract visible in a trace
+
+For the widget request, I’d log the canonical tenant, account and feature identifiers first. If “ACME” maps to both a US and an EU account, clarify the target before proposing a rollout. For a resolved target, the structured lookup should return the current environment restriction and its source ID. The supporting retrieval path can then add installation notes or similar rollout episodes.
+
+| Stage | What I’d inspect |
+|---|---|
+| Candidate generation | Were filters applied before ranking? |
+| Rank fusion and budget | Did exact identifiers and supporting terms survive? |
+| Context assembly | Was the authoritative restriction included? |
+| Tool gateway | Was the exact target checked against live policy? |
+
+Lexical search helps with identifiers and product terminology. Semantic retrieval helps when “enable the widget” and “activate in-app guidance” describe the same intent. Rank fusion combines independent result lists. For the exact policy, use a dedicated structured lookup and preserve its priority through truncation. If the index is behind, query the authoritative store for consequential decisions.
+
+### Debug retrieval with three different fixtures
+
+Use one easy query with the exact feature ID, one paraphrase, and one query where current and retired accounts have nearly identical names. Record whether the right evidence was eligible, ranked and injected. Then give the agent the gold evidence directly. If that repairs the decision, inspect retrieval first. If the failure persists, inspect evidence interpretation and tool guardrails.
+
+Measure recall at the actual context budget, not just at the retriever’s generous top-k. Track unauthorized results as a separate failure class and compare p95 latency after adding each search path.
+
+**Try it.** Put a stale document and another tenant’s document at the top of both fixture lists. The authoritative policy and scoped supporting records should still be the only records returned.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 06
+```
+
+## Conclusion
+
+Put the decisive fact on a path that guarantees scope, freshness, and space in context. Grade the retrieval trace and the tool outcome so you can tell which stage needs fixing.
+
+<MemorySeries current="retrieving-decisive-memory" />
+
+## Further reading
+
+Azure AI Search documents lexical and vector results fused through RRF. RRF combines ranks. It does not establish authority or factual validity. The exact policy lookup in this design precedes supporting retrieval. [Hybrid search](https://learn.microsoft.com/azure/search/hybrid-search-overview) · [Lost in the Middle](https://arxiv.org/abs/2307.03172)

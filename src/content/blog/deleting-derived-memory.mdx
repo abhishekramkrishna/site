@@ -1,0 +1,79 @@
+---
+title: "What happens when a user asks an AI agent to forget?"
+description: "A user deletes a preference and an old handoff summary repeats it a week later. Track lineage through summaries, embeddings and caches, block derivatives with a tombstone, and refuse rebuilds from the deleted generation."
+pubDate: 2026-11-23
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/deleting-derived-memory.png
+  thumb: ../../assets/covers/deleting-derived-memory-thumb.png
+  alt: "Deleted from the UI. Still in the summary. Source removed: Record the deletion and hide the fact. Derived copies: Block summaries, indexes, and caches. Stale rebuild: Refuse writes from the deleted generation. Fresh-session test: Verify the fact stays out of recall."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+A customer removes a memory item. The account fact disappears from the UI. A week later, the agent mentions the same detail from last month’s handoff summary.
+
+If the summary can reconstruct the deleted fact, the memory feature needs a deletion model that knows where its derivatives came from.
+
+I’d assign every persisted memory a source identity and track where it flows: semantic facts, summaries, embeddings, caches, and any queued rebuilds. A tombstone can make reads stop serving the source and its derivatives immediately. Background work can then purge or rebuild those artifacts according to their lifecycle. Rebuilds need to consult the tombstone too.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Deletion has to reach every copy that can recall."}
+    steps={[
+    ["Source removed", "Record the deletion and hide the fact"],
+    ["Derived copies", "Block summaries, indexes, and caches"],
+    ["Stale rebuild", "Refuse writes from the deleted generation"],
+    ["Fresh-session test", "Verify the fact stays out of recall"],
+    ]}
+    note={"Test immediate invisibility and eventual cleanup separately. This is an engineering pattern, not a legal-compliance claim."}
+  />
+</Figure>
+
+The regression test I’d run: delete one fact, replay an older event and start an indexing job that was already queued. Open a new session and ask the question that used to surface the fact. It should stay gone throughout the rebuild.
+
+For product leaders, deletion behavior belongs in the feature spec next to “remember this.” Both affect whether users can trust the agent across sessions.
+
+### Decide what “gone” means across the pipeline
+
+Here’s the lifecycle I would specify for a removed onboarding preference:
+
+| Copy | Expected behavior |
+|---|---|
+| Authoritative preference | Remove it from normal reads and record the deletion generation |
+| Handoff summary and search entry | Block recall through lineage, then rebuild or purge |
+| Cache | Invalidate it or require a generation check before serving |
+| Queued extraction or indexing job | Reject writes derived from the deleted generation |
+| Backup or exported copy | Apply the documented lifecycle and enforce deletion rules on restore |
+
+The tombstone only works if the source identity survives normalization. When three facts get combined into one summary, keep links to the contributing records. If one contributor is deleted, hide that version and rebuild from the remaining authorized sources. For very large derived artifacts, decide up front how coarse lineage can be before deleting one item needlessly disrupts unrelated work.
+
+### Verify immediate invisibility and eventual cleanup separately
+
+First test whether a fresh session can surface the fact right after deletion. Then inspect derived copies once cleanup completes. Force the background job to start from an old snapshot. When it tries to commit, compare against the current deletion generation. Replay older evidence and verify that it does not recreate the deleted fact. Test restore behavior where backups are part of the product.
+
+A customer asking to forget one thing should be able to predict what the next conversation will see. The product should also explain when background cleanup finishes and how separately managed copies are treated.
+
+**Try it.** Delete the source behind a handoff summary. Test both visibility of the existing summary and the result of an attempted stale rebuild. The demo checks those behaviors in sequential execution.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 11
+```
+
+## Conclusion
+
+Track lineage through every copy that can feed recall. Verify immediate invisibility and delayed cleanup independently, including rebuilds from old snapshots.
+
+<MemorySeries current="deleting-derived-memory" />
+
+## Further reading
+
+OWASP’s securing-agentic-applications guidance discusses selective deletion. The lineage, tombstone, and rebuild design here is an engineering pattern. The sample makes no claim about legal compliance or physical deletion from backups. [OWASP Securing Agentic Applications](https://genai.owasp.org/resource/securing-agentic-applications-guide-1-0/)

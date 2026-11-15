@@ -1,0 +1,77 @@
+---
+title: "When does an AI agent need a memory graph?"
+description: "Before adding a memory graph, write the impact question it should win on. How I would compare joins, hybrid retrieval and bounded graph traversal, and why every affected result needs a dated, permissioned evidence path."
+pubDate: 2026-11-21
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/when-memory-needs-a-graph.png
+  thumb: ../../assets/covers/when-memory-needs-a-graph-thumb.png
+  alt: "Write the impact question before you buy the graph. Start with the question: Which pilots lose an approved dependency? Follow the evidence path: Pilot → tenant → integration → approval. Compare the alternatives: Joins, hybrid retrieval, and graph traversal. Test difficult cases: Renamed services, retired edges, restricted pilots."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+“Who owns this rollout?” is a straightforward lookup.
+
+“Which active pilots are affected when this integration loses approval?” follows a chain: pilot → tenant → enabled integration → approval state. If those relationships are spread across project notes and tickets, getting a reliable answer can take more than finding similar text.
+
+I’d first see whether existing product data can answer the question with a join. A graph becomes interesting when the relationships are numerous, change over time, and are asked about from several directions. Each edge still needs a source, an effective time, and an access boundary.
+
+The product test I’d run: revoke the approval, rename the integration, and rerun the impact query. Does the agent list exactly the pilots with active dependencies? Can it show the path for each? Does it refrain from guessing about an ambiguous link?
+
+If most of your traffic only needs a customer’s current preference, a relational record may do the job. If users repeatedly ask “what else does this affect?” and the paths vary, a graph is worth testing against joins and hybrid retrieval.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Buy the graph on the question it wins."}
+    steps={[
+    ["Start with the question", "Which pilots lose an approved dependency?"],
+    ["Follow the evidence path", "Pilot → tenant → integration → approval"],
+    ["Compare the alternatives", "Joins, hybrid retrieval, and graph traversal"],
+    ["Test difficult cases", "Renamed services, retired edges, restricted pilots"],
+    ]}
+    note={"A correct pilot attached to a false dependency is still a defect. Score the path, not just the list."}
+  />
+</Figure>
+
+### Make the path inspectable
+
+For each pilot, return the path that made it eligible: pilot record → tenant → enabled integration → affected approval. Each link should carry the evidence that asserted it, its active interval, and its owner or access scope. A useful impact report can therefore say which record to inspect if someone disputes the result.
+
+I’d make the identity rules explicit before building this index. “Identity Service,” “SSO integration,” and a renamed display label may refer to one canonical identifier. Two integrations can also have near-identical names. Unresolved aliases belong in a review queue. A guessed association can put an unrelated pilot on the list.
+
+### Run the same impact query three ways
+
+| Approach | Question to ask during evaluation |
+|---|---|
+| Relational join | Can current application tables express all the required links? |
+| Hybrid document retrieval | Can the relevant passages be surfaced reliably within budget? |
+| Bounded graph traversal | Does it improve path coverage as relationships and query directions grow? |
+
+Measure precision and recall of affected pilots against a reviewed set. Score the evidence path too. A correct pilot attached to a false dependency is still a defect. Add a renamed integration, a retired edge and an access-restricted pilot. Check the time from a source update to a corrected answer and keep the indexing cost in the comparison.
+
+I’d avoid starting with LLM-extracted edges for relationships the product already knows, like a tenant’s enabled integration. For relationships only described in notes, track confidence and provenance and validate high-impact edges before using them.
+
+**Try it.** Add an active pilot in a different tenant and a retired pilot in the target tenant. Only the permitted active path should appear.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 07
+```
+
+## Conclusion
+
+Use the impact query as the buying criterion. Choose the simplest representation that can return correct, permissioned evidence paths at the freshness your users need.
+
+<MemorySeries current="when-memory-needs-a-graph" />
+
+## Further reading
+
+Microsoft GraphRAG documents local entity-centric retrieval and global corpus-level community summaries. Zep describes a temporal graph for evolving agent knowledge. These solve related but different retrieval problems. The demo uses explicit dependency edges for impact analysis. [GraphRAG query engine](https://github.com/microsoft/graphrag/blob/main/docs/query/overview.md) · [Zep](https://arxiv.org/abs/2501.13956)

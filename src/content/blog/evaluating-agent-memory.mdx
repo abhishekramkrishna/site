@@ -1,0 +1,78 @@
+---
+title: "How to evaluate whether agent memory improves the product"
+description: "A memory benchmark can look good while customers still repeat themselves. How I would compare recent history, full context, a rolling digest and scoped retrieval on the same journeys, with stage-level traces, cost per success and release gates."
+pubDate: 2026-11-23
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/evaluating-agent-memory.png
+  thumb: ../../assets/covers/evaluating-agent-memory-thumb.png
+  alt: "More successes can still fail the release. Set a baseline: Recent history, full context, digest, retrieval. Grade each stage: Saved fact, retrieved evidence, chosen action. Enforce release gates: Inspect critical violations individually. Measure business value: Cost per success and repeated customer input."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+
+An agent memory benchmark can look good while customers still repeat their preferences, see old decisions resurfacing, or watch an agent retry work they already approved.
+
+I’d start with the failures I want memory to prevent. For an onboarding agent, my release suite would include a corrected launch date, a deleted preference, a pending approval just before compaction, two similar account names, and a crash after a side effect.
+
+Run the same journeys with recent history, long context where it fits, a rolling digest, and selective retrieval. Keep the model and tool permissions fixed. Check each stage: was the fact written correctly, did the right evidence reach the agent, and did the agent take the correct action?
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"Evaluate memory on the failures customers notice."}
+    steps={[
+    ["Set a baseline", "Recent history, full context, digest, retrieval"],
+    ["Grade each stage", "Saved fact, retrieved evidence, chosen action"],
+    ["Enforce release gates", "Inspect critical violations individually"],
+    ["Measure business value", "Cost per success and repeated customer input"],
+    ]}
+    note={"In the demo fixture, selective retrieval has more successes and still fails the gate on one cross-account scope failure."}
+  />
+</Figure>
+
+I’d publish per-case failures alongside p95 latency and cost per successful workflow. If the same model configuration is nondeterministic, run each case repeatedly and report the spread. For subjective grading, calibrate the judge with human-reviewed cases. Critical actions can often be graded from tool receipts.
+
+### Compare memory strategies under the same workload
+
+I’d run recent turns, a full history when it fits, a rolling digest, and a scoped retrieval strategy against the same accounts and task trajectories. Use fixed model and tool versions, controlled inputs and a common evidence budget where the comparison allows it. Record retries, background memory costs and failures. Where a full history exceeds context capacity, record that case explicitly rather than dropping it from the comparison silently.
+
+For each replay, collect the output and the trace that explains it.
+
+| Metric | What it diagnoses |
+|---|---|
+| Correctly committed facts / facts that should be saved | Which supported facts survive ingestion, paired with precision among accepted writes |
+| Gold evidence included / answerable cases | Whether decisive context reached the model |
+| Stale evidence served / cases with a changed fact | Whether updates propagate through memory |
+| Successful tasks / attempts | Whether the agent completed the permitted workflow |
+| Total memory and run cost / successful tasks | What it costs to deliver a successful outcome |
+| Prohibited actions and leaks | Release-blocking failures to inspect individually |
+
+Give an evaluator the expected action, permitted alternatives, evidence IDs and abstention rules before running the task. Run nondeterministic cases repeatedly and report the numerator, denominator and variation. Audit disagreement between human reviewers and the judge on a calibration sample.
+
+### Pick thresholds after establishing a baseline
+
+If a strategy raises overall success while reintroducing a cross-account leak, the aggregate has hidden the decision the team actually cares about. Gate high-severity failures separately. For adoption, pair offline scores with repeat-information rate and handoff completion time after rollout. Compare accounts with similar workloads so the product signal has a usable baseline.
+
+**Try it.** The fixture gives selective retrieval a higher overall success count and a critical scope failure. Inspect why it still fails the release gate and why cost per success can remain flat even as per-run spend increases.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 12
+```
+
+## Conclusion
+
+Require better customer outcomes and explicit safety gates before paying for a more complex memory layer. Read the stage-level traces behind each failed workflow and include the total cost of delivering a success.
+
+<MemorySeries current="evaluating-agent-memory" />
+
+## Further reading
+
+LongMemEval tests extraction, multi-session reasoning, temporal reasoning, knowledge updates, and abstention. LoCoMo adds very long conversational trajectories and related evaluation tasks. Neither supplies production tool receipts or your app’s permission boundaries. Vendor results from Mem0 and Zep use particular models, prompts, retrieval budgets and graders. Compare on a common setup before using them for procurement. [LongMemEval](https://arxiv.org/abs/2410.10813) · [LoCoMo](https://arxiv.org/abs/2402.17753) · [Mem0](https://arxiv.org/abs/2504.19413) · [Zep](https://arxiv.org/abs/2501.13956)

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/tags/small-models', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side', '/blog/assume-agents-can-read-your-shipped-code', '/blog/what-is-a-small-language-model', '/blog/small-models-for-support-ticket-routing', '/blog/invoice-extraction-needs-evidence', '/blog/when-a-small-model-first-pass-saves-money', '/blog/small-models-for-app-commands', '/blog/rewrites-without-losing-facts', '/blog/evaluate-small-models-by-what-they-send-to-review', '/blog/founders-case-for-an-slm-pilot'];
+const pages = ['/', '/about', '/blog', '/tags/agents', '/tags/strategy', '/tags/business', '/tags/leadership', '/tags/small-models', '/blog/agents-that-answer-with-screens', '/blog/more-code-not-more-software', '/blog/moderating-ai-agents', '/blog/what-a-good-agent-eval-looks-like', '/blog/skills-are-the-new-team-wiki', '/blog/stop-counting-tokens', '/blog/model-retirement-is-the-new-dependency-upgrade', '/blog/fail-stop-containment-for-agents', '/blog/claude-code-hooks', '/blog/prompt-caching-measured', '/blog/what-each-part-of-an-agent-harness-is-worth', '/blog/agent-loops-and-graphs-do-different-jobs', '/blog/test-your-agent-skills-like-code', '/blog/is-your-codebase-agent-ready', '/blog/when-to-spin-up-a-subagent', '/blog/ubers-adr-securing-coding-agents', '/blog/passing-evals-is-not-permission-to-ship', '/blog/what-to-spend-on-ai-per-engineer', '/blog/why-i-write-from-the-build-side', '/blog/assume-agents-can-read-your-shipped-code', '/blog/what-is-a-small-language-model', '/blog/small-models-for-support-ticket-routing', '/blog/invoice-extraction-needs-evidence', '/blog/when-a-small-model-first-pass-saves-money', '/blog/small-models-for-app-commands', '/blog/rewrites-without-losing-facts', '/blog/evaluate-small-models-by-what-they-send-to-review', '/blog/founders-case-for-an-slm-pilot', '/blog/four-types-of-agent-memory', '/blog/compaction-continuation-test', '/blog/refreshing-stale-summaries', '/blog/who-can-write-agent-memory', '/blog/time-aware-semantic-memory', '/blog/retrieving-decisive-memory', '/blog/when-memory-needs-a-graph', '/blog/from-episodes-to-procedures', '/blog/crash-recovery-and-receipts', '/blog/live-authorization-for-agent-memory', '/blog/deleting-derived-memory', '/blog/evaluating-agent-memory'];
 
 async function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -596,4 +596,38 @@ test('blog page filters include the small language models series', async ({ page
   // The series is a blog filter, not a fifth home-page pillar
   await page.goto('/');
   await expect(page.locator('.pillars > li')).toHaveCount(4);
+});
+
+const memorySeries = ['four-types-of-agent-memory', 'compaction-continuation-test', 'refreshing-stale-summaries', 'who-can-write-agent-memory', 'time-aware-semantic-memory', 'retrieving-decisive-memory', 'when-memory-needs-a-graph', 'from-episodes-to-procedures', 'crash-recovery-and-receipts', 'live-authorization-for-agent-memory', 'deleting-derived-memory', 'evaluating-agent-memory'];
+
+for (const [i, slug] of memorySeries.entries()) {
+  test(`agent memory post ${i + 1} shows its four-step figure, demo link and series list`, async ({ page }) => {
+    await page.goto(`/blog/${slug}`, { waitUntil: 'networkidle' });
+    const fig = page.locator('main .dfig.memflow[role="img"]');
+    await expect(fig).toHaveCount(1);
+    expect((await fig.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+    await expect(fig.locator('li')).toHaveCount(4);
+    expect(await fig.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+    await expect(page.locator('main a[href="https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py"]')).toHaveCount(1);
+    await expect(page.locator('main pre').filter({ hasText: `memory_demos.py ${String(i + 1).padStart(2, '0')}` })).toHaveCount(1);
+    const series = page.locator('main nav.memseries');
+    await expect(series.locator('li')).toHaveCount(12);
+    await expect(series.locator('a')).toHaveCount(11);
+    await expect(series.locator('[aria-current="page"]')).toHaveCount(1);
+    await expect(page.locator('main h2', { hasText: 'Further reading' })).toHaveCount(1);
+  });
+}
+
+test('agent memory posts with an explainer serve the silent video and its poster', async ({ page, request }) => {
+  for (const slug of ['compaction-continuation-test', 'crash-recovery-and-receipts']) {
+    await page.goto(`/blog/${slug}`, { waitUntil: 'networkidle' });
+    const video = page.locator('main video');
+    await expect(video).toHaveCount(1);
+    expect((await video.getAttribute('aria-label'))?.length).toBeGreaterThan(80);
+    for (const attr of ['src', 'poster']) {
+      const url = await video.getAttribute(attr);
+      expect(url, `video ${attr}`).toBeTruthy();
+      expect((await request.head(url!)).status(), `video ${attr} ${url}`).toBe(200);
+    }
+  }
 });

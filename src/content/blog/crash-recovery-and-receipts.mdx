@@ -1,0 +1,81 @@
+---
+title: "How an AI agent can resume after a crash without duplicating work"
+description: "The provider created the checklist, then the worker crashed before saving the receipt. Persist intent with a stable operation ID, reconcile on restart, and test the window between the provider commit and the local receipt."
+pubDate: 2026-11-22
+tags: [agents, engineering]
+draft: false
+cover:
+  image: ../../assets/covers/crash-recovery-and-receipts.png
+  thumb: ../../assets/covers/crash-recovery-and-receipts-thumb.png
+  alt: "Did the write happen? Ask the receipt, not the transcript. Persist intent: Save the operation ID before dispatch. Provider commits: The checklist is created, then the worker crashes. Reconcile: Look up the effect or retry with the same key. Resume from receipt: One checklist and a completed workflow step."
+---
+
+import Figure from '../../components/Figure.astro';
+import MemoryFlow from '../../components/diagrams/MemoryFlow.astro';
+import MemorySeries from '../../components/MemorySeries.astro';
+
+export const media = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/blog/crash-recovery-and-receipts`;
+
+
+An agent creates the rollout checklist. The external service accepts the request. The worker crashes before the agent records the result. When the worker restarts, what should it do?
+
+A conversation summary might say, “Checklist creation was in progress.” That leaves the critical question open: did the write happen?
+
+I’d give the operation a stable identity before sending it and keep a durable record of the intended action. On recovery, the worker should reconcile using that identity, either by looking up the prior result or retrying with an idempotency key that the downstream system honors.
+
+The workflow needs a checkpoint for the goal and outstanding work. It also needs receipts for accepted side effects. That separation keeps the agent from inferring external state from its own text.
+
+<Figure caption="The four steps of this post at a glance. The same steps appear in its social image." tone="navy" wide>
+  <MemoryFlow
+    title={"A checkpoint and a receipt answer different questions."}
+    steps={[
+    ["Persist intent", "Save the operation ID before dispatch"],
+    ["Provider commits", "The checklist is created, then the worker crashes"],
+    ["Reconcile", "Look up the effect or retry with the same key"],
+    ["Resume from receipt", "One checklist and a completed workflow step"],
+    ]}
+    note={"A transcript can explain intent. A receipt tells you which effect the workflow can safely continue from."}
+  />
+</Figure>
+
+<video controls preload="none" playsinline muted poster={`${media}/explainer-poster.jpg`} src={`${media}/explainer.mp4`} style={{ width: '100%', height: 'auto', borderRadius: '8px' }} aria-label="20-second silent explainer with on-screen text. 00:00 Persist intent: save the operation ID before dispatch. 00:04 Provider commits: the checklist is created, then the worker crashes. 00:08 Reconcile: look up the effect or retry with the same key. 00:12 Resume from receipt: one checklist and a completed workflow step."></video>
+
+The 20-second explainer above is silent. Its four scenes are the same four steps as the figure.
+
+The test is straightforward: crash after the downstream service commits and before the local receipt is saved. Restart and check that the customer still has exactly one checklist. Repeat with a timeout and a concurrent retry.
+
+### Follow the operation through the crash
+
+| Boundary | What survives | Recovery behavior |
+|---|---|---|
+| Before the request leaves the worker | Stable operation ID and canonical payload | Dispatch the recorded intent |
+| After provider commit, before local receipt | Intent locally and effect at the provider | Look up the effect or retry using the same ID |
+| After the local receipt commits | Intent and receipt | Resume from the completed step |
+
+I’d generate the operation ID from a persistent run and action identity before dispatch. Store the account, action, payload and expected preconditions. A retry must reuse the same identity and payload. If the user changes the intended target, create a new operation and resolve the old one first when its outcome is uncertain.
+
+A local transaction can save workflow state and dispatch intent together. The downstream effect is still outside that transaction. Confirm that the provider actually honors the key across timeout and retry, what it returns on key reuse, and how long deduplication lasts. When the provider offers neither reliable lookup nor retry dedupe, mark the result unresolved and route it for reconciliation instead of issuing another consequential write automatically.
+
+### Test the window that matters
+
+Inject a timeout after the downstream commit, restart the worker, and run a second worker against the same intent. Verify the downstream count and the stored receipt. Also test reuse with a different payload and recovery beyond the provider’s key lifetime. Track duplicated effects and time spent in unresolved state separately from model response quality.
+
+**Try it.** The SQLite example keeps its local intent across a simulated restart and reuses the provider’s receipt. The simulated provider is a fixture. Run the same failure injection against your real tool contract before publishing a reliability claim.
+
+**Run the demo.** The fixture is [`examples/memory_demos.py`](https://github.com/abhishekramkrishna/agent-harness-lab/blob/main/examples/memory_demos.py) in agent-harness-lab. It runs offline, with no model or network calls, and asserts the behaviour described above.
+
+```bash
+git clone https://github.com/abhishekramkrishna/agent-harness-lab
+cd agent-harness-lab
+python3 examples/memory_demos.py 09
+```
+
+## Conclusion
+
+Treat an accepted side effect as a workflow event with an identity and a receipt. Test the crash window before trusting automatic retries on real accounts.
+
+<MemorySeries current="crash-recovery-and-receipts" />
+
+## Further reading
+
+AWS describes replay and retry semantics and why side-effecting operations need idempotency under at-least-once execution. Model continuity and side-effect reconciliation are different control paths. [AWS durable execution](https://docs.aws.amazon.com/durable-execution/patterns/best-practices/idempotency/)
